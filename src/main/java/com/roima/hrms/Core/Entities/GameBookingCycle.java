@@ -12,14 +12,14 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "game_cycle")
-public class GameBookingCycleEntity extends BaseEntity {
+@Table(name = "game_cycles")
+public class GameBookingCycle extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "game_id")
     private Game game;
 
-    private LocalDateTime cycle_strat;
+    private LocalDateTime cycle_start;
 
     private LocalDateTime cycle_end;
 

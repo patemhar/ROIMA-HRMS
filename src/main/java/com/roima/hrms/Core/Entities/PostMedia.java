@@ -12,7 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "post_media")
+@Table(name = "post_medias")
 public class PostMedia {
 
     @Id

@@ -43,7 +43,7 @@ public class GameSlot extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cycle_id")
-    private GameBookingCycleEntity game_cycle;
+    private GameBookingCycle game_cycle;
 
     @OneToMany(mappedBy = "slot")
     private List<SlotBooking> bookings;

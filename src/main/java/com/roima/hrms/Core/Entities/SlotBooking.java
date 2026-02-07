@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.util.List;
 
 @Entity
-@Table(name = "slot_booking")
+@Table(name = "slot_bookings")
 public class SlotBooking extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

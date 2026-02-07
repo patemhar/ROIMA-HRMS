@@ -18,7 +18,7 @@ import lombok.Setter;
                 )
         }
 )
-public class GameInterests extends BaseEntity{
+public class GameInterest extends BaseEntity{
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

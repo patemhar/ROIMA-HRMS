@@ -24,7 +24,7 @@ public class UserCycleStats extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cycle_id")
-    private GameBookingCycleEntity game_cycle;
+    private GameBookingCycle game_cycle;
 
     private Integer playes_count;
 }

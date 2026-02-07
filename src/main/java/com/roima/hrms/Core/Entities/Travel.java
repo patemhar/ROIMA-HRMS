@@ -34,8 +34,8 @@ public class Travel extends BaseEntity {
     private List<TravelItinerary> itineraries;
 
     @OneToMany(mappedBy = "travel")
-    private List<Expense> expenses;
+    private List<TravelExpense> expenses;
 
     @OneToMany(mappedBy = "travel")
-    private List<Booking> bookings;
+    private List<TravelBooking> travel_bookings;
 }

@@ -39,8 +39,8 @@ public class Game extends BaseEntity {
     private List<GameSlot> slots;
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL)
-    private Set<GameInterests> game_interests;
+    private Set<GameInterest> game_interests;
 
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL)
-    private Set<GameBookingCycleEntity> game_cycle;
+    private Set<GameBookingCycle> game_cycle;
 }

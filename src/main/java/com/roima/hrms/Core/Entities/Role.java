@@ -19,7 +19,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity
 @Table(name = "roles")
-public class Roles extends BaseEntity{
+public class Role extends BaseEntity{
 
     private String name;
 

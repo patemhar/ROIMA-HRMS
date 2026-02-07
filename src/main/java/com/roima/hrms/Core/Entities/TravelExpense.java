@@ -6,8 +6,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "expenses")
-public class Expense extends BaseEntity {
+@Table(name = "travel_expenses")
+public class TravelExpense extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "travel_id", nullable = false)
@@ -15,7 +15,7 @@ public class Expense extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "paid_by", nullable = false)
-    private User paidBy;
+    private User paid_by;
 
     @Enumerated(EnumType.STRING)
     private ExpenseType expense_type;

@@ -15,7 +15,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name = "referrals")
-public class Referrals extends BaseEntity {
+public class Referral extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "referred_by")

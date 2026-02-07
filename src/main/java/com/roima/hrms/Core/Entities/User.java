@@ -31,7 +31,7 @@ public class User extends BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "role_id")
-    private Roles role;
+    private Role role;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reports_to")
@@ -41,10 +41,10 @@ public class User extends BaseEntity{
     private Set<User> reports_to_me;
 
     @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY)
-    private Set<Notifications> my_notifications = new HashSet<>();
+    private Set<Notification> my_notifications = new HashSet<>();
 
     @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY)
-    private Set<Notifications> sent_notifications = new HashSet<>();
+    private Set<Notification> sent_notifications = new HashSet<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Profile profile;
@@ -62,7 +62,7 @@ public class User extends BaseEntity{
     private Set<Job> jobs_created_by_me = new HashSet<>();
 
     @OneToMany(mappedBy = "referred_by", fetch = FetchType.LAZY)
-    private Set<Referrals> my_referrals = new HashSet<>();
+    private Set<Referral> my_referrals = new HashSet<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Set<SlotParticipant> my_participation = new HashSet<>();
@@ -74,5 +74,8 @@ public class User extends BaseEntity{
     private Set<Document> my_docs = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-    private Set<GameInterests> game_interests;
+    private Set<GameInterest> game_interests = new HashSet<>();
+
+    @OneToMany(mappedBy = "paid_by", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<TravelExpense> my_travel_expenses = new HashSet<>();
 }

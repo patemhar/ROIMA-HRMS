@@ -15,6 +15,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@Table(name = "jobs")
 public class Job extends BaseEntity{
 
     private String title;
@@ -47,5 +48,5 @@ public class Job extends BaseEntity{
     private User created_by;
 
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
-    private Set<Referrals> job_referrals = new HashSet<>();
+    private Set<Referral> job_referrals = new HashSet<>();
 }
