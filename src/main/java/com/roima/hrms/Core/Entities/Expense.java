@@ -7,15 +7,15 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "expenses")
-public class ExpenseEntity extends BaseEntity {
+public class Expense extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "travel_id", nullable = false)
-    private TravelEntity travel;
+    private Travel travel;
 
     @ManyToOne
     @JoinColumn(name = "paid_by", nullable = false)
-    private UserEntity paidBy;
+    private User paidBy;
 
     @Enumerated(EnumType.STRING)
     private ExpenseType expense_type;

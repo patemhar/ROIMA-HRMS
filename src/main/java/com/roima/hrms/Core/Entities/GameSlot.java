@@ -1,25 +1,33 @@
 package com.roima.hrms.Core.Entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(
-        name = "slots",
+        name = "game_slots",
         uniqueConstraints = {
                 @UniqueConstraint(
                         columnNames = {"game_id", "slot_date", "start_time"}
                 )
         }
 )
-public class SlotEntity extends BaseEntity {
+public class GameSlot extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_id", nullable = false)
-    private GameEntity game;
+    private Game game;
 
     @Column(nullable = false)
     private LocalDate slotDate;
@@ -33,6 +41,10 @@ public class SlotEntity extends BaseEntity {
     @Column(nullable = false)
     private Integer maxPlayers;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cycle_id")
+    private GameBookingCycleEntity game_cycle;
+
     @OneToMany(mappedBy = "slot")
-    private List<SlotBookingEntity> bookings;
+    private List<SlotBooking> bookings;
 }

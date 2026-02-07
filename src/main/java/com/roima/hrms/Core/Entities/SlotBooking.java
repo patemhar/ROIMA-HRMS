@@ -6,14 +6,14 @@ import java.util.List;
 
 @Entity
 @Table(name = "slot_booking")
-public class SlotBookingEntity extends BaseEntity {
+public class SlotBooking extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "slot_id", nullable = false)
-    private SlotEntity slot;
+    private GameSlot slot;
 
     @OneToMany(mappedBy = "booking",
             cascade = CascadeType.ALL,
             orphanRemoval = true)
-    private List<SlotParticipantEntity> participants;
+    private List<SlotParticipant> participants;
 }

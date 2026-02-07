@@ -9,7 +9,7 @@ import jakarta.persistence.*;
                 @UniqueConstraint(columnNames = {"travel_id", "user_id"})
         }
 )
-public class TravelMemberEntity {
+public class TravelMember {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,10 +17,10 @@ public class TravelMemberEntity {
 
     @ManyToOne
     @JoinColumn(name = "travel_id", nullable = false)
-    private TravelEntity travel;
+    private Travel travel;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
+    private User user;
 
 }

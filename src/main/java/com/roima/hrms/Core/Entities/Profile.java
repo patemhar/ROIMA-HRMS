@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 
 @Getter
@@ -17,11 +16,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "user_profiles")
-public class ProfileEntity extends BaseEntity{
+public class Profile extends BaseEntity{
 
     @OneToOne
     @JoinColumn(name = "user_id", unique = true)
-    private UserEntity user;
+    private User user;
 
     private String emp_nmuber;
 
@@ -38,12 +37,12 @@ public class ProfileEntity extends BaseEntity{
     // department relation
     @ManyToOne
     @JoinColumn(name = "department_id")
-    private DepartmentEntity department;
+    private Department department;
 
     // hierarchy
     @ManyToOne
     @JoinColumn(name = "reports_to")
-    private UserEntity reports_to;
+    private User reports_to;
 
 }
 

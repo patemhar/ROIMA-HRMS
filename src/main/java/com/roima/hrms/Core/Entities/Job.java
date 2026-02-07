@@ -15,7 +15,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class JobEntity extends BaseEntity{
+public class Job extends BaseEntity{
 
     private String title;
 
@@ -40,12 +40,12 @@ public class JobEntity extends BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "department_id")
-    private DepartmentEntity department;
+    private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
-    private UserEntity created_by;
+    private User created_by;
 
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
-    private Set<JobEntity> job_referrals = new HashSet<>();
+    private Set<Referrals> job_referrals = new HashSet<>();
 }

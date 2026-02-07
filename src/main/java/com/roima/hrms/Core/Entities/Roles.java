@@ -19,12 +19,12 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity
 @Table(name = "roles")
-public class RolesEntity extends BaseEntity{
+public class Roles extends BaseEntity{
 
     private String name;
 
     private String description;
 
     @OneToMany(mappedBy = "role", cascade = CascadeType.DETACH)
-    private Set<UserEntity> users = new HashSet<>();
+    private Set<User> users = new HashSet<>();
 }

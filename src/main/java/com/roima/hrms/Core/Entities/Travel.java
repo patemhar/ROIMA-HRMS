@@ -1,6 +1,5 @@
 package com.roima.hrms.Core.Entities;
 
-import com.roima.hrms.Core.Entities.BaseEntity;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -8,7 +7,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "travels")
-public class TravelEntity extends BaseEntity {
+public class Travel extends BaseEntity {
 
     @Column(nullable = false)
     private String title;
@@ -17,7 +16,7 @@ public class TravelEntity extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
-    private UserEntity createdBy;
+    private User createdBy;
 
     private LocalDate start_date;
 
@@ -29,14 +28,14 @@ public class TravelEntity extends BaseEntity {
     private TravelStatus status;
 
     @OneToMany(mappedBy = "travel", cascade = CascadeType.ALL)
-    private List<TravelMemberEntity> members;
+    private List<TravelMember> members;
 
     @OneToMany(mappedBy = "travel")
-    private List<TravelItineraryEntity> itineraries;
+    private List<TravelItinerary> itineraries;
 
     @OneToMany(mappedBy = "travel")
-    private List<ExpenseEntity> expenses;
+    private List<Expense> expenses;
 
     @OneToMany(mappedBy = "travel")
-    private List<BookingEntity> bookings;
+    private List<Booking> bookings;
 }

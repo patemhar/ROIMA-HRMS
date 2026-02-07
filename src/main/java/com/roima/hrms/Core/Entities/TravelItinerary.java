@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "travel_itinerary")
-public class TravelItineraryEntity {
+public class TravelItinerary {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,7 +14,7 @@ public class TravelItineraryEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "travel_id", nullable = false)
-    private TravelEntity travel;
+    private Travel travel;
 
     private String title;
 

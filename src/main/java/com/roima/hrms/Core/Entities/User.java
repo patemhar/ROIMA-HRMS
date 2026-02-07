@@ -15,7 +15,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Entity
 @Table(name = "users")
-public class UserEntity {
+public class User extends BaseEntity{
 
     private String first_name;
 
@@ -31,41 +31,48 @@ public class UserEntity {
 
     @ManyToOne
     @JoinColumn(name = "role_id")
-    private RolesEntity role;
+    private Roles role;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reports_to")
+    private User reports_to;
 
     @OneToMany(mappedBy = "reports_to")
-    private Set<UserEntity> reports_to_me = new HashSet<>();
+    private Set<User> reports_to_me;
 
     @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY)
-    private Set<NotificationsEntity> my_notifications = new HashSet<>();
+    private Set<Notifications> my_notifications = new HashSet<>();
 
     @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY)
-    private Set<NotificationsEntity> sent_notifications = new HashSet<>();
+    private Set<Notifications> sent_notifications = new HashSet<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private ProfileEntity profile;
+    private Profile profile;
 
     @OneToMany(mappedBy = "postOwner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<PostEntity> user_posts = new HashSet<>();
+    private Set<Post> user_posts = new HashSet<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private Set<LikeEntity> my_likes = new HashSet<>();
+    private Set<Like> my_likes = new HashSet<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private Set<CommentEntity> my_comments = new HashSet<>();
+    private Set<Comment> my_comments = new HashSet<>();
 
     @OneToMany(mappedBy = "created_by", fetch = FetchType.LAZY)
-    private Set<JobEntity> jobs_created_by_me = new HashSet<>();
+    private Set<Job> jobs_created_by_me = new HashSet<>();
 
     @OneToMany(mappedBy = "referred_by", fetch = FetchType.LAZY)
-    private Set<ReferralsEntity> my_referrals = new HashSet<>();
+    private Set<Referrals> my_referrals = new HashSet<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private Set<SlotParticipantEntity> my_participation = new HashSet<>();
+    private Set<SlotParticipant> my_participation = new HashSet<>();
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
-    private Set<TravelMemberEntity> my_travel = new HashSet<>();
+    private Set<TravelMember> my_travel = new HashSet<>();
 
     @OneToMany(mappedBy = "uploadedBy", fetch = FetchType.LAZY)
-    private Set<DocumentEntity> my_docs = new HashSet<>();
+    private Set<Document> my_docs = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<GameInterests> game_interests;
 }

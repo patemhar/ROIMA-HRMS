@@ -11,13 +11,13 @@ import jakarta.persistence.*;
                 )
         }
 )
-public class SlotParticipantEntity extends BaseEntity{
+public class SlotParticipant extends BaseEntity{
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
-    private SlotBookingEntity booking;
+    private SlotBooking booking;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
+    private User user;
 }

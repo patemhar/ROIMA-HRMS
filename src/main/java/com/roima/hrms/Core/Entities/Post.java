@@ -16,22 +16,22 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity
 @Table(name = "posts")
-public class PostEntity extends BaseEntity{
+public class Post extends BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private UserEntity postOwner;
+    private User postOwner;
 
     private String title;
 
     private String content;
 
     @OneToMany(mappedBy = "post")
-    private Set<PostMediaEntity> media = new HashSet<>();
+    private Set<PostMedia> media = new HashSet<>();
 
     @OneToMany(mappedBy = "post")
-    private Set<LikeEntity> likes = new HashSet<>();
+    private Set<Like> likes = new HashSet<>();
 
     @OneToMany(mappedBy = "post")
-    private Set<CommentEntity> comments = new HashSet<>();
+    private Set<Comment> comments = new HashSet<>();
 }

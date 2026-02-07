@@ -19,7 +19,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Entity
 @Table(name = "departments")
-public class DepartmentEntity extends BaseEntity {
+public class Department extends BaseEntity {
 
     private String department_name;
 
@@ -27,9 +27,9 @@ public class DepartmentEntity extends BaseEntity {
 
     // Employee Relation
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<ProfileEntity> employees = new HashSet<>();
+    private Set<Profile> employees = new HashSet<>();
 
     // Job Relation
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<JobEntity> job_openings = new HashSet<>();
+    private Set<Job> job_openings = new HashSet<>();
 }

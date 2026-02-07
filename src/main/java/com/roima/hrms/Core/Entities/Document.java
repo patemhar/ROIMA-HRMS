@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "documents")
-public class DocumentEntity {
+public class Document {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,7 +20,7 @@ public class DocumentEntity {
 
     @ManyToOne
     @JoinColumn(name = "uploaded_by")
-    private UserEntity uploadedBy;
+    private User uploadedBy;
 
     private String fileUrl;
 

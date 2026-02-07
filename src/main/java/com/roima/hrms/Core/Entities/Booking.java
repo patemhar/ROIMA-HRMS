@@ -1,17 +1,25 @@
 package com.roima.hrms.Core.Entities;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "travel_bookings")
-public class BookingEntity extends BaseEntity {
+public class Booking extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "travel_id")
-    private TravelEntity travel;
+    private Travel travel;
 
     @Enumerated(EnumType.STRING)
     private BookingType bookingType;

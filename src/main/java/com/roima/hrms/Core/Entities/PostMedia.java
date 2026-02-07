@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.security.PrivateKey;
-
 
 @Getter
 @Setter
@@ -15,7 +13,7 @@ import java.security.PrivateKey;
 @AllArgsConstructor
 @Entity
 @Table(name = "post_media")
-public class PostMediaEntity {
+public class PostMedia {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -23,7 +21,7 @@ public class PostMediaEntity {
 
     @ManyToOne
     @JoinColumn(name = "post_id")
-    private PostEntity post;
+    private Post post;
 
     private String media_url;
 }

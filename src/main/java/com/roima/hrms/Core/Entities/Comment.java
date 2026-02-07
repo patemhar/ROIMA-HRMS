@@ -16,15 +16,15 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Table(name = "comments")
-public class CommentEntity {
+public class Comment extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private UserEntity user;
+    private User user;
 
     @ManyToOne
     @JoinColumn(name = "post_id")
-    private PostEntity post;
+    private Post post;
 
     private String content;
 }
