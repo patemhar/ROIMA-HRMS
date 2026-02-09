@@ -1,5 +1,6 @@
 package com.roima.hrms.Core.Entities;
 
+import com.roima.hrms.Core.Enums.BookingRequestStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

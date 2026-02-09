@@ -1,9 +1,12 @@
 package com.roima.hrms.Core.Entities;
 
+import com.roima.hrms.Core.Enums.TravelStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "travels")
@@ -38,4 +41,7 @@ public class Travel extends BaseEntity {
 
     @OneToMany(mappedBy = "travel")
     private List<TravelBooking> travel_bookings;
+
+    @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
+    private Set<TravelDocument> travel_documents = new HashSet<>();
 }

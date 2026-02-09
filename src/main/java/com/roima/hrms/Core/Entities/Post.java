@@ -26,6 +26,12 @@ public class Post extends BaseEntity{
 
     private String content;
 
+    private boolean is_active;
+
+    @ManyToOne
+    @JoinColumn(name = "visibility_role")
+    private Role visibility_role;
+
     @OneToMany(mappedBy = "post")
     private Set<PostMedia> media = new HashSet<>();
 

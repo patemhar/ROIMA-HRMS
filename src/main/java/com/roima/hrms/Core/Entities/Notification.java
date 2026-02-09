@@ -1,5 +1,7 @@
 package com.roima.hrms.Core.Entities;
 
+import com.roima.hrms.Core.Enums.EntityType;
+import com.roima.hrms.Core.Enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

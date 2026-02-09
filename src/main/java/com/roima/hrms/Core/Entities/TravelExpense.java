@@ -1,9 +1,12 @@
 package com.roima.hrms.Core.Entities;
 
+import com.roima.hrms.Core.Enums.ExpenseType;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "travel_expenses")
@@ -27,6 +30,13 @@ public class TravelExpense extends BaseEntity {
     private String currency;
 
     private LocalDate expenseDate;
+
+    @ManyToOne
+    @JoinColumn(name = "approved_by")
+    private User approved_by;
+
+    @OneToMany(mappedBy = "travel_expense", fetch = FetchType.LAZY)
+    private Set<ExpenseDocument> expense_docs = new HashSet<>();
 }
 
 

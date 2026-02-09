@@ -12,7 +12,6 @@ import lombok.Setter;
 import java.util.HashSet;
 import java.util.Set;
 
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,4 +26,7 @@ public class Role extends BaseEntity{
 
     @OneToMany(mappedBy = "role", cascade = CascadeType.DETACH)
     private Set<User> users = new HashSet<>();
+
+    @OneToMany(mappedBy = "visibility_role")
+    private Set<Post> posts = new HashSet<>();
 }

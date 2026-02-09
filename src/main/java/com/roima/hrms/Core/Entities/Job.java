@@ -1,5 +1,6 @@
 package com.roima.hrms.Core.Entities;
 
+import com.roima.hrms.Core.Enums.JobStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -39,6 +40,12 @@ public class Job extends BaseEntity{
 
     private String location;
 
+    private boolean is_active;
+
+    @ManyToOne
+    @JoinColumn(name = "default_reviewer")
+    private User default_reviewer;
+
     @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department;
@@ -49,4 +56,7 @@ public class Job extends BaseEntity{
 
     @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
     private Set<Referral> job_referrals = new HashSet<>();
+
+    @OneToMany(mappedBy = "job", fetch = FetchType.LAZY)
+    private Set<JobSharingRecord> shares = new HashSet<>();
 }

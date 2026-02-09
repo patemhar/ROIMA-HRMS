@@ -1,4 +1,4 @@
-package com.roima.hrms.Core.Entities;
+package com.roima.hrms.Core.Enums;
 
 public enum EntityType {
     POST,

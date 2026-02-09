@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 
 @Getter
@@ -38,11 +39,6 @@ public class Profile extends BaseEntity{
     @ManyToOne
     @JoinColumn(name = "department_id")
     private Department department;
-
-    // hierarchy
-    @ManyToOne
-    @JoinColumn(name = "reports_to")
-    private User reports_to;
 
 }
 

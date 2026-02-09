@@ -33,12 +33,13 @@ public class User extends BaseEntity{
     @JoinColumn(name = "role_id")
     private Role role;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reports_to")
-    private User reports_to;
-
     @OneToMany(mappedBy = "reports_to")
     private Set<User> reports_to_me;
+
+    // hierarchy
+    @ManyToOne
+    @JoinColumn(name = "reports_to")
+    private User reports_to;
 
     @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY)
     private Set<Notification> my_notifications = new HashSet<>();
@@ -71,11 +72,26 @@ public class User extends BaseEntity{
     private Set<TravelMember> my_travel = new HashSet<>();
 
     @OneToMany(mappedBy = "uploadedBy", fetch = FetchType.LAZY)
-    private Set<Document> my_docs = new HashSet<>();
+    private Set<TravelDocument> my_travel_docs = new HashSet<>();
+
+    @OneToMany(mappedBy = "uploadedBy", fetch = FetchType.LAZY)
+    private Set<ExpenseDocument> my_expense_docs = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<GameInterest> game_interests = new HashSet<>();
 
     @OneToMany(mappedBy = "paid_by", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<TravelExpense> my_travel_expenses = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<RefreshToken> refresh_tokens = new HashSet<>();
+
+    @OneToMany(mappedBy = "approved_by", fetch = FetchType.LAZY)
+    private Set<TravelExpense> my_approved_expenses;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<JobSharingRecord> my_shared_jobs;
+
+    @OneToMany(mappedBy = "default_reviewer", fetch = FetchType.LAZY)
+    private Set<Job> jobs_under_my_review;
 }
