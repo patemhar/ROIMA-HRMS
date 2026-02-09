@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,21 +26,21 @@ public class User extends BaseEntity{
 
     private String password_hash;
 
-    private String last_login;
+    private LocalDateTime last_login;
 
-    private boolean is_active;
+    private boolean is_active = true;
 
     @ManyToOne
     @JoinColumn(name = "role_id")
     private Role role;
 
-    @OneToMany(mappedBy = "reports_to")
-    private Set<User> reports_to_me;
-
     // hierarchy
     @ManyToOne
     @JoinColumn(name = "reports_to")
     private User reports_to;
+
+    @OneToMany(mappedBy = "reports_to")
+    private Set<User> reports_to_me;
 
     @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY)
     private Set<Notification> my_notifications = new HashSet<>();

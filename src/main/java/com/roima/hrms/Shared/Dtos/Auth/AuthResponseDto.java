@@ -7,16 +7,19 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LoginResponseDto {
+public class AuthResponseDto {
 
-    private String token;
+    private UUID userId;
 
-    private String first_name;
+    private String userName;
 
-    private String last_name;
+    private String email;
+
+    private String role;
 }

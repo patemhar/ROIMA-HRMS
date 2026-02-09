@@ -1,9 +1,6 @@
 package com.roima.hrms.Core.Entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,7 +16,10 @@ import java.time.LocalDateTime;
 @Table(name = "refresh_tokens")
 public class RefreshToken extends BaseEntity {
 
-    private String TokenHash;
+    @Column(name = "token_hash")
+    private String tokenHash;
+
+    private String userMail;
 
     private LocalDateTime expires_at;
 
