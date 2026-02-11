@@ -1,13 +1,24 @@
 package com.roima.hrms.Core.Entities;
 
+import com.roima.hrms.Core.Enums.ExpenseStatus;
 import com.roima.hrms.Core.Enums.ExpenseType;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "travel_expenses")
 public class TravelExpense extends BaseEntity {
@@ -25,11 +36,24 @@ public class TravelExpense extends BaseEntity {
 
     private String title;
 
+    private String description;
+
     private BigDecimal amount;
 
     private String currency;
 
     private LocalDate expenseDate;
+
+    private LocalDateTime approved_at;
+
+    private String remark;
+
+    @Enumerated(EnumType.STRING)
+    private ExpenseStatus status;
+
+    @ManyToOne
+    @JoinColumn(name = "created_by")
+    private User createdBy;
 
     @ManyToOne
     @JoinColumn(name = "approved_by")

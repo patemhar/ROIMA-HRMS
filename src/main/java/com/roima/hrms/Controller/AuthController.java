@@ -4,6 +4,8 @@ import com.roima.hrms.Service.Interfaces.AuthService;
 import com.roima.hrms.Shared.Dtos.ApiResponse;
 import com.roima.hrms.Shared.Dtos.Auth.AuthResponseDto;
 import com.roima.hrms.Shared.Dtos.Auth.LoginRequestDto;
+import com.roima.hrms.Shared.Dtos.Auth.RegisterRequestDto;
+import com.roima.hrms.Shared.Dtos.Auth.RegisterResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -48,5 +50,15 @@ public class AuthController {
         authService.logout(request, response);
 
         return ApiResponse.success(null, "Logged out successfully");
+    }
+
+    @PostMapping("/register")
+    public ApiResponse<RegisterResponseDto> register (
+        RegisterRequestDto dto
+    ) {
+
+        RegisterResponseDto result = authService.register(dto);
+
+        return ApiResponse.success(result, "user registered successfully");
     }
 }

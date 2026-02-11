@@ -19,6 +19,8 @@ public class GlobalExceptionHandler {
             );
         }
 
+
+
         return new ResponseEntity<>(
                 ApiResponse.error(ex.getMessage(), ex.toString()),
                 HttpStatus.INTERNAL_SERVER_ERROR

@@ -2,12 +2,21 @@ package com.roima.hrms.Core.Entities;
 
 import com.roima.hrms.Core.Enums.TravelStatus;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "travels")
 public class Travel extends BaseEntity {
@@ -31,16 +40,16 @@ public class Travel extends BaseEntity {
     private TravelStatus status;
 
     @OneToMany(mappedBy = "travel", cascade = CascadeType.ALL)
-    private List<TravelMember> members;
+    private Set<TravelMember> members = new HashSet<>();
 
     @OneToMany(mappedBy = "travel")
-    private List<TravelItinerary> itineraries;
+    private Set<TravelItinerary> itineraries = new HashSet<>();
 
     @OneToMany(mappedBy = "travel")
-    private List<TravelExpense> expenses;
+    private Set<TravelExpense> expenses = new HashSet<>();
 
     @OneToMany(mappedBy = "travel")
-    private List<TravelBooking> travel_bookings;
+    private Set<TravelBooking> travel_bookings = new HashSet<>();
 
     @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
     private Set<TravelDocument> travel_documents = new HashSet<>();

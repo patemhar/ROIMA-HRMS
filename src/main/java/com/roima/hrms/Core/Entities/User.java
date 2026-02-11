@@ -60,6 +60,9 @@ public class User extends BaseEntity{
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Set<Comment> my_comments = new HashSet<>();
 
+    @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
+    private Set<Travel> travel_created_by_me = new HashSet<>();
+
     @OneToMany(mappedBy = "created_by", fetch = FetchType.LAZY)
     private Set<Job> jobs_created_by_me = new HashSet<>();
 
@@ -81,6 +84,9 @@ public class User extends BaseEntity{
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<GameInterest> game_interests = new HashSet<>();
 
+    @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<TravelExpense> my_created_expenses = new HashSet<>();
+
     @OneToMany(mappedBy = "paid_by", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<TravelExpense> my_travel_expenses = new HashSet<>();
 
@@ -95,4 +101,5 @@ public class User extends BaseEntity{
 
     @OneToMany(mappedBy = "default_reviewer", fetch = FetchType.LAZY)
     private Set<Job> jobs_under_my_review;
+
 }

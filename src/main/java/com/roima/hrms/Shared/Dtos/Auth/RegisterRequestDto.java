@@ -14,15 +14,17 @@ import java.util.UUID;
 @NoArgsConstructor
 public class RegisterRequestDto {
 
-    public String first_name;
+    private String first_name;
 
-    public String last_name;
+    private String last_name;
 
-    public String email;
+    private String email;
 
-    public String password;
+    private String password;
 
-    public UUID role;
+    private String confirm_password;
 
-    public UUID reports_to;
+    private UUID role;
+
+    private UUID reports_to;
 }
