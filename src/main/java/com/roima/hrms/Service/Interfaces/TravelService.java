@@ -10,13 +10,17 @@ import java.util.UUID;
 public interface TravelService {
 
     //Travel
-    TravelResponseSummary createTravel(TravelRequest dto, UUID createdBy);
+    TravelResponseSummary createTravel(TravelRequest dto);
 
     TravelResponse getTravel(UUID travelId);
 
-    List<TravelResponseSummary> getAll();
+    List<TravelResponseSummary> getMyTravel();
 
     List<TravelResponseSummary> getTravelsForUser(UUID userId);
+
+    List<TravelResponseSummary> getTravels();
+
+    TravelResponse updateTravel(UUID travelId, TravelRequest dto);
 
 
     //Travel Member

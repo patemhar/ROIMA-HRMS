@@ -19,11 +19,7 @@ import java.util.UUID;
                 @UniqueConstraint(columnNames = {"travel_id", "user_id"})
         }
 )
-public class TravelMember {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private UUID id;
+public class TravelMember extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "travel_id", nullable = false)

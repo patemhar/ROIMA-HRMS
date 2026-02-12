@@ -1,10 +1,15 @@
 package com.roima.hrms.Controller;
 
+import com.roima.hrms.Core.Entities.ExpenseDocument;
+import com.roima.hrms.Core.Entities.TravelDocument;
 import com.roima.hrms.Service.Implementation.CustomUserDetails;
 import com.roima.hrms.Service.Implementation.CustomUserDetailsService;
+import com.roima.hrms.Service.Interfaces.ExpenseDocumentService;
 import com.roima.hrms.Service.Interfaces.TravelDocumentService;
+import com.roima.hrms.Service.Interfaces.TravelExpenseService;
 import com.roima.hrms.Service.Interfaces.TravelService;
 import com.roima.hrms.Shared.Dtos.ApiResponse;
+import com.roima.hrms.Shared.Dtos.DocUploadResponse;
 import com.roima.hrms.Shared.Dtos.Travel.*;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -16,146 +21,246 @@ import java.util.Set;
 import java.util.UUID;
 
 // content according to relation pending,
-
 @RestController
-@RequestMapping("/api/travels")
+@RequestMapping("/travels")
 @RequiredArgsConstructor
 public class TravelController {
 
     private final TravelService travelService;
     private final TravelDocumentService travelDocumentService;
+    private final TravelExpenseService travelExpenseService;
+    private final ExpenseDocumentService expenseDocumentService;
     private final SecurityUtil securityUtil;
 
+
+    // Travel
+
     @PostMapping
-    @PreAuthorize("hasRole('HR')")
+//    @PreAuthorize("HasRole('HR')")
     public ApiResponse<TravelResponseSummary> createTravel(
             @RequestBody TravelRequest request) {
 
-        var userId = securityUtil.getCurrentUser().getId();
-
-        TravelResponseSummary response =
-                travelService.createTravel(request, userId);
-
-        return ApiResponse.success(response,
-                "Travel created successfully");
+        return ApiResponse.success(
+                travelService.createTravel(request),
+                "Travel created successfully"
+        );
     }
 
     @GetMapping("/{travelId}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+//    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
     public ApiResponse<TravelResponse> getTravel(
             @PathVariable UUID travelId) {
 
-        TravelResponse response =
-                travelService.getTravel(travelId);
-
-        return ApiResponse.success(response,
-                "Travel fetched successfully");
+        return ApiResponse.success(
+                travelService.getTravel(travelId),
+                "Travel fetched successfully"
+        );
     }
 
-
-    @GetMapping
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
-    public ApiResponse<List<TravelResponseSummary>> getAllTravels() {
+    @GetMapping("/my")
+//    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    public ApiResponse<List<TravelResponseSummary>> getMyTravels() {
 
         return ApiResponse.success(
-                travelService.getAll(),
+                travelService.getMyTravel(),
                 "Travels fetched successfully"
         );
     }
 
-
-    @GetMapping("/travels/{userId}")
-    public ApiResponse<List<TravelResponseSummary>> getUserTravels(@PathVariable UUID userId) {
+    // travels that are created by user
+    @GetMapping("/user/{userId}")
+//    @PreAuthorize("hasAnyRole('MANAGER','HR')")
+    public ApiResponse<List<TravelResponseSummary>> getUserTravels(
+            @PathVariable UUID userId
+    ) {
 
         return ApiResponse.success(
                 travelService.getTravelsForUser(userId),
-                "Travels fetched successfully for user"
+                "Travels fetched successfully"
         );
     }
 
+    @GetMapping
+//    @PreAuthorize("hasRole('HR')")
+    public ApiResponse<List<TravelResponseSummary>> getAllTravels() {
+
+        return ApiResponse.success(
+                travelService.getTravels(),
+                "Travels fetched successfully"
+        );
+    }
+
+    @DeleteMapping("/{travelId}")
+//    @PreAuthorize("hasRole('HR')")
+    public ApiResponse<Void> deleteTravel(@PathVariable UUID travelId) {
+
+        travelService.deleteTravel(travelId);
+
+        return ApiResponse.success(null, "Travel deleted successfully");
+    }
+
+
+    // Travel Member
 
     @PostMapping("/{travelId}/members")
-    @PreAuthorize("hasAnyRole('MANAGER','HR')")
+//    @PreAuthorize("hasAnyRole('HR','MANAGER')")
     public ApiResponse<Set<TravelMemberResponse>> addMember(
             @PathVariable UUID travelId,
             @RequestBody TravelMemberRequest request) {
 
-        var travelMembers = travelService.addTravelMember(travelId, request);
-
-        return ApiResponse.success(travelMembers,
-                "Member added successfully");
+        return ApiResponse.success(
+                travelService.addTravelMember(travelId, request),
+                "Member added successfully"
+        );
     }
 
 
+    // Travel Itinerary
+
     @PostMapping("/{travelId}/itinerary")
-    @PreAuthorize("hasRole('HR')")
+//    @PreAuthorize("hasRole('HR')")
     public ApiResponse<TravelItineraryResponse> addItinerary(
             @PathVariable UUID travelId,
             @RequestBody TravelItineraryRequest request) {
 
-        var travelItinerary = travelService.addTravelItinerary(travelId, request);
-
-        return ApiResponse.success( travelItinerary,
-                "Itinerary added successfully");
+        return ApiResponse.success(
+                travelService.addTravelItinerary(travelId, request),
+                "Itinerary added successfully"
+        );
     }
 
     @GetMapping("/{travelId}/itinerary")
-    @PreAuthorize("hasRole('HR')")
-    public ApiResponse<List<TravelItineraryResponse>> addItinerary(
+//    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    public ApiResponse<List<TravelItineraryResponse>> getItinerary(
             @PathVariable UUID travelId) {
 
-        var travelItinerary = travelService.getTravelItineraries(travelId);
-
-        return ApiResponse.success( travelItinerary,
-                "Itinerary added successfully");
+        return ApiResponse.success(
+                travelService.getTravelItineraries(travelId),
+                "Itinerary fetched successfully"
+        );
     }
 
+
+    // Travel Booking
+
     @PostMapping("/{travelId}/booking")
-    @PreAuthorize("hasRole('HR')")
+//    @PreAuthorize("hasRole('HR')")
     public ApiResponse<TravelBookingResponse> addBooking(
             @PathVariable UUID travelId,
             @RequestBody TravelBookingRequest request) {
 
-        var travelItinerary = travelService.addTravelBooking(travelId, request);
-
-        return ApiResponse.success( travelItinerary,
-                "Travel booking added successfully");
+        return ApiResponse.success(
+                travelService.addTravelBooking(travelId, request),
+                "Booking added successfully"
+        );
     }
 
     @GetMapping("/{travelId}/booking")
-    @PreAuthorize("hasAnyRole('HR', 'EMPLOYEE', 'MANAGER')")
-    public ApiResponse<List<TravelBookingResponse>> getBooking(
+//    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    public ApiResponse<List<TravelBookingResponse>> getBookings(
             @PathVariable UUID travelId) {
 
-        var travelItinerary = travelService.getTravelBookings(travelId);
-
-        return ApiResponse.success( travelItinerary,
-                "Travel booking added successfully");
+        return ApiResponse.success(
+                travelService.getTravelBookings(travelId),
+                "Bookings fetched successfully"
+        );
     }
 
 
-    // pending
+    // Travel Doc
+
     @PostMapping("/{travelId}/documents")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
-    public ApiResponse<String> uploadDocument(
+//    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    public ApiResponse<DocUploadResponse> uploadTravelDocument(
             @PathVariable UUID travelId,
             @RequestBody TravelDocRequest request) {
 
-        travelDocumentService.addTravelDocs(travelId, request);
+        return ApiResponse.success(
+                travelDocumentService.addTravelDocs(travelId, request),
+                "Document uploaded successfully"
+        );
+    }
 
-        return ApiResponse.success(null,
-                "Document uploaded successfully");
+    @GetMapping("/{travelId}/documents")
+//    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    public ApiResponse<List<TravelDocument>> getTravelDocuments(
+            @PathVariable UUID travelId) {
+
+        return ApiResponse.success(
+                travelDocumentService.getTravelDocs(travelId),
+                "Documents fetched successfully"
+        );
     }
 
 
-    @DeleteMapping("/{travelId}")
-    @PreAuthorize("hasRole('HR')")
-    public ApiResponse<String> deleteTravel(
+    // Expense
+
+    @PostMapping("/{travelId}/expenses")
+//    @PreAuthorize("hasAnyRole('EMPLOYEE','HR')")
+    public ApiResponse<TravelExpenseResponse> addExpense(
+            @PathVariable UUID travelId,
+            @RequestBody TravelExpenseRequest request) {
+
+        return ApiResponse.success(
+                travelExpenseService.addTravelExpense(travelId, request),
+                "Expense added successfully"
+        );
+    }
+
+    @GetMapping("/{travelId}/expenses")
+//    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    public ApiResponse<List<TravelExpenseResponse>> getExpenses(
             @PathVariable UUID travelId) {
 
-        travelService.deleteTravel(travelId);
+        return ApiResponse.success(
+                travelExpenseService.getAllExpenses(travelId),
+                "Expenses fetched successfully"
+        );
+    }
 
-        return ApiResponse.success(null,
-                "Travel deleted successfully");
+    @PutMapping("/expenses/{expenseId}/approve")
+//    @PreAuthorize("hasRole('HR')")
+    public ApiResponse<Void> approveExpense(
+            @PathVariable UUID expenseId,
+            @RequestParam String remark) {
+
+        travelExpenseService.approveExpense(expenseId, remark);
+        return ApiResponse.success(null, "Expense approved");
+    }
+
+    @PutMapping("/expenses/{expenseId}/reject")
+//    @PreAuthorize("hasRole('HR')")
+    public ApiResponse<Void> rejectExpense(
+            @PathVariable UUID expenseId,
+            @RequestParam String remark) {
+
+        travelExpenseService.rejectExpense(expenseId, remark);
+        return ApiResponse.success(null, "Expense rejected");
+    }
+
+
+    // Expense Doc
+
+    @PostMapping("/expenses/{expenseId}/documents")
+//    @PreAuthorize("hasAnyRole('EMPLOYEE','HR')")
+    public ApiResponse<DocUploadResponse> uploadExpenseDocs(
+            @PathVariable UUID expenseId,
+            @ModelAttribute ExpenseDocRequest request) {
+
+        return ApiResponse.success(
+                expenseDocumentService.addExpenseDocs(expenseId, request),
+                "Expense documents uploaded"
+        );
+    }
+
+    @GetMapping("/expenses/{expenseId}/documents")
+//    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    public ApiResponse<List<ExpenseDocument>> getExpenseDocs(
+            @PathVariable UUID expenseId) {
+
+        return ApiResponse.success(
+                expenseDocumentService.getTravelExpenseDocs(expenseId),
+                "Expense documents fetched"
+        );
     }
 }

@@ -3,6 +3,7 @@ package com.roima.hrms.Mapper;
 import com.roima.hrms.Core.Entities.*;
 import com.roima.hrms.Shared.Dtos.Travel.*;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
@@ -12,8 +13,40 @@ public class TravelMapper {
 
     private final ModelMapper modelMapper;
 
-    public TravelResponseSummary TravelToTravelResSum (Travel travel) {
-        return modelMapper.map(travel, TravelResponseSummary.class);
+    public TravelResponseSummary ToTravelResSum (Travel travel) {
+
+        var travelResponseSummary = new TravelResponseSummary();
+
+        travelResponseSummary.setId(travel.getId());
+        travelResponseSummary.setTitle(travel.getTitle());
+        travelResponseSummary.setDescription(travel.getDescription());
+        travelResponseSummary.setStart_date(travel.getStart_date());
+        travelResponseSummary.setEnd_date(travel.getEnd_date());
+        travelResponseSummary.setDestination(travel.getDestination());
+        travelResponseSummary.setStatus(travel.getStatus());
+
+        var travelMembers = travel.getMembers();
+
+        for(var travelMember : travelMembers) {
+
+            var travelMemberResponse = getTravelMemberResponse(travelMember);
+
+            travelResponseSummary.getTravel_members().add(travelMemberResponse);
+        }
+
+        return travelResponseSummary;
+    }
+
+    private static @NonNull TravelMemberResponse getTravelMemberResponse(TravelMember travelMember) {
+        var travelMemberResponse = new TravelMemberResponse();
+
+        travelMemberResponse.setId(travelMember.getId());
+        travelMemberResponse.setMember_id(travelMember.getUser().getId());
+        travelMemberResponse.setName(travelMember.getUser().getFirst_name() + travelMember.getUser().getLast_name());
+        travelMemberResponse.setEmail(travelMember.getUser().getEmail());
+        travelMemberResponse.setRole(travelMember.getUser().getRole().getName());
+
+        return travelMemberResponse;
     }
 
     // Travel
@@ -94,6 +127,9 @@ public class TravelMapper {
         return response;
     }
 
+    public Travel updateTravel (Travel travel, TravelRequest request) {
+        return modelMapper.map(request, Travel.class);
+    }
 
     // Travel Member
 
@@ -104,7 +140,7 @@ public class TravelMapper {
         response.setId(member.getId());
 
         if (member.getUser() != null) {
-            response.setId(member.getUser().getId());
+            response.setMember_id(member.getUser().getId());
             response.setName(
                     member.getUser().getFirst_name() + " " + member.getUser().getLast_name()
             );

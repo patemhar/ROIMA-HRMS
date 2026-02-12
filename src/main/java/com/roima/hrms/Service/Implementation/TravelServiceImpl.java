@@ -8,11 +8,11 @@ import com.roima.hrms.Service.Interfaces.TravelService;
 import com.roima.hrms.Shared.Dtos.Travel.*;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -27,40 +27,51 @@ public class TravelServiceImpl implements TravelService{
     private final TravelItineraryRepository travelItineraryRepository;
     private final SecurityUtil securityUtil;
 
+    private static final Logger logger = LoggerFactory.getLogger(TravelServiceImpl.class);
+
     @Value("${ImageStoreUrl}")
     private String uploadDir;
 
     @Override
-    public TravelResponseSummary createTravel(TravelRequest dto, UUID createdBy) {
+    public TravelResponseSummary createTravel(TravelRequest dto) {
+
+        User currentUser = securityUtil.getCurrentUser();
+        ensureHr(currentUser);
 
         Travel travel = travelMapper.ToTravel(dto);
-
-        var existingUser = userRepository.findById(createdBy).orElseThrow(() -> new RuntimeException("No such user found!"));
-
-        travel.setCreatedBy(existingUser);
+        travel.setCreatedBy(currentUser);
         travel.setStatus(TravelStatus.PLANNED);
 
-        Set<TravelMemberResponse> memberList = addTravelMember( travel.getId(), dto.getTravelMemberIds());
+        Travel savedTravel = travelRepository.save(travel);
 
-        var savedTravel = travelRepository.save(travel);
+        currentUser.getTravel_created_by_me().add(savedTravel);
 
-        // for memory model
-        existingUser.getTravel_created_by_me().add(savedTravel);
+        // add members
+        if (dto.getTravelMemberIds() != null) {
+            for (UUID userId : dto.getTravelMemberIds().getMember_ids()) {
 
-        userRepository.save(existingUser);
+                User existingUser = userRepository.findById(userId)
+                        .orElseThrow(() -> new RuntimeException("User not found"));
 
-        var response = travelMapper.TravelToTravelResSum(savedTravel);
+                TravelMember member = new TravelMember();
+                member.setTravel(savedTravel);
+                member.setUser(existingUser);
 
-        response.getTravel_members().addAll(memberList);
+                var savedTravelMember = travelMemberRepo.save(member);
 
-        return response;
+                // memory
+                savedTravel.getMembers().add(savedTravelMember);
+                existingUser.getMy_travel().add(savedTravelMember);
+            }
+        }
+//        System.out.println("\n\nTravel Members:" + savedTravel.getMembers().toString());
+
+        return travelMapper.ToTravelResSum(savedTravel);
     }
 
-    // convert to travel response
+
     @Override
     public TravelResponse getTravel(UUID travelId) {
-
-        var currentUser = securityUtil.getCurrentUser();
 
         var existingTravel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
 
@@ -68,19 +79,46 @@ public class TravelServiceImpl implements TravelService{
     }
 
     @Override
-    public List<TravelResponseSummary> getAll() {
+    public List<TravelResponseSummary> getMyTravel() {
 
-        var allTravels = travelRepository.findAll();
+        var allTravels = travelRepository.findByMemberUserId(securityUtil.getCurrentUser().getId());
 
-        return allTravels.stream().map(travelMapper::TravelToTravelResSum).toList();
+        return allTravels.stream().map(travelMapper::ToTravelResSum).toList();
     }
+
+
+    @Override
+    public List<TravelResponseSummary> getTravels() {
+
+        User currentUser = securityUtil.getCurrentUser();
+        String role = currentUser.getRole().getName();
+
+        List<Travel> travels;
+
+        if (role.equals("HR")) {
+
+            travels = travelRepository.findAll();
+
+        } else if (role.equals("MANAGER")) {
+
+            travels = travelRepository.findByReportsTo(currentUser.getId());
+
+        } else {
+            travels = travelRepository.findByMemberUserId(currentUser.getId());
+        }
+
+        return travels.stream()
+                .map(travelMapper::ToTravelResSum)
+                .toList();
+    }
+
 
     @Override
     public List<TravelResponseSummary> getTravelsForUser(UUID user_id) {
 
         List<Travel> user_travels = travelRepository.findByCreatedById(user_id);
 
-        return user_travels.stream().map(travelMapper::TravelToTravelResSum).toList();
+        return user_travels.stream().map(travelMapper::ToTravelResSum).toList();
     }
 
 
@@ -117,12 +155,6 @@ public class TravelServiceImpl implements TravelService{
 
         return travelMemberResponses;
     }
-
-    @Override
-    public void deleteTravel(UUID travelId) {
-        travelRepository.deleteById(travelId);
-    }
-
 
     @Override
     public TravelBookingResponse addTravelBooking(UUID travelId, TravelBookingRequest dto) {
@@ -183,4 +215,83 @@ public class TravelServiceImpl implements TravelService{
 
         return travelItinerariesResponse;
     }
+
+    @Override
+    public TravelResponse updateTravel(UUID travelId, TravelRequest dto) {
+
+        Travel travel = validateAccess(travelId);
+        User currentUser = securityUtil.getCurrentUser();
+
+        String role = currentUser.getRole().getName();
+
+        if (role.equals("MANAGER")) {
+            throw new RuntimeException("Manager cannot update travel");
+        }
+
+        if (role.equals("EMPLOYEE") &&
+                !travel.getCreatedBy().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Not allowed");
+        }
+
+        travelMapper.updateTravel(travel, dto);
+
+        return travelMapper.toResponse(travelRepository.save(travel));
+    }
+
+
+    @Override
+    public void deleteTravel(UUID travelId) {
+
+        Travel travel = validateAccess(travelId);
+        User currentUser = securityUtil.getCurrentUser();
+
+        String role = currentUser.getRole().getName();
+
+        if (role.equals("MANAGER")) {
+            throw new RuntimeException("Manager cannot delete");
+        }
+
+        if (role.equals("EMPLOYEE") &&
+                !travel.getCreatedBy().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Not allowed");
+        }
+
+        travelRepository.delete(travel);
+    }
+
+    private Travel validateAccess(UUID travelId) {
+
+        User currentUser = securityUtil.getCurrentUser();
+        Travel travel = travelRepository.findById(travelId)
+                .orElseThrow(() -> new RuntimeException("Travel not found"));
+
+        String role = currentUser.getRole().getName();
+
+        if (role.equals("HR")) return travel;
+
+        if (role.equals("EMPLOYEE") &&
+                travel.getCreatedBy().getId().equals(currentUser.getId())) {
+            return travel;
+        }
+
+        if (role.equals("MANAGER")) {
+
+            List<User> team =
+                    userRepository.findByReportsTo(currentUser.getId());
+
+            boolean allowed = team.stream()
+                    .anyMatch(u -> u.getId()
+                            .equals(travel.getCreatedBy().getId()));
+
+            if (allowed) return travel;
+        }
+
+        throw new RuntimeException("Access denied");
+    }
+
+    private void ensureHr(User user) {
+        if (!"HR".equals(user.getRole().getName()))
+            throw new RuntimeException("Only HR allowed");
+    }
+
 }

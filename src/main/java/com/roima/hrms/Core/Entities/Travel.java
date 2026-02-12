@@ -42,13 +42,13 @@ public class Travel extends BaseEntity {
     @OneToMany(mappedBy = "travel", cascade = CascadeType.ALL)
     private Set<TravelMember> members = new HashSet<>();
 
-    @OneToMany(mappedBy = "travel")
+    @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
     private Set<TravelItinerary> itineraries = new HashSet<>();
 
-    @OneToMany(mappedBy = "travel")
+    @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
     private Set<TravelExpense> expenses = new HashSet<>();
 
-    @OneToMany(mappedBy = "travel")
+    @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)
     private Set<TravelBooking> travel_bookings = new HashSet<>();
 
     @OneToMany(mappedBy = "travel", fetch = FetchType.LAZY)

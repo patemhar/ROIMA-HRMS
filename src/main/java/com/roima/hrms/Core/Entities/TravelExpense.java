@@ -59,7 +59,7 @@ public class TravelExpense extends BaseEntity {
     @JoinColumn(name = "approved_by")
     private User approved_by;
 
-    @OneToMany(mappedBy = "travel_expense", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "travelExpense", fetch = FetchType.LAZY)
     private Set<ExpenseDocument> expense_docs = new HashSet<>();
 }
 

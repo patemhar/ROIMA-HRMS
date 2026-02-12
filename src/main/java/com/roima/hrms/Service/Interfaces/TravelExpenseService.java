@@ -6,6 +6,7 @@ import com.roima.hrms.Shared.Dtos.Travel.TravelExpenseResponse;
 import java.util.List;
 import java.util.UUID;
 
+
 public interface TravelExpenseService {
 
     void approveExpense(UUID expenseId, String remark);
