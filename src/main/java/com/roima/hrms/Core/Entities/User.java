@@ -36,10 +36,10 @@ public class User extends BaseEntity{
 
     // hierarchy
     @ManyToOne
-    @JoinColumn(name = "reports_to")
+    @JoinColumn(name = "reports_to", nullable = true)
     private User reports_to;
 
-    @OneToMany(mappedBy = "reports_to")
+    @OneToMany(mappedBy = "reports_to", fetch = FetchType.LAZY)
     private Set<User> reports_to_me;
 
     @OneToMany(mappedBy = "recipient", fetch = FetchType.LAZY)
@@ -48,7 +48,7 @@ public class User extends BaseEntity{
     @OneToMany(mappedBy = "actor", fetch = FetchType.LAZY)
     private Set<Notification> sent_notifications = new HashSet<>();
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Profile profile;
 
     @OneToMany(mappedBy = "postOwner", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
@@ -81,7 +81,7 @@ public class User extends BaseEntity{
     @OneToMany(mappedBy = "uploadedBy", fetch = FetchType.LAZY)
     private Set<ExpenseDocument> my_expense_docs = new HashSet<>();
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<GameInterest> game_interests = new HashSet<>();
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

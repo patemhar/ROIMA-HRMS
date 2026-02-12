@@ -1,11 +1,7 @@
 package com.roima.hrms.Exception;
 
-public class TokenExpiredException extends RuntimeException {
+public class TokenExpiredException extends IllegalAccessException {
     public TokenExpiredException(String message) {
         super(message);
-    }
-
-    public TokenExpiredException(String message, Throwable cause) {
-        super(message, cause);
     }
 }

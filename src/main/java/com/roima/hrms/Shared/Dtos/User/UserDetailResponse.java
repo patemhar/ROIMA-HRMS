@@ -1,4 +1,4 @@
-package com.roima.hrms.Shared.Dtos.Auth;
+package com.roima.hrms.Shared.Dtos.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,13 +6,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterResponseDto {
+@Component
+public class UserDetailResponse {
 
     private UUID id;
 
@@ -20,7 +22,11 @@ public class RegisterResponseDto {
 
     private String email;
 
+    private LocalDateTime last_login;
+
+    private boolean is_active;
+
     private String role;
 
-    private String reports_to;
+    private UUID reports_to;
 }

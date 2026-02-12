@@ -1,65 +1,73 @@
 package com.roima.hrms.Utility;
 
-import com.roima.hrms.Exception.TokenExpiredException;
 import com.roima.hrms.Service.Implementation.CustomUserDetailsService;
-import io.jsonwebtoken.ExpiredJwtException;
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.security.authentication.*;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
 @Component
+@RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
-    private JwtUtil jwtUtil;
-    private CustomUserDetailsService userDetailsService;
-
-    private HandlerExceptionResolver resolver;
-
-    public JwtAuthFilter(JwtUtil jwtUtil, CustomUserDetailsService customUserDetailsService, HandlerExceptionResolver handlerExceptionResolver) {
-        this.jwtUtil = jwtUtil;
-        this.userDetailsService = customUserDetailsService;
-        this.resolver = handlerExceptionResolver;
-    }
+    private final JwtUtil jwtUtil;
+    private final CustomUserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
     ) throws ServletException, IOException {
+
+        String path = request.getRequestURI();
+
+        if(path.startsWith("/auth") || path.startsWith("/swagger-ui") || path.startsWith("/v3/api-docs")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         String token = extractAccessToken(request);
 
-        if(token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        System.out.println("token: "+token);
+
+        if (token != null &&
+                SecurityContextHolder.getContext().getAuthentication() == null) {
 
             String username = jwtUtil.extractUsername(token);
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (username != null) {
 
-            if(jwtUtil.validateToken(token, userDetails)) {
+                UserDetails userDetails =
+                        userDetailsService.loadUserByUsername(username);
 
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
+                if (jwtUtil.validateToken(token, userDetails)) {
 
-                auth.setDetails(
-                        new WebAuthenticationDetailsSource()
-                                .buildDetails(request));
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities()
+                            );
 
-                SecurityContextHolder.getContext()
-                        .setAuthentication(auth);
+                    auth.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request)
+                    );
+
+                    SecurityContextHolder
+                            .getContext()
+                            .setAuthentication(auth);
+                }
             }
         }
 
@@ -68,15 +76,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private String extractAccessToken(HttpServletRequest request) {
 
-        if(request.getCookies() == null)
-            return null;
+        String authHeader = request.getHeader("Authorization");
 
-        for(Cookie cookie : request.getCookies()) {
-            if ("access_token".equals(cookie.getName())) {
-                return cookie.getValue();
-            }
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return null;
         }
 
-        return null;
+        return authHeader.substring(7);
     }
 }

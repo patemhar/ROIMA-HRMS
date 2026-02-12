@@ -8,6 +8,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class SecurityUtil {
@@ -25,15 +27,15 @@ public class SecurityUtil {
 
         Object principal = authentication.getPrincipal();
 
-        String email;
+        String userId;
 
         if (principal instanceof UserDetails userDetails) {
-            email = userDetails.getUsername();
+            userId = userDetails.getUsername();
         } else {
-            email = principal.toString();
+            userId = principal.toString();
         }
 
-        return userRepository.findByEmail(email)
+        return userRepository.findById(UUID.fromString(userId))
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

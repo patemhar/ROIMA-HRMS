@@ -17,12 +17,29 @@ public class AuthMapper {
         this.modelMapper = modelMapper;
     }
 
-    public User RegReqToEntity(RegisterRequestDto registerRequestDto) {
-        return modelMapper.map(registerRequestDto, User.class);
+    public User ToEntity(RegisterRequestDto registerRequestDto) {
+
+        User user = new User();
+
+        user.setFirst_name(registerRequestDto.getFirst_name());
+        user.setLast_name(registerRequestDto.getLast_name());
+        user.setEmail(registerRequestDto.getEmail());
+
+        return user;
     }
 
     public RegisterResponseDto toRegRes(User user) {
-        return modelMapper.map(user, RegisterResponseDto.class);
+
+        var registerResponse = new RegisterResponseDto();
+
+        registerResponse.setId(user.getId());
+        registerResponse.setName(user.getFirst_name() + user.getLast_name());
+        registerResponse.setEmail(user.getEmail());
+        registerResponse.setRole(user.getRole().getName());
+        if(user.getReports_to() != null) {
+            registerResponse.setReports_to(user.getReports_to().getFirst_name() + user.getReports_to().getFirst_name());
+        }
+        return registerResponse;
     }
 
     public AuthResponseDto toAuthRes(User user) {

@@ -19,6 +19,8 @@ import java.util.*;
 @Component
 public class TravelResponseSummary {
 
+    private UUID id;
+
     private String title;
 
     private String description;
@@ -31,7 +33,5 @@ public class TravelResponseSummary {
 
     private TravelStatus status;
 
-    private List<User> travelMembers;
-
-    private Set<TravelMemberResponse> travel_members = new HashSet<>();
+    private List<TravelMemberResponse> travel_members = new ArrayList<>();
 }
