@@ -3,6 +3,7 @@ package com.roima.hrms.Core.Entities;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -13,6 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Table(name = "expense_document")
 public class ExpenseDocument extends BaseEntity {
 
     @ManyToOne
@@ -21,7 +23,7 @@ public class ExpenseDocument extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "expense_id")
-    private TravelExpense travel_expense;
+    private TravelExpense travelExpense;
 
-    private String doc_rl;
+    private String doc_url;
 }

@@ -1,4 +1,4 @@
-package com.roima.hrms.Shared.Dtos.Auth;
+package com.roima.hrms.Shared.Dtos.Travel;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,15 +12,16 @@ import java.util.UUID;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterResponseDto {
+@Component
+public class TravelMemberResponse {
 
     private UUID id;
 
-    private String name;
+    private UUID member_id;
 
-    private String email;
+    private String name;
 
     private String role;
 
-    private String reports_to;
+    private String email;
 }

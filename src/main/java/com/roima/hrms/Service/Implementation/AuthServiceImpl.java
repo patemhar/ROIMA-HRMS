@@ -9,13 +9,18 @@ import com.roima.hrms.Exception.UserNotFoundException;
 import com.roima.hrms.Infrastructure.Repositories.RefreshTokenRepository;
 import com.roima.hrms.Infrastructure.Repositories.RoleRepository;
 import com.roima.hrms.Infrastructure.Repositories.UserRepository;
+import com.roima.hrms.Mapper.AuthMapper;
 import com.roima.hrms.Service.Interfaces.AuthService;
 import com.roima.hrms.Shared.Dtos.Auth.AuthResponseDto;
 import com.roima.hrms.Shared.Dtos.Auth.LoginRequestDto;
+import com.roima.hrms.Shared.Dtos.Auth.RegisterRequestDto;
+import com.roima.hrms.Shared.Dtos.Auth.RegisterResponseDto;
 import com.roima.hrms.Utility.JwtUtil;
+import com.roima.hrms.Utility.SecurityUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -35,7 +40,7 @@ import java.util.logging.Logger;
 public class AuthServiceImpl implements AuthService {
 
     private final AuthenticationManager authenticationManager;
-    private final CustomUserDetailsService userDetailsService;
+    private final CustomUserDetailsService customUserDetailsService;
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
@@ -174,6 +179,7 @@ public class AuthServiceImpl implements AuthService {
 
         refreshToken.setUser(user);
         refreshToken.setTokenHash(token);
+        refreshToken.setUserMail(user.getEmail());
         refreshToken.setExpires_at(
                 LocalDateTime.now().plusDays(7)
         );
