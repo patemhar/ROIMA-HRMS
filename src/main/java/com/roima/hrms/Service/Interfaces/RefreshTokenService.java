@@ -8,5 +8,5 @@ public interface RefreshTokenService {
 
     void validate(String token);
 
-    void revoke(String token, String reason);
+    void revoke(String token, String reason, String newToken);
 }

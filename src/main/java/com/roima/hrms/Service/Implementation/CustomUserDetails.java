@@ -1,13 +1,19 @@
 package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Core.Entities.User;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
 
+@RequiredArgsConstructor
+@Service
 public class CustomUserDetails implements UserDetails {
 
     private User user;
@@ -55,7 +61,4 @@ public class CustomUserDetails implements UserDetails {
         return true;
     }
 
-    public User getUser() {
-        return user;
-    }
 }

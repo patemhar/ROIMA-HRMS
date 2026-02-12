@@ -37,11 +37,12 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     @Override
-    public void revoke(String token, String reason) {
+    public void revoke(String token, String reason, String newToken) {
         repository.findByTokenHash(token)
                 .ifPresent(rt -> {
                     rt.setRevoked_at(LocalDateTime.now());
                     rt.setReason_revoked(reason);
+                    rt.setReplaced_by_tokenHash(newToken);
                     repository.save(rt);
                 });
     }
