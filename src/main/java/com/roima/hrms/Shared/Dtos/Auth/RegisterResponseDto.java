@@ -6,13 +6,17 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class RegisterResponseDto {
 
-    public String first_name;
+    private UUID id;
+
+    private String name;
 
     public String last_name;
 

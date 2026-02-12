@@ -23,16 +23,13 @@ import java.util.Map;
 public class SecurityConfig {
 
     private JwtAuthFilter jwtAuthFilter;
-//    private PasswordEncoder passwordEncoder;
     private final CustomUserDetailsService userDetailsService;
 
     public SecurityConfig(
             JwtAuthFilter jwtAuthFilter,
-//            PasswordEncoder passwordEncoder,
             CustomUserDetailsService userDetailsService
     ) {
         this.jwtAuthFilter = jwtAuthFilter;
-//        this.passwordEncoder = passwordEncoder;
         this.userDetailsService = userDetailsService;
     }
 
@@ -46,7 +43,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**").permitAll()
                         .anyRequest().authenticated())
 
                 .userDetailsService(userDetailsService)
@@ -59,7 +58,7 @@ public class SecurityConfig {
 
                     Map<String, String> error = new HashMap<>();
 
-                    error.put("error", "Full authentication is required. Your token may have expired or is invalid. Please log in again.");
+                    error.put("error", "Your token may have expired or is invalid. Please log in again.");
                     error.put("message",response.toString());
                     ObjectMapper mapper = new ObjectMapper();
                     response.getWriter().write(mapper.writeValueAsString(error));

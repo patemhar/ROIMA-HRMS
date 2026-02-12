@@ -2,8 +2,12 @@ package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Core.Entities.Referral;
 import com.roima.hrms.Core.Entities.RefreshToken;
+import com.roima.hrms.Core.Entities.Role;
 import com.roima.hrms.Core.Entities.User;
+import com.roima.hrms.Exception.RoleNotFoundException;
+import com.roima.hrms.Exception.UserNotFoundException;
 import com.roima.hrms.Infrastructure.Repositories.RefreshTokenRepository;
+import com.roima.hrms.Infrastructure.Repositories.RoleRepository;
 import com.roima.hrms.Infrastructure.Repositories.UserRepository;
 import com.roima.hrms.Service.Interfaces.AuthService;
 import com.roima.hrms.Shared.Dtos.Auth.AuthResponseDto;
@@ -13,12 +17,18 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.security.InvalidKeyException;
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
@@ -29,41 +39,87 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtil jwtUtil;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
+    private final RefreshTokenServiceImpl refreshTokenService;
+    private final AuthMapper authMapper;
+    private final SecurityUtil securityUtil;
+    private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
+
+    @Override
+    public RegisterResponseDto register(RegisterRequestDto dto) {
+
+        if( userRepository.existsByEmail(dto.getEmail()) ) {
+            throw new RuntimeException("Email already in use.");
+        }
+
+        if(!Objects.equals(dto.getPassword(), dto.getConfirm_password())) {
+            throw new RuntimeException("Provided password doesn't match");
+        }
+
+        // password
+        User user = authMapper.ToEntity(dto);
+
+        user.setPassword_hash(passwordEncoder.encode(dto.getPassword()));
+
+        // role
+        var existingRole = roleRepository.findById(dto.getRole()).orElseThrow(() -> new RoleNotFoundException("No role found for given role id"));
+
+        user.setRole(existingRole);
+
+        if(dto.getReports_to() != null) {
+            //reports to
+            var existingUser = userRepository.findById(dto.getReports_to()).orElseThrow(() -> new UserNotFoundException("User not found for reporting"));
+
+            user.setReports_to(existingUser);
+
+        }
+
+        var savedUser = userRepository.save(user);
+
+        return authMapper.toRegRes(savedUser);
+    }
 
     @Override
     public AuthResponseDto login(LoginRequestDto request, HttpServletResponse response) {
 
+        var user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new UserNotFoundException("user not found"));
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
+                        user.getId(),
                         request.getPassword()
                         )
         );
 
         CustomUserDetails userDetails =
-                (CustomUserDetails) userDetailsService.loadUserByUsername(request.getEmail());
+                (CustomUserDetails) customUserDetailsService.loadUserByUsername(user.getId().toString());
 
-        User user = userDetails.getUser();
 
         String accessToken = jwtUtil.generateAccessToken(userDetails);
 
-//        String refreshToken = jwtUtil.generateRefreshToken(userDetails);
+        String refreshToken = jwtUtil.generateRefreshToken(userDetails);
 
-//        saveRefreshToken(user, refreshToken);
+        refreshTokenService.revokeAll(user.getId(), "New login", refreshToken);
 
-        addAccessCookie(response, accessToken);
-//        addRefreshCookie(response, refreshToken);
+        saveRefreshToken(user, refreshToken);
+
+        clearCookie(response, "refreshToken");
+
+        addRefreshCookie(response, refreshToken);
+
+        user.setLast_login(LocalDateTime.now());
 
         return new AuthResponseDto(
                 user.getId(),
                 user.getFirst_name() + user.getLast_name(),
                 user.getEmail(),
-                user.getRole().getName()
+                user.getRole().getName(),
+                accessToken
         );
     }
 
     @Override
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response) {
+    public AuthResponseDto refreshToken(HttpServletRequest request, HttpServletResponse response) {
 
         String refreshToken = extractCookie(request, "refresh_token");
 
@@ -72,16 +128,33 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() ->
                         new RuntimeException("Invalid refresh token"));
 
-        if(token.getExpires_at().isBefore(LocalDateTime.now()))
-            throw new RuntimeException("Refresh token expired");
+        if (!Objects.equals(jwtUtil.extractUsername(refreshToken), token.getUser().getId().toString()) || token.getExpires_at().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Invalid or Expired Refresh Token");
+        }
 
         User user = token.getUser();
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
 
-        String newAccessToken = jwtUtil.generateAccessToken(userDetails);
+        clearCookie(response, "refresh_token");
 
-        addAccessCookie(response, newAccessToken);
+        String newAccessToken = jwtUtil.generateAccessToken(userDetails);
+        String newRefreshToken = jwtUtil.generateRefreshToken(userDetails);
+
+        refreshTokenService.revoke(user.getId(), "Token rotated", newRefreshToken);
+
+        saveRefreshToken(user, newRefreshToken);
+
+        addRefreshCookie(response, newRefreshToken);
+
+        return new AuthResponseDto(
+                user.getId(),
+                user.getFirst_name() + user.getLast_name(),
+                user.getEmail(),
+                user.getRole().getName(),
+                newAccessToken
+        );
+
     }
 
     @Override
@@ -89,11 +162,10 @@ public class AuthServiceImpl implements AuthService {
 
         String refreshToken = extractCookie(request, "refresh_token");
 
-        refreshTokenRepository
-                .findByTokenHash(refreshToken)
-                .isPresent();
+        var userId = jwtUtil.extractUsername(refreshToken);
 
-        clearCookie(response, "access_token");
+        refreshTokenService.revoke(UUID.fromString(userId), "User logout", null);
+
         clearCookie(response, "refresh_token");
     }
 
@@ -107,18 +179,6 @@ public class AuthServiceImpl implements AuthService {
         );
 
         refreshTokenRepository.save(refreshToken);
-    }
-
-    private void addAccessCookie(HttpServletResponse response, String token) {
-
-        Cookie cookie = new Cookie("access_token", token);
-
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        cookie.setPath("/");
-        cookie.setMaxAge(15 * 60);
-
-        response.addCookie(cookie);
     }
 
     private void addRefreshCookie(HttpServletResponse response, String token) {
