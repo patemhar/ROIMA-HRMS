@@ -2,10 +2,10 @@ package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Core.Entities.*;
 import com.roima.hrms.Core.Enums.TravelStatus;
-import com.roima.hrms.Infrastructure.Repositories.*;
+import com.roima.hrms.Dtos.Travel.*;
 import com.roima.hrms.Mapper.TravelMapper;
+import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Service.Interfaces.TravelService;
-import com.roima.hrms.Shared.Dtos.Travel.*;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -15,8 +15,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-@Service
 @RequiredArgsConstructor
+@Service
 public class TravelServiceImpl implements TravelService{
 
     private final TravelRepository travelRepository;
@@ -68,7 +68,6 @@ public class TravelServiceImpl implements TravelService{
 
         return travelMapper.ToTravelResSum(savedTravel);
     }
-
 
     @Override
     public TravelResponse getTravel(UUID travelId) {
@@ -186,6 +185,21 @@ public class TravelServiceImpl implements TravelService{
     }
 
     @Override
+    public void updateBooking(UUID bookingID, TravelBookingRequest request) {
+
+        var travelBooking = travelBookingRepository.findById(bookingID).orElseThrow(() -> new RuntimeException("No booking found for provided id."));
+
+        var updatedTravelBooking = travelMapper.updateBooking(travelBooking, request);
+
+        travelBookingRepository.save(updatedTravelBooking);
+    }
+
+    @Override
+    public void deleteBooking(UUID bookingId) {
+        travelBookingRepository.deleteById(bookingId);
+    }
+
+    @Override
     public TravelItineraryResponse addTravelItinerary(UUID travelId, TravelItineraryRequest dto) {
 
         var existingTravel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
@@ -207,8 +221,6 @@ public class TravelServiceImpl implements TravelService{
     @Override
     public List<TravelItineraryResponse> getTravelItineraries(UUID travelId) {
 
-        var existingTravel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
-
         var travelItineraries = travelItineraryRepository.FindByTravelId(travelId);
 
         var travelItinerariesResponse = travelItineraries.stream().map(travelMapper::ToItineraryResponse).toList();
@@ -217,27 +229,30 @@ public class TravelServiceImpl implements TravelService{
     }
 
     @Override
-    public TravelResponse updateTravel(UUID travelId, TravelRequest dto) {
+    public void updateItinerary(UUID itineraryId, TravelItineraryRequest request) {
 
-        Travel travel = validateAccess(travelId);
-        User currentUser = securityUtil.getCurrentUser();
+        var travelItinerary = travelItineraryRepository.findById(itineraryId).orElseThrow(() -> new RuntimeException("No itinerary found for given"));
 
-        String role = currentUser.getRole().getName();
+        var updatedTravelItinerary = travelMapper.updateTravelItinerary(request, travelItinerary);
 
-        if (role.equals("MANAGER")) {
-            throw new RuntimeException("Manager cannot update travel");
-        }
-
-        if (role.equals("EMPLOYEE") &&
-                !travel.getCreatedBy().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Not allowed");
-        }
-
-        travelMapper.updateTravel(travel, dto);
-
-        return travelMapper.toResponse(travelRepository.save(travel));
+        travelItineraryRepository.save(updatedTravelItinerary);
     }
 
+    @Override
+    public void updateTravel(UUID travelId, TravelUpdateRequest dto) {
+
+        Travel travel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
+
+        var updatedTravel = travelMapper.updateTravel(travel, dto);
+
+        travelRepository.save(updatedTravel);
+    }
+
+    @Override
+    public void deleteMember(UUID memberId) {
+
+        travelMemberRepo.deleteById(memberId);
+    }
 
     @Override
     public void deleteTravel(UUID travelId) {
@@ -257,6 +272,7 @@ public class TravelServiceImpl implements TravelService{
         }
 
         travelRepository.delete(travel);
+
     }
 
     private Travel validateAccess(UUID travelId) {

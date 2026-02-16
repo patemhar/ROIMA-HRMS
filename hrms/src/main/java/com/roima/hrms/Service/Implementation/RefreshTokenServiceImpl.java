@@ -2,7 +2,7 @@ package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Core.Entities.RefreshToken;
 import com.roima.hrms.Core.Entities.User;
-import com.roima.hrms.Infrastructure.Repositories.RefreshTokenRepository;
+import com.roima.hrms.Repositories.RefreshTokenRepository;
 import com.roima.hrms.Service.Interfaces.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

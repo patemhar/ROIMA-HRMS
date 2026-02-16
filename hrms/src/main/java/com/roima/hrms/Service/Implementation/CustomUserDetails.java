@@ -10,7 +10,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
@@ -24,11 +26,28 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(
+
+        Set<GrantedAuthority> authorities = new HashSet<>();
+
+        // ROLE
+        authorities.add(
                 new SimpleGrantedAuthority(
-                        user.getRole().getName()
+                        "ROLE_" + user.getRole().getName()
                 )
         );
+
+        // PERMISSIONS
+        user.getRole()
+                .getRolePermissions()
+                .forEach(rp ->
+                        authorities.add(
+                                new SimpleGrantedAuthority(
+                                        rp.getPermission().getCode()
+                                )
+                        )
+                );
+
+        return authorities;
     }
 
     @Override

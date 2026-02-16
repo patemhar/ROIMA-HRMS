@@ -1,8 +1,7 @@
 package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Core.Entities.User;
-import com.roima.hrms.Infrastructure.Repositories.UserRepository;
-import lombok.RequiredArgsConstructor;
+import com.roima.hrms.Repositories.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

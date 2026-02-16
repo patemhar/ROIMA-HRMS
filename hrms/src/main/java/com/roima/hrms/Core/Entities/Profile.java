@@ -23,7 +23,7 @@ public class Profile extends BaseEntity{
     @JoinColumn(name = "user_id", unique = true)
     private User user;
 
-    private String emp_nmuber;
+    private String emp_number;
 
     private String phone;
 

@@ -1,14 +1,11 @@
 package com.roima.hrms.Controller;
 
 import com.roima.hrms.Service.Interfaces.userService;
-import com.roima.hrms.Shared.Dtos.ApiResponse;
-import com.roima.hrms.Shared.Dtos.User.UserDetailResponse;
+import com.roima.hrms.Dtos.ApiResponse;
+import com.roima.hrms.Dtos.User.UserDetailResponse;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -38,5 +35,19 @@ public class userController {
         return ApiResponse.success(userService.getUserDetails(user.getId()), "User Details Fetched Successfully.");
 
     }
+
+//    @PatchMapping("/{userId}")
+//    public ApiResponse<Void> updateUserDetails(
+//            @PathVariable UUID userId
+//    ) {
+//
+//        var currentUser = securityUtil.getCurrentUser();
+//
+//        if(userId != currentUser.getId() && !Objects.equals(currentUser.getRole().getName(), "HR")) {
+//            return ApiResponse.error(null, "Access Denied");
+//        }
+//
+//
+//    }
 
 }
