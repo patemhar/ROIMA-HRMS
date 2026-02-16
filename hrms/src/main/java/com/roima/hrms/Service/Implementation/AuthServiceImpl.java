@@ -1,39 +1,32 @@
 package com.roima.hrms.Service.Implementation;
 
-import com.roima.hrms.Core.Entities.Referral;
 import com.roima.hrms.Core.Entities.RefreshToken;
-import com.roima.hrms.Core.Entities.Role;
 import com.roima.hrms.Core.Entities.User;
 import com.roima.hrms.Exception.RoleNotFoundException;
 import com.roima.hrms.Exception.UserNotFoundException;
-import com.roima.hrms.Infrastructure.Repositories.RefreshTokenRepository;
-import com.roima.hrms.Infrastructure.Repositories.RoleRepository;
-import com.roima.hrms.Infrastructure.Repositories.UserRepository;
+import com.roima.hrms.Repositories.RefreshTokenRepository;
+import com.roima.hrms.Repositories.RoleRepository;
+import com.roima.hrms.Repositories.UserRepository;
 import com.roima.hrms.Mapper.AuthMapper;
 import com.roima.hrms.Service.Interfaces.AuthService;
-import com.roima.hrms.Shared.Dtos.Auth.AuthResponseDto;
-import com.roima.hrms.Shared.Dtos.Auth.LoginRequestDto;
-import com.roima.hrms.Shared.Dtos.Auth.RegisterRequestDto;
-import com.roima.hrms.Shared.Dtos.Auth.RegisterResponseDto;
+import com.roima.hrms.Dtos.auth.AuthResponseDto;
+import com.roima.hrms.Dtos.auth.LoginRequestDto;
+import com.roima.hrms.Dtos.auth.RegisterRequestDto;
+import com.roima.hrms.Dtos.auth.RegisterResponseDto;
 import com.roima.hrms.Utility.JwtUtil;
 import com.roima.hrms.Utility.SecurityUtil;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.security.InvalidKeyException;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 @Service
 @RequiredArgsConstructor
@@ -114,13 +107,9 @@ public class AuthServiceImpl implements AuthService {
 
         user.setLast_login(LocalDateTime.now());
 
-        return new AuthResponseDto(
-                user.getId(),
-                user.getFirst_name() + user.getLast_name(),
-                user.getEmail(),
-                user.getRole().getName(),
-                accessToken
-        );
+        userRepository.save(user);
+
+        return authMapper.toAuthRes(user, accessToken);
     }
 
     @Override
@@ -152,13 +141,7 @@ public class AuthServiceImpl implements AuthService {
 
         addRefreshCookie(response, newRefreshToken);
 
-        return new AuthResponseDto(
-                user.getId(),
-                user.getFirst_name() + user.getLast_name(),
-                user.getEmail(),
-                user.getRole().getName(),
-                newAccessToken
-        );
+        return authMapper.toAuthRes(user, newAccessToken);
 
     }
 

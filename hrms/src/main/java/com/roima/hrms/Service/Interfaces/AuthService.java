@@ -1,9 +1,9 @@
 package com.roima.hrms.Service.Interfaces;
 
-import com.roima.hrms.Shared.Dtos.Auth.AuthResponseDto;
-import com.roima.hrms.Shared.Dtos.Auth.LoginRequestDto;
-import com.roima.hrms.Shared.Dtos.Auth.RegisterRequestDto;
-import com.roima.hrms.Shared.Dtos.Auth.RegisterResponseDto;
+import com.roima.hrms.Dtos.auth.AuthResponseDto;
+import com.roima.hrms.Dtos.auth.LoginRequestDto;
+import com.roima.hrms.Dtos.auth.RegisterRequestDto;
+import com.roima.hrms.Dtos.auth.RegisterResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 

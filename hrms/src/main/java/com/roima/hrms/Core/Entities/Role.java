@@ -29,4 +29,7 @@ public class Role extends BaseEntity{
 
     @OneToMany(mappedBy = "visibility_role")
     private Set<Post> posts = new HashSet<>();
+
+    @OneToMany(mappedBy = "role")
+    private Set<RolePermission> rolePermissions;
 }
