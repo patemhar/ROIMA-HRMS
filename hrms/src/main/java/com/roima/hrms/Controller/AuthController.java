@@ -1,11 +1,11 @@
 package com.roima.hrms.Controller;
 
 import com.roima.hrms.Service.Interfaces.AuthService;
-import com.roima.hrms.Shared.Dtos.ApiResponse;
-import com.roima.hrms.Shared.Dtos.Auth.AuthResponseDto;
-import com.roima.hrms.Shared.Dtos.Auth.LoginRequestDto;
-import com.roima.hrms.Shared.Dtos.Auth.RegisterRequestDto;
-import com.roima.hrms.Shared.Dtos.Auth.RegisterResponseDto;
+import com.roima.hrms.Dtos.ApiResponse;
+import com.roima.hrms.Dtos.auth.AuthResponseDto;
+import com.roima.hrms.Dtos.auth.LoginRequestDto;
+import com.roima.hrms.Dtos.auth.RegisterRequestDto;
+import com.roima.hrms.Dtos.auth.RegisterResponseDto;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.info.Info;
 import jakarta.servlet.http.HttpServletRequest;
