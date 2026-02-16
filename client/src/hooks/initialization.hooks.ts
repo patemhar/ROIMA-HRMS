@@ -1,7 +1,7 @@
 import { authService } from "@/services/authService";
 import { useAuth } from "@/store";
 import { isTokenNearExpiryOrExpired } from "@/utils/tokenUtils";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 
 export function useAuthInitialization() {
@@ -9,7 +9,7 @@ export function useAuthInitialization() {
     const [isInitialized, setIsInitialized] = useState<boolean>();
     const { logout, setToken } = useAuth((state) => state.auth);
 
-    const initializeAuth = useCallback(async () : Promise<void> => {
+    const initializeAuth = async () => {
 
         try {
             
@@ -34,11 +34,11 @@ export function useAuthInitialization() {
             setIsInitialized(true);
         }
 
-    }, [logout, useAuth])
+    }
 
     useEffect(() => {
         void initializeAuth();
-    }, [initializeAuth]);
+    }, []);
 
     return {
         isInitialized,
