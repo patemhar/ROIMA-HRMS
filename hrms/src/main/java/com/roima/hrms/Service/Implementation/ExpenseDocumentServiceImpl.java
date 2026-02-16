@@ -1,21 +1,21 @@
 package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Core.Entities.ExpenseDocument;
-import com.roima.hrms.Core.Entities.TravelDocument;
 import com.roima.hrms.Core.Entities.User;
-import com.roima.hrms.Infrastructure.Repositories.*;
+import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Service.Interfaces.CloudinaryService;
 import com.roima.hrms.Service.Interfaces.ExpenseDocumentService;
-import com.roima.hrms.Shared.Dtos.DocUploadResponse;
-import com.roima.hrms.Shared.Dtos.Travel.ExpenseDocRequest;
-import com.roima.hrms.Shared.Dtos.Travel.ExpenseDocResponse;
-import com.roima.hrms.Shared.Dtos.Travel.TravelDocResponse;
-import com.roima.hrms.Shared.Dtos.Travel.TravelExpenseResponse;
+import com.roima.hrms.Dtos.DocUploadResponse;
+//import com.roima.hrms.Shared.Dtos.Travel.ExpenseDocRequest;
+//import com.roima.hrms.Shared.Dtos.Travel.ExpenseDocResponse;
+//import com.roima.hrms.Shared.Dtos.Travel.TravelDocResponse;
+//import com.roima.hrms.Shared.Dtos.Travel.TravelExpenseResponse;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,14 +33,14 @@ public class ExpenseDocumentServiceImpl implements ExpenseDocumentService {
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
 
     @Override
-    public DocUploadResponse addExpenseDocs(UUID expenseId, ExpenseDocRequest dto) {
+    public DocUploadResponse addExpenseDocs(UUID expenseId, MultipartFile[] files) throws IOException {
         User user = securityUtil.getCurrentUser();
 
         var existingExpense = travelExpenseRepository.findById(expenseId).orElseThrow(() -> new RuntimeException("No expense found for provided id."));
 
         var docUploadResponse = new DocUploadResponse();
 
-        for (var expenseDoc : dto.getExpense_docs()) {
+        for (var expenseDoc : files) {
 
             if (expenseDoc.isEmpty() || expenseDoc.getSize() > MAX_FILE_SIZE) {
                 docUploadResponse.getFailedDocs().add(expenseDoc.getName());

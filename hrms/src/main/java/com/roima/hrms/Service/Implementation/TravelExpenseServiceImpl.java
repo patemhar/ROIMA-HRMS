@@ -1,18 +1,16 @@
 package com.roima.hrms.Service.Implementation;
 
-import com.roima.hrms.Core.Entities.Travel;
 import com.roima.hrms.Core.Entities.TravelExpense;
 import com.roima.hrms.Core.Entities.User;
 import com.roima.hrms.Core.Enums.ExpenseStatus;
-import com.roima.hrms.Infrastructure.Repositories.TravelExpenseRepository;
-import com.roima.hrms.Infrastructure.Repositories.TravelRepository;
-import com.roima.hrms.Infrastructure.Repositories.UserRepository;
+import com.roima.hrms.Repositories.TravelExpenseRepository;
+import com.roima.hrms.Repositories.TravelRepository;
+import com.roima.hrms.Repositories.UserRepository;
 import com.roima.hrms.Mapper.TravelMapper;
 import com.roima.hrms.Service.Interfaces.TravelExpenseService;
-import com.roima.hrms.Shared.Dtos.Travel.TravelExpenseRequest;
-import com.roima.hrms.Shared.Dtos.Travel.TravelExpenseResponse;
+import com.roima.hrms.Dtos.Travel.TravelExpenseRequest;
+import com.roima.hrms.Dtos.Travel.TravelExpenseResponse;
 import lombok.RequiredArgsConstructor;
-import org.apache.catalina.security.SecurityUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;

@@ -1,7 +1,7 @@
 package com.roima.hrms.Mapper;
 
 import com.roima.hrms.Core.Entities.*;
-import com.roima.hrms.Shared.Dtos.Travel.*;
+import com.roima.hrms.Dtos.Travel.*;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.modelmapper.ModelMapper;
@@ -24,6 +24,8 @@ public class TravelMapper {
         travelResponseSummary.setEnd_date(travel.getEnd_date());
         travelResponseSummary.setDestination(travel.getDestination());
         travelResponseSummary.setStatus(travel.getStatus());
+
+        travelResponseSummary.setCreatedByName(travel.getCreatedBy().getFirst_name() + " " + travel.getCreatedBy().getLast_name());
 
         var travelMembers = travel.getMembers();
 
@@ -72,6 +74,7 @@ public class TravelMapper {
 
         if (travel.getCreatedBy() != null) {
             response.setCreated_by(travel.getCreatedBy().getId());
+            response.setCreated_by_name(travel.getCreatedBy().getFirst_name() + " " + travel.getCreatedBy().getLast_name());
         }
 
         // MEMBERS
@@ -127,8 +130,25 @@ public class TravelMapper {
         return response;
     }
 
-    public Travel updateTravel (Travel travel, TravelRequest request) {
-        return modelMapper.map(request, Travel.class);
+    public Travel updateTravel (Travel travel, TravelUpdateRequest request) {
+
+        if(request.getTitle() != null) {
+            travel.setTitle(request.getTitle());
+        }
+        if(request.getDescription() != null) {
+            travel.setDescription(request.getDescription());
+        }
+        if(request.getStart_date() != null) {
+            travel.setStart_date(request.getStart_date());
+        }
+        if(request.getEnd_date() != null) {
+            travel.setEnd_date(request.getEnd_date());
+        }
+        if(request.getDestination() != null) {
+            travel.setDestination(request.getDestination());
+        }
+
+        return travel;
     }
 
     // Travel Member
@@ -179,6 +199,26 @@ public class TravelMapper {
         return modelMapper.map(travelItineraryRequest, TravelItinerary.class);
     }
 
+    public TravelItinerary updateTravelItinerary (TravelItineraryRequest request, TravelItinerary travelItinerary) {
+
+        if(request.getTitle() != null) {
+            travelItinerary.setTitle(request.getTitle());
+        }
+        if(request.getDescription() != null) {
+            travelItinerary.setDescription(request.getDescription());
+        }
+        if(request.getLocation() != null) {
+            travelItinerary.setLocation(request.getLocation());
+        }
+        if(request.getStartDateTime() != null) {
+            travelItinerary.setStartDateTime(request.getStartDateTime());
+        }
+        if(request.getEndDateTime() != null) {
+            travelItinerary.setEndDateTime(request.getEndDateTime());
+        }
+
+        return travelItinerary;
+    }
 
     // Travel Expense
 
@@ -213,6 +253,7 @@ public class TravelMapper {
 
         var travelBookingResponse = new TravelBookingResponse();
 
+        travelBookingResponse.setBooking_id(travelBooking.getId());
         travelBookingResponse.setTravel_id(travelBooking.getTravel().getId());
         travelBookingResponse.setBooking_reference(travelBooking.getBooking_reference());
         travelBookingResponse.setBookingType(travelBooking.getBookingType());
@@ -223,6 +264,33 @@ public class TravelMapper {
         travelBookingResponse.setProvider_name(travelBooking.getProvider_name());
 
         return travelBookingResponse;
+    }
+
+    public TravelBooking updateBooking (TravelBooking travelBooking, TravelBookingRequest request) {
+
+        if (request.getAmount() != null) {
+            travelBooking.setAmount(request.getAmount());
+        }
+        if (request.getBookingType() != null) {
+            travelBooking.setBookingType(request.getBookingType());
+        }
+        if (request.getBooking_reference() != null) {
+            travelBooking.setBooking_reference(request.getBooking_reference());
+        }
+        if (request.getCurrency() != null) {
+            travelBooking.setCurrency(request.getCurrency());
+        }
+        if (request.getProvider_name() != null) {
+            travelBooking.setProvider_name(request.getProvider_name());
+        }
+        if (request.getStart_dateTime() != null) {
+            travelBooking.setStart_dateTime(request.getStart_dateTime());
+        }
+        if (request.getEnd_dateTime() != null) {
+            travelBooking.setEnd_dateTime(request.getEnd_dateTime());
+        }
+
+        return travelBooking;
     }
 
     // document res

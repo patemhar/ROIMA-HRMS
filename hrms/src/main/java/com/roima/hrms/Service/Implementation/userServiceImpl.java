@@ -1,10 +1,10 @@
 package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Exception.UserNotFoundException;
-import com.roima.hrms.Infrastructure.Repositories.UserRepository;
+import com.roima.hrms.Repositories.UserRepository;
 import com.roima.hrms.Mapper.UserMapper;
 import com.roima.hrms.Service.Interfaces.userService;
-import com.roima.hrms.Shared.Dtos.User.UserDetailResponse;
+import com.roima.hrms.Dtos.User.UserDetailResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

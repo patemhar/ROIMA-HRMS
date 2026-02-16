@@ -1,26 +1,22 @@
 package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Core.Entities.TravelDocument;
-import com.roima.hrms.Core.Entities.User;
-import com.roima.hrms.Infrastructure.Repositories.TravelDocumentRepository;
-import com.roima.hrms.Infrastructure.Repositories.TravelMemberRepository;
-import com.roima.hrms.Infrastructure.Repositories.TravelRepository;
-import com.roima.hrms.Infrastructure.Repositories.UserRepository;
+import com.roima.hrms.Repositories.TravelDocumentRepository;
+import com.roima.hrms.Repositories.TravelMemberRepository;
+import com.roima.hrms.Repositories.TravelRepository;
+import com.roima.hrms.Repositories.UserRepository;
 import com.roima.hrms.Service.Interfaces.CloudinaryService;
 import com.roima.hrms.Service.Interfaces.TravelDocumentService;
-import com.roima.hrms.Shared.Dtos.DocUploadResponse;
-import com.roima.hrms.Shared.Dtos.Travel.TravelDocRequest;
-import com.roima.hrms.Shared.Dtos.Travel.TravelDocResponse;
+import com.roima.hrms.Dtos.DocUploadResponse;
+//import com.roima.hrms.Shared.Dtos.Travel.TravelDocRequest;
+//import com.roima.hrms.Shared.Dtos.Travel.TravelDocResponse;
 import com.roima.hrms.Utility.SecurityUtil;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -36,9 +32,9 @@ public class TravelDocumentServiceImpl implements TravelDocumentService {
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
 
     @Override
-    public DocUploadResponse addTravelDocs(UUID travelId, TravelDocRequest dto) {
+    public DocUploadResponse addTravelDocs(UUID travelId, MultipartFile[] files) throws IOException {
 
-        User user = securityUtil.getCurrentUser();
+        var user = securityUtil.getCurrentUser();
 
         boolean allowed =
                 user.getRole().getName().equals("HR") ||
@@ -52,7 +48,7 @@ public class TravelDocumentServiceImpl implements TravelDocumentService {
 
         var docUploadResponse = new DocUploadResponse();
 
-        for (var travelDoc : dto.getTravel_docs()) {
+        for (var travelDoc : files) {
 
             if (travelDoc.isEmpty() || travelDoc.getSize() > MAX_FILE_SIZE) {
                 docUploadResponse.getFailedDocs().add(travelDoc.getName());
@@ -62,7 +58,7 @@ public class TravelDocumentServiceImpl implements TravelDocumentService {
 
             var url = cloudinaryService.uploadFile(travelDoc, "HRMS/Travel Document");
 
-            if(!url.trim().equals("")) {
+            if(url == null) {
                 docUploadResponse.getFailedDocs().add(travelDoc.getName());
                 docUploadResponse.getErrors().add("Failed to upload doc" + travelDoc.getName());
                 continue;
