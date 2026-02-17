@@ -299,7 +299,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getProfile"];
+        get?: never;
         put?: never;
         post?: never;
         delete?: never;
@@ -388,6 +388,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/profiles/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/org/{userId}": {
         parameters: {
             query?: never;
@@ -395,7 +411,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getDescendingLayer"];
+        get: operations["getFollowingLayer"];
         put?: never;
         post?: never;
         delete?: never;
@@ -647,12 +663,12 @@ export interface components {
         UserDetailResponse: {
             /** Format: uuid */
             id?: string;
-            name?: string;
+            first_name?: string;
+            last_name?: string;
             email?: string;
             /** Format: date-time */
             last_login?: string;
             role?: string;
-            /** Format: uuid */
             reports_to?: string;
             permission?: string[];
             is_active?: boolean;
@@ -1177,10 +1193,19 @@ export interface components {
             message?: string;
             data?: components["schemas"]["ExpenseDocument"][];
         };
-        ApiResponseListUserDetailResponse: {
+        ApiResponseListNodeResponse: {
             success?: boolean;
             message?: string;
-            data?: components["schemas"]["UserDetailResponse"][];
+            data?: components["schemas"]["nodeResponse"][];
+        };
+        nodeResponse: {
+            /** Format: uuid */
+            id: string;
+            first_name?: string;
+            last_name?: string;
+            email?: string;
+            role?: string;
+            reports_to?: string;
         };
     };
     responses: never;
@@ -1828,28 +1853,6 @@ export interface operations {
             };
         };
     };
-    getProfile: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                profileId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseProfileResponseDTO"];
-                };
-            };
-        };
-    };
     updateProfile: {
         parameters: {
             query?: never;
@@ -2004,7 +2007,7 @@ export interface operations {
             };
         };
     };
-    getDescendingLayer: {
+    getProfile: {
         parameters: {
             query?: never;
             header?: never;
@@ -2021,7 +2024,29 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListUserDetailResponse"];
+                    "*/*": components["schemas"]["ApiResponseProfileResponseDTO"];
+                };
+            };
+        };
+    };
+    getFollowingLayer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListNodeResponse"];
                 };
             };
         };
