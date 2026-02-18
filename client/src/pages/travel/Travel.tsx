@@ -17,18 +17,67 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useGetAllTravels } from "@/hooks/travel/travel.hooks";
+import { useCreateTravel, useGetAllTravels, useGetMyTravels } from "@/hooks/travel/travel.hooks";
 import { getErrorMessage } from "@/utils/error";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import type { components } from "@/types/api";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+  Dialog,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+  DialogFooter,
+  DialogContent,
+  DialogHeader,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/store";
+
+type Schemas = components["schemas"];
 
 export const Travel = () => {
   const navigate = useNavigate();
 
+  const userRole = useAuth((state) => state.auth.user?.role);
+
+  const getMyTravelsQuery = useGetMyTravels();
+
   const getAllTravelsquery = useGetAllTravels();
+
+  const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
+
+  const createTravel = useCreateTravel();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<Schemas["TravelRequest"]>({
+    mode: "onBlur",
+    defaultValues: {
+      title: "",
+      description: "",
+      start_date: "",
+      end_date: "",
+      destination: "",
+    },
+  });
+
+  
+
+  const onSubmit = (data: Schemas["TravelRequest"]) => {
+    createTravel.mutate(data, {
+      onSuccess: () => {
+        reset();
+        setCreateDialogOpen(false);
+      },
+      onError: (err: any) => {},
+    });
+  };
 
   const items = getAllTravelsquery.data ?? [];
 
@@ -39,15 +88,98 @@ export const Travel = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => getAllTravelsquery.refetch()}
-          >
-            Refresh
-          </Button>
+      <div className="flex justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => getAllTravelsquery.refetch()}
+            >
+              Refresh
+            </Button>
+          </div>
         </div>
+
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>Create Travel</Button>
+          </DialogTrigger>
+
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create Travel</DialogTitle>
+              <DialogDescription>
+                Fill in the details to create a new travel plan.
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <div className="grid gap-4 py-4">
+                {/* Title */}
+                <div className="space-y-2">
+                  <Label>Title</Label>
+                  <Input
+                    {...register("title", { required: "Title is required" })}
+                  />
+                  {errors.title && (
+                    <p className="text-sm text-destructive">
+                      {errors.title.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Description */}
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea {...register("description")} />
+                </div>
+
+                {/* Destination */}
+                <div className="space-y-2">
+                  <Label>Destination</Label>
+                  <Input {...register("destination")} />
+                </div>
+
+                {/* Dates */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Start Date</Label>
+                    <Input
+                      type="date"
+                      {...register("start_date", {
+                        required: "Start date required",
+                      })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>End Date</Label>
+                    <Input
+                      type="date"
+                      {...register("end_date", {
+                        required: "End date required",
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCreateDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+
+                <Button type="submit" disabled={createTravel.isPending}>
+                  {createTravel.isPending ? "Creating..." : "Create Travel"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card>

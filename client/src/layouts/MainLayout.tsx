@@ -12,8 +12,8 @@ const navItems: Array<{
   roles?: readonly string[];
 }> = [
   { to: "travels", label: "Travels" },
-  { to: "profile", label: "Profile" },
-  { to: "account", label: "Account" }
+  { to: "account", label: "Account" },  
+  { to: "hr/users", label: "Users", roles: ["HR"]}
 ];
 
 export const MainLayout = () => {
@@ -27,7 +27,7 @@ export const MainLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const visibleNavItems = navItems.filter(
-    (item) => !item.roles || item.roles.some((role) => role.includes(role))
+    (item) => !item.roles || item.roles.some((r) => r == role)
   );
 
   const handleLogout = () => {
@@ -59,8 +59,8 @@ export const MainLayout = () => {
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm font-medium">
-                {user?.firstName
-                  ? `${user.firstName} ${user?.lastName ?? ""}`
+                {user?.first_name
+                  ? `${user.first_name} ${user?.last_name ?? ""}`
                   : "Staff"}
               </p>
               <p className="text-xs text-muted-foreground">Staff Portal</p>
