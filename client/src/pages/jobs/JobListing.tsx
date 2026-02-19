@@ -83,8 +83,9 @@ export const JobListPage = () => {
     friendName: "",
     friendEmail: "",
     note: "",
-    cvFile: null,
   });
+
+  const [cvFile, setCvFile] = useState<File | null>();
 
   const jobQuery = useGetAllActiveJobs();
   const jobs = jobQuery.data || [];
@@ -182,8 +183,8 @@ export const JobListPage = () => {
       data.append("friendEmail", refferForm.friendEmail);
       data.append("note", refferForm.note);
 
-      if (refferForm.cvFile) {
-        data.append("cvFile", refferForm.cvFile);
+      if (cvFile) {
+        data.append("cvFile", cvFile);
       }
 
       const response = await refferMutation.mutateAsync(data);
@@ -195,7 +196,6 @@ export const JobListPage = () => {
         friendName: "",
         friendEmail: "",
         note: "",
-        cvFile: null
       });
     } catch (error) {
         setReferFriendOpen(false)
@@ -575,10 +575,7 @@ export const JobListPage = () => {
                 id="cv"
                 onChange={(e) => {
                   const file = e.target.files?.[0] || null;
-                  setRefferForm((prev) => ({
-                    ...prev,
-                    cvFile: file
-                  }))
+                  setCvFile(file)
                 }}
                 placeholder="e.g. Cv of Your Friend"
                 type="file"
