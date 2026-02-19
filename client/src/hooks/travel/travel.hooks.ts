@@ -69,7 +69,7 @@ export const useGetUserTravels = (
   });
 };
 
-export const useGetAllTravels = () => {
+export const useGetAllTravels = (isEnabled: boolean) => {
   const user = useAuth((state) => state.auth.user);
 
   return useQuery({
@@ -82,7 +82,7 @@ export const useGetAllTravels = () => {
 
       return res.data;
     },
-    enabled: user?.role === "HR",
+    enabled: isEnabled,
     ...normalCacheConfig,
   });
 };
@@ -280,7 +280,7 @@ export const useAddItinerary = () => {
             return response;
         },
         onSuccess: (_, { id }) => {
-            queryClient.invalidateQueries({ queryKey: hrKeys.itineraryByTravelId(id) })
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(id) })
         }
     })
 }
@@ -457,7 +457,7 @@ export const useApproveExpense = () => {
             return response;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: hrKeys.allTravels(role ?? "public") })
+            queryClient.invalidateQueries({ queryKey: hrKeys.travels() })
         }
     })
 }
@@ -489,7 +489,7 @@ export const useRejectExpense = () => {
             return response;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: hrKeys.allTravels(role ?? "public") })
+            queryClient.invalidateQueries({ queryKey: hrKeys.travels() })
         }
     })
 }

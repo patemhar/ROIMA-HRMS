@@ -244,6 +244,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/share": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["shareJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/refer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["referFriend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/travels/{travelId}": {
         parameters: {
             query?: never;
@@ -356,6 +404,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/users/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/travels/user/{userId}": {
         parameters: {
             query?: never;
@@ -420,6 +484,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/util/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllUsers_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/util/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllRoles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/util/members/{travelId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllTravelMembers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/util/dept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllDepartments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllActiveJobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/travels/members/{memberId}": {
         parameters: {
             query?: never;
@@ -431,6 +575,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["deleteMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteJob"];
         options?: never;
         head?: never;
         patch?: never;
@@ -534,7 +694,6 @@ export interface components {
             data?: components["schemas"]["TravelExpenseResponse"];
         };
         TravelExpenseResponse: {
-            /** Format: uuid */
             paid_by?: string;
             /** @enum {string} */
             expense_type?: "TRANSPORTATION" | "ACCOMMODATION" | "MEALS" | "ENTERTAINMENT";
@@ -544,8 +703,11 @@ export interface components {
             currency?: string;
             /** Format: date */
             expenseDate?: string;
-            /** Format: uuid */
             approved_by?: string;
+            remark?: string;
+            /** @enum {string} */
+            status?: "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED";
+            createdBy?: string;
             /** Format: uuid */
             id?: string;
         };
@@ -682,6 +844,62 @@ export interface components {
             email?: string;
             password?: string;
         };
+        JobRequestDto: {
+            title?: string;
+            description?: string;
+            job_responsibilities?: string;
+            required_qualification?: string;
+            employment_type?: string;
+            salary_range?: string;
+            /** @enum {string} */
+            status?: "OPEN" | "CLOSED";
+            /** Format: date */
+            application_deadline?: string;
+            min_experience?: string;
+            location?: string;
+            /** Format: uuid */
+            department_id?: string;
+            /** Format: uuid */
+            default_reviewer_id?: string;
+            is_active?: boolean;
+        };
+        ApiResponseJobResponseDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["JobResponseDto"];
+        };
+        JobResponseDto: {
+            /** Format: uuid */
+            id?: string;
+            title?: string;
+            description?: string;
+            job_responsibilities?: string;
+            required_qualification?: string;
+            status?: string;
+            salary_range?: string;
+            location?: string;
+            employment_type?: string;
+            min_experience?: string;
+            /** Format: date */
+            application_deadline?: string;
+            departmentName?: string;
+            default_reviewer?: string;
+            createdBy?: string;
+        };
+        ShareJobRequest: {
+            /** Format: uuid */
+            jobId?: string;
+            recipientEmail?: string[];
+        };
+        ReferralRequest: {
+            /** Format: uuid */
+            jobId?: string;
+            friendName?: string;
+            friendEmail?: string;
+            note?: string;
+            /** Format: binary */
+            cvFile?: string;
+        };
         TravelUpdateRequest: {
             title?: string;
             description?: string;
@@ -700,6 +918,11 @@ export interface components {
             success?: boolean;
             message?: string;
             data?: components["schemas"]["UserDetailResponse"];
+        };
+        ApiResponseListUserDetailResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["UserDetailResponse"][];
         };
         ApiResponseListTravelResponseSummary: {
             success?: boolean;
@@ -848,7 +1071,7 @@ export interface components {
             /** Format: int32 */
             maxPlayers?: number;
             game_cycle?: components["schemas"]["GameBookingCycle"];
-            bookings?: components["schemas"]["SlotBooking"][];
+            booking_requests?: components["schemas"]["SlotBookingRequest"][];
         };
         Job: {
             /** Format: uuid */
@@ -883,6 +1106,9 @@ export interface components {
             created_at?: string;
             /** Format: date-time */
             updated_at?: string;
+            user?: components["schemas"]["User"];
+            job?: components["schemas"]["Job"];
+            email?: string;
         };
         Like: {
             /** Format: uuid */
@@ -1024,13 +1250,22 @@ export interface components {
             role?: components["schemas"]["Role"];
             permission?: components["schemas"]["Permission"];
         };
-        SlotBooking: {
+        SlotBookingRequest: {
             /** Format: uuid */
             id?: string;
             /** Format: date-time */
             created_at?: string;
             /** Format: date-time */
             updated_at?: string;
+            slot?: components["schemas"]["GameSlot"];
+            user?: components["schemas"]["User"];
+            /** Format: date-time */
+            requestedAt?: string;
+            /** @enum {string} */
+            status?: "ONHOLD" | "CONFIRMED" | "REJECTED" | "CANCELLED";
+            /** Format: int32 */
+            priorityScore?: number;
+            slotParticipants?: components["schemas"]["SlotParticipant"][];
         };
         SlotParticipant: {
             /** Format: uuid */
@@ -1039,6 +1274,8 @@ export interface components {
             created_at?: string;
             /** Format: date-time */
             updated_at?: string;
+            bookingRequest?: components["schemas"]["SlotBookingRequest"];
+            user?: components["schemas"]["User"];
         };
         Travel: {
             /** Format: uuid */
@@ -1152,10 +1389,10 @@ export interface components {
             created_at?: string;
             /** Format: date-time */
             updated_at?: string;
-            first_name?: string;
+            first_name: string;
             last_name?: string;
-            email?: string;
-            password_hash?: string;
+            email: string;
+            password_hash: string;
             /** Format: date-time */
             last_login?: string;
             role?: components["schemas"]["Role"];
@@ -1207,6 +1444,36 @@ export interface components {
             role?: string;
             reports_to?: string;
         };
+        ApiResponseListUserOptions: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["userOptions"][];
+        };
+        userOptions: {
+            /** Format: uuid */
+            userId?: string;
+            name?: string;
+        };
+        ApiResponseListRoleOptions: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["roleOptions"][];
+        };
+        roleOptions: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+        };
+        ApiResponseListDepartmentOptions: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["departmentOptions"][];
+        };
+        departmentOptions: {
+            /** Format: uuid */
+            departmentId?: string;
+            name?: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -1218,16 +1485,18 @@ export type $defs = Record<string, never>;
 export interface operations {
     rejectExpense: {
         parameters: {
-            query: {
-                remark: string;
-            };
+            query?: never;
             header?: never;
             path: {
                 expenseId: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": string;
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -1242,16 +1511,18 @@ export interface operations {
     };
     approveExpense: {
         parameters: {
-            query: {
-                remark: string;
-            };
+            query?: never;
             header?: never;
             path: {
                 expenseId: string;
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": string;
+            };
+        };
         responses: {
             /** @description OK */
             200: {
@@ -1709,6 +1980,78 @@ export interface operations {
             };
         };
     };
+    createJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseJobResponseDto"];
+                };
+            };
+        };
+    };
+    shareJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ShareJobRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
+    referFriend: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": components["schemas"]["ReferralRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+        };
+    };
     getTravel: {
         parameters: {
             query?: never;
@@ -1965,6 +2308,26 @@ export interface operations {
             };
         };
     };
+    getAllUsers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListUserDetailResponse"];
+                };
+            };
+        };
+    };
     getUserTravels: {
         parameters: {
             query?: never;
@@ -2051,12 +2414,136 @@ export interface operations {
             };
         };
     };
+    getAllUsers_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListUserOptions"];
+                };
+            };
+        };
+    };
+    getAllRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListRoleOptions"];
+                };
+            };
+        };
+    };
+    getAllTravelMembers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                travelId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListUserOptions"];
+                };
+            };
+        };
+    };
+    getAllDepartments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListDepartmentOptions"];
+                };
+            };
+        };
+    };
+    getAllActiveJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["JobResponseDto"][];
+                };
+            };
+        };
+    };
     deleteMember: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    deleteJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
             };
             cookie?: never;
         };

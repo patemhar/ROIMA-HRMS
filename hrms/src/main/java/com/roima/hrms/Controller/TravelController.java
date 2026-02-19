@@ -251,7 +251,7 @@ public class TravelController {
     // Expense
 
     @PostMapping("/{travelId}/expenses")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','HR', 'MANAGER)")
+    @PreAuthorize("hasAnyRole('EMPLOYEE','HR', 'MANAGER')")
     public ApiResponse<TravelExpenseResponse> addExpense(
             @PathVariable UUID travelId,
             @RequestBody TravelExpenseRequest request) {
@@ -277,7 +277,7 @@ public class TravelController {
     @PreAuthorize("hasRole('HR')")
     public ApiResponse<Void> approveExpense(
             @PathVariable UUID expenseId,
-            @RequestParam String remark) {
+            @RequestBody String remark) {
 
         travelExpenseService.approveExpense(expenseId, remark);
         return ApiResponse.success(null, "Expense approved");
@@ -287,7 +287,7 @@ public class TravelController {
     @PreAuthorize("hasRole('HR')")
     public ApiResponse<Void> rejectExpense(
             @PathVariable UUID expenseId,
-            @RequestParam String remark) {
+            @RequestBody String remark) {
 
         travelExpenseService.rejectExpense(expenseId, remark);
         return ApiResponse.success(null, "Expense rejected");

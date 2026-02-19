@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { useLogout } from "@/hooks/auth/logout.hooks";
 import { useState } from "react";
 import { Menu } from "lucide-react";
+import logo from "../assets/Roima_logo.png";
 
 const navItems: Array<{
   to: string;
@@ -12,12 +13,12 @@ const navItems: Array<{
   roles?: readonly string[];
 }> = [
   { to: "travels", label: "Travels" },
-  { to: "account", label: "Account" },  
-  { to: "hr/users", label: "Users", roles: ["HR"]}
+  { to: "account", label: "Account" },
+  { to: "hr/users", label: "Users", roles: ["HR"] },
+  { to: "jobs", label: "Jobs" },
 ];
 
 export const MainLayout = () => {
-
   const user = useAuth((state) => state.auth.user);
 
   const performLogout = useLogout({ redirectTo: "/auth/login" });
@@ -27,7 +28,7 @@ export const MainLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const visibleNavItems = navItems.filter(
-    (item) => !item.roles || item.roles.some((r) => r == role)
+    (item) => !item.roles || item.roles.some((r) => r == role),
   );
 
   const handleLogout = () => {
@@ -36,7 +37,7 @@ export const MainLayout = () => {
 
   return (
     <div className="min-h-screen bg-muted/20 text-foreground">
-      <header className="border-b bg-white/90 backdrop-blur">
+      <header className="border-b bg-emerald-300 backdrop-blur">
         <div className="mx-auto flex h-16 w-full max-w-screen-2xl items-center justify-between px-6">
           <div className="flex items-center gap-4">
             <Button
@@ -48,12 +49,7 @@ export const MainLayout = () => {
               <Menu className="h-4 w-4" />
             </Button>
             <div>
-              <p className="text-lg font-semibold">Roima Staff Portal</p>
-              <p className="text-xs text-muted-foreground">
-                {role
-                  ? `${role} workspace`
-                  : "HRMS"}
-              </p>
+              <img src={logo} className="h-6"/>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -63,7 +59,9 @@ export const MainLayout = () => {
                   ? `${user.first_name} ${user?.last_name ?? ""}`
                   : "Staff"}
               </p>
-              <p className="text-xs text-muted-foreground">Staff Portal</p>
+              <p className="text-xs text-muted-foreground">
+                {role ? `${role} workspace` : "HRMS"}
+              </p>
             </div>
             <Button variant="outline" size="sm" onClick={handleLogout}>
               Logout
@@ -81,7 +79,7 @@ export const MainLayout = () => {
                     "flex items-center px-3 py-3 text-sm font-medium transition-colors",
                     isActive
                       ? "text-primary border-b-2 border-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )
                 }
               >
@@ -103,7 +101,7 @@ export const MainLayout = () => {
                       "flex items-center gap-2 rounded px-3 py-2 text-sm font-medium",
                       isActive
                         ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:bg-muted"
+                        : "text-muted-foreground hover:bg-muted",
                     )
                   }
                 >

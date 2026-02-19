@@ -4,6 +4,7 @@ export type User = {
             last_name?: string | null;
             email?: string | null;
             phoneNumber?: string | null;
+            permission: string[];
             isActive?: boolean;
             role?: string | null;
         }; ;

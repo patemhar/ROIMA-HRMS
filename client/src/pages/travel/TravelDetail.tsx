@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Calendar, Users, Phone, User, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Users,
+  Phone,
+  User,
+  Plus,
+  Wallet,
+  Receipt,
+} from "lucide-react";
 import {
   Card,
   CardAction,
@@ -47,9 +56,21 @@ import { useForm } from "react-hook-form";
 import type { components } from "@/types/api";
 import type { ApiResponse } from "@/types/http";
 import { toast } from "react-toastify";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { DateTimeDisplay } from "@/utils/dateUtils";
 
 export const TravelDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: travelId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -58,19 +79,25 @@ export const TravelDetail = () => {
     useState<boolean>(false);
   const [expenseDialogOpen, setExpenseDialogOpen] = useState<boolean>(false);
 
+  const [approveMessage, setApproveMessage] = useState("");
+  const [rejectMessage, setRejectMessage] = useState("");
+
   // Mutations
   const approveExpense = useApproveExpense();
   const rejectExpense = useRejectExpense();
   const addExpense = useAddExpense();
   const addItinerary = useAddItinerary();
-  const travelDetailQuery = useTravelById(id!);
+  const travelDetailQuery = useTravelById(travelId!);
 
+  // itinerary
   const {
-    register,
-    handleSubmit,
-    formState: { errors },
+    register: itineraryRegister,
+    handleSubmit: itinerarySubmit,
+    reset: resetItinerary,
+    watch: watchItinerary,
+    formState: { errors: itineraryErrors },
   } = useForm({
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: {
       title: "",
       description: "",
@@ -86,87 +113,110 @@ export const TravelDetail = () => {
     reset: resetExpense,
     formState: { errors: expenseErrors },
   } = useForm({
-    mode: "onBlur",
+    mode: "onChange",
     defaultValues: {
       title: "",
       paid_by: "",
-      expense_type: undefined,
+      expense_type: "",
       amount: 0,
-      currency: "",
+      currency: "INR",
       expenseDate: "",
     },
   });
 
-  const handleAddItinerary = handleSubmit((data) => {
-    if (!id) return;
+  const startDateTime = watchItinerary("startDateTime");
 
-    addItinerary.mutate(
-      { id, data },
-      {
-        onSuccess: (response) => {
-          resetExpense();
-          toast.success(response.message);
-          setItineraryDialogOpen(false);
-        },
-        onError: (err: any) => {
-          toast.error(err.message);
-        },
+  const onItinerarySubmit = async (data: any) => {
+    try {
+      if (!travelId) {
+        toast.error("TravelId missing");
+        return;
       }
-    );
-  });
 
-  const handleAddExpense = expenseSubmit((data) => {
-    if (!id) return;
+      const response = await addItinerary.mutateAsync({ id: travelId, data });
 
-    addExpense.mutate(
-      { id, data },
-      {
-        onSuccess: (response) => {
-          resetExpense();
-          toast.success(response.message);
-          setExpenseDialogOpen(false);
-        },
-        onError: (err: any) => {
-          toast.error(err.message);
-        },
-      }
-    );
-  });
+      setSuccessMessage(response.message || "Itenerary added successfully");
+      toast.success("Itinerary added!");
 
-  const handleApproveExpense = (expenseId: string, data: string) => {
-    approveExpense.mutate(
-      { expenseId,  data},
-      {
-        onSuccess: () => {
-          toast.success("Expense approved successfully.");
-        },
-        onError: (err: any) => {
-          toast.error(err.message);
-        },
-      }
-    );
+      setItineraryDialogOpen(false);
+
+      resetItinerary();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+      toast.error(getErrorMessage(error));
+    }
   };
 
-  const handleRejectExpense = (expenseId: string, data: string) => {
-    rejectExpense.mutate(
-      { expenseId, data },
-      {
-        onSuccess: () => {
-          toast.success("Expense rejected successfully.");
-        },
-        onError: (err: any) => {
-          toast.error(err.message);
-        },
+  // Handler for Expense
+  const onExpenseSubmit = async (data: any) => {
+    try {
+      if (!travelId) {
+        toast.error("TravelId missing");
+        return;
       }
-    );
+
+      const response = await addExpense.mutateAsync({ id: travelId, data });
+
+      setSuccessMessage(response.message || "Expense recorded successfully!");
+      toast.success(response.message || "Expense recorded successfully!");
+
+      setExpenseDialogOpen(false);
+      resetExpense();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+      toast.error(getErrorMessage(error));
+    }
   };
+
+  const handleApproveExpense = async (expenseId: string) => {
+    try {
+      const response = await approveExpense.mutateAsync({
+        expenseId,
+        data: approveMessage,
+      });
+
+      toast.success(response.message || "Expense approved successfully.");
+      setSuccessMessage(response.message || "Expense Approved Successfully");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const handleRejectExpense = async (expenseId: string) => {
+    try {
+      const response = await rejectExpense.mutateAsync({
+        expenseId,
+        data: rejectMessage,
+      });
+
+      toast.success(response.message || "Expense Rejected successfully.");
+      setSuccessMessage(response.message || "Expense Rejected Successfully");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  if (travelDetailQuery.isLoading) {
+    return (
+      <div className="text-center py-12">
+        <h2 className="text-2xl font-semibold mb-2">
+          Loading Travel Details for you!
+          <Spinner />
+        </h2>
+      </div>
+    );
+  }
 
   if (travelDetailQuery.isError || !travelDetailQuery.data) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-semibold text-destructive mb-2">Error Loading Travel</h2>
+        <h2 className="text-2xl font-semibold text-destructive mb-2">
+          Error Loading Travel
+        </h2>
         <p className="text-muted-foreground mb-4">
-          {travelDetailQuery.error ? getErrorMessage(travelDetailQuery.error) : "Travel not found or access denied."}
+          {travelDetailQuery.error
+            ? getErrorMessage(travelDetailQuery.error)
+            : "Travel not found or access denied."}
         </p>
         <Button onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
@@ -264,7 +314,10 @@ export const TravelDetail = () => {
               <p className="text-sm font-medium">Travel Itinerary</p>
               <Dialog
                 open={itineraryDialogOpen}
-                onOpenChange={setItineraryDialogOpen}
+                onOpenChange={(open) => {
+                  setItineraryDialogOpen(open);
+                  if (!open) resetItinerary();
+                }}
               >
                 <DialogTrigger asChild>
                   <Button>
@@ -272,6 +325,7 @@ export const TravelDetail = () => {
                     Create Itinerary
                   </Button>
                 </DialogTrigger>
+
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Create Itinerary</DialogTitle>
@@ -279,112 +333,123 @@ export const TravelDetail = () => {
                       Fill in the details to create a new job Itinerary.
                     </DialogDescription>
                   </DialogHeader>
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
+
+                  {/* Wrap content in a form */}
+                  <form
+                    onSubmit={itinerarySubmit(onItinerarySubmit)}
+                    className="space-y-4 py-4"
+                  >
+                    <div className="grid gap-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* Title */}
+                        <div className="space-y-2">
+                          <Label htmlFor="title">Title *</Label>
+                          <Input
+                            id="title"
+                            placeholder="Itinerary Title"
+                            {...itineraryRegister("title", {
+                              required: "Title is required",
+                            })}
+                          />
+                          {itineraryErrors.title && (
+                            <p className="text-sm text-destructive">
+                              {itineraryErrors.title.message as string}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Description */}
+                        <div className="space-y-2">
+                          <Label htmlFor="description">Description *</Label>
+                          <Input
+                            id="description"
+                            placeholder="Short description"
+                            {...itineraryRegister("description", {
+                              required: "Description is required",
+                            })}
+                          />
+                          {itineraryErrors.description && (
+                            <p className="text-sm text-destructive">
+                              {itineraryErrors.description.message as string}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Start Date Time */}
                       <div className="space-y-2">
-                        <Label htmlFor="title">Title</Label>  
+                        <Label htmlFor="startDateTime">Start Date Time *</Label>
                         <Input
-                          id="title"
-                          autoComplete="given-name"
-                          aria-invalid={Boolean(errors.title)}
-                          {...register("title", {
-                            required: "Title name is required",
+                          id="startDateTime"
+                          type="datetime-local"
+                          {...itineraryRegister("startDateTime", {
+                            required: "Start time is required",
                           })}
                         />
-                        {errors.title && (
+                        {itineraryErrors.startDateTime && (
                           <p className="text-sm text-destructive">
-                            {errors.title.message}
+                            {itineraryErrors.startDateTime.message as string}
                           </p>
                         )}
                       </div>
+
+                      {/* End Date Time */}
                       <div className="space-y-2">
-                        <Label htmlFor="description">Description</Label>
+                        <Label htmlFor="endDateTime">End Date Time *</Label>
                         <Input
-                          id="description"
-                          aria-invalid={Boolean(errors.description)}
-                          {...register("description", {
-                            required: "description is required",
+                          id="endDateTime"
+                          type="datetime-local"
+                          {...itineraryRegister("endDateTime", {
+                            required: "End time is required",
+                            validate: (value) => {
+                              if (!startDateTime) return true;
+                              return (
+                                new Date(value) > new Date(startDateTime) ||
+                                "End time must be after start time"
+                              );
+                            },
                           })}
                         />
-                        {errors.description && (
+                        {itineraryErrors.endDateTime && (
                           <p className="text-sm text-destructive">
-                            {errors.description.message}
+                            {itineraryErrors.endDateTime.message as string}
                           </p>
                         )}
                       </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="startDate">Start Date Time</Label>
-                      <Input
-                        id="startDate"
-                        type="datetime-local"
-                        autoComplete="email"
-                        aria-invalid={Boolean(errors.startDateTime)}
-                        {...register("startDateTime", {
-                          required: "StartDateTime is required",
-                        })}
-                      />
-                      {errors.startDateTime && (
-                        <p className="text-sm text-destructive">
-                          {errors.startDateTime.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="endDateTime">End Date Time </Label>
-                      <Input
-                        id="endDateTime"
-                        type="datetime-local"
-                        autoComplete="email"
-                        aria-invalid={Boolean(errors.startDateTime)}
-                        {...register("endDateTime", {
-                          required: "EndDateTime is required",
-                        })}
-                      />
-                      {errors.startDateTime && (
-                        <p className="text-sm text-destructive">
-                          {errors.endDateTime?.message}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
+                      {/* Location */}
+                      <div className="space-y-2">
+                        <Label htmlFor="location">Location *</Label>
                         <Input
                           id="location"
-                          aria-invalid={Boolean(errors.location)}
-                          {...register("location", {
-                            required: "location is required",
+                          placeholder="Meeting point or address"
+                          {...itineraryRegister("location", {
+                            required: "Location is required",
                           })}
                         />
-                        {errors.description && (
+                        {itineraryErrors.location && (
                           <p className="text-sm text-destructive">
-                            {errors.location?.message}
+                            {itineraryErrors.location.message as string}
                           </p>
                         )}
                       </div>
-                  </div>
+                    </div>
 
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setItineraryDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={
-                        addItinerary.isPending
-                      }
-                    >
-                      {addItinerary.isPending
-                        ? "Creating..."
-                        : "Create Position"}
-                    </Button>
-                  </DialogFooter>
+                    <DialogFooter className="mt-6">
+                      <Button
+                        variant="outline"
+                        type="button"
+                        onClick={() => setItineraryDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={addItinerary.isPending}>
+                        {addItinerary.isPending
+                          ? "Creating..."
+                          : "Create Itinerary"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
                 </DialogContent>
               </Dialog>
             </div>
@@ -405,7 +470,8 @@ export const TravelDetail = () => {
                       {entry.description}
                     </div>
                     <div className="font-medium text-sm">
-                      {entry.startDateTime} →{entry.endDateTime}
+                      {DateTimeDisplay(entry.startDateTime || "")} →{" "}
+                      {DateTimeDisplay(entry.endDateTime || "")}
                     </div>
                     <span className="text-xs text-medium">
                       {entry.location}
@@ -560,9 +626,17 @@ export const TravelDetail = () => {
             </Collapsible>
           </Card>
 
-          <Dialog open={expenseDialogOpen} onOpenChange={setExpenseDialogOpen}>
+          <Dialog
+            open={expenseDialogOpen}
+            onOpenChange={(open) => {
+              setExpenseDialogOpen(open);
+              if (!open) resetExpense();
+            }}
+          >
             <DialogTrigger asChild>
-              <Button>Add Expense</Button>
+              <Button variant="outline" className="bg-black text-white">
+                Add Expense
+              </Button>
             </DialogTrigger>
 
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -573,32 +647,57 @@ export const TravelDetail = () => {
                 </DialogDescription>
               </DialogHeader>
 
-              <form onSubmit={() => handleAddExpense()}>
-                <div className="grid gap-4 py-4">
-
+              {/* Use expenseSubmit wrapper here */}
+              <form
+                onSubmit={expenseSubmit(onExpenseSubmit)}
+                className="space-y-5 py-4"
+              >
+                <div className="grid gap-4">
                   {/* Title */}
                   <div className="space-y-2">
-                    <Label>Title</Label>
-                    <Input {...register("title", { required: true })} />
-                    {errors.title && (
+                    <Label htmlFor="expense-title">Title *</Label>
+                    <Input
+                      id="expense-title"
+                      placeholder="e.g., Dinner with client"
+                      className={
+                        expenseErrors.title ? "border-destructive" : ""
+                      }
+                      {...expenseRegister("title", {
+                        required: "Title is required",
+                      })}
+                    />
+                    {expenseErrors.title && (
                       <p className="text-sm text-destructive">
-                        Title is required
+                        {expenseErrors.title.message as string}
                       </p>
                     )}
                   </div>
 
                   {/* Paid By */}
                   <div className="space-y-2">
-                    <Label>Paid By</Label>
-                    <Input {...expenseRegister("paid_by")} />
+                    <Label htmlFor="paid_by">Paid By *</Label>
+                    <Input
+                      id="paid_by"
+                      placeholder="Name of employee"
+                      {...expenseRegister("paid_by", {
+                        required: "Who paid for this?",
+                      })}
+                    />
+                    {expenseErrors.paid_by && (
+                      <p className="text-sm text-destructive">
+                        {expenseErrors.paid_by.message as string}
+                      </p>
+                    )}
                   </div>
 
                   {/* Expense Type */}
                   <div className="space-y-2">
-                    <Label>Expense Type</Label>
+                    <Label>Expense Type *</Label>
                     <select
-                      className="w-full border rounded-md h-10 px-2"
-                      {...expenseRegister("expense_type", { required: true })}
+                      className={`w-full border rounded-md h-10 px-2 bg-background ${expenseErrors.expense_type ? "border-destructive" : ""}`}
+                      {...expenseRegister("expense_type", {
+                        required: "Please select a type",
+                      })}
                     >
                       <option value="">Select type</option>
                       <option value="TRANSPORTATION">Transportation</option>
@@ -606,37 +705,63 @@ export const TravelDetail = () => {
                       <option value="MEALS">Meals</option>
                       <option value="ENTERTAINMENT">Entertainment</option>
                     </select>
+                    {expenseErrors.expense_type && (
+                      <p className="text-sm text-destructive">
+                        {expenseErrors.expense_type.message as string}
+                      </p>
+                    )}
                   </div>
 
                   {/* Amount + Currency */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Amount</Label>
+                      <Label>Amount *</Label>
                       <Input
                         type="number"
                         step="0.01"
+                        placeholder="0.00"
                         {...expenseRegister("amount", {
                           valueAsNumber: true,
-                          required: true
+                          required: "Amount is required",
+                          min: {
+                            value: 0.01,
+                            message: "Amount must be greater than 0",
+                          },
                         })}
                       />
+                      {expenseErrors.amount && (
+                        <p className="text-sm text-destructive">
+                          {expenseErrors.amount.message as string}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Currency</Label>
-                      <Input {...expenseRegister("currency")} />
+                      <Label>Currency *</Label>
+                      <Input
+                        placeholder="INR, USD, etc."
+                        {...expenseRegister("currency", {
+                          required: "Currency is required",
+                        })}
+                      />
                     </div>
                   </div>
 
                   {/* Expense Date */}
                   <div className="space-y-2">
-                    <Label>Expense Date</Label>
+                    <Label>Expense Date *</Label>
                     <Input
                       type="date"
-                      {...expenseRegister("expenseDate", { required: true })}
+                      {...expenseRegister("expenseDate", {
+                        required: "Date is required",
+                      })}
                     />
+                    {expenseErrors.expenseDate && (
+                      <p className="text-sm text-destructive">
+                        {expenseErrors.expenseDate.message as string}
+                      </p>
+                    )}
                   </div>
-
                 </div>
 
                 <DialogFooter>
@@ -647,11 +772,7 @@ export const TravelDetail = () => {
                   >
                     Cancel
                   </Button>
-
-                  <Button
-                    type="submit"
-                    disabled={addExpense.isPending}
-                  >
+                  <Button type="submit" disabled={addExpense.isPending}>
                     {addExpense.isPending ? "Adding..." : "Add Expense"}
                   </Button>
                 </DialogFooter>
@@ -661,45 +782,207 @@ export const TravelDetail = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
+                <Receipt className="h-5 w-5" />
                 Expenses ({travel.expenses?.length || 0})
               </CardTitle>
             </CardHeader>
             <CardContent>
               {travel.expenses && travel.expenses.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {travel.expenses.map((expense) => (
                     <div
                       key={expense.id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
+                      className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-xl bg-card hover:shadow-sm transition-shadow gap-4"
                     >
-                      <div className="flex items-center gap-3">
-                        <User className="h-8 w-8 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{expense.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {expense.description}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {expense.amount} - {expense.currency}
-                          </p>
-                          <p className="font-medium">{expense.expense_type}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {expense.expenseDate}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {expense.paid_by}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {expense.approved_by}
-                          </p>
+                      <div className="flex items-start gap-4">
+                        <div className="mt-1 bg-primary/10 p-2 rounded-lg">
+                          <Wallet className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold text-lg">
+                              {expense.title}
+                            </p>
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] uppercase"
+                            >
+                              {expense.expense_type}
+                            </Badge>
+                            <Badge
+                              variant={
+                                expense.status === "APPROVED"
+                                  ? "default"
+                                  : expense.status === "REJECTED"
+                                    ? "destructive"
+                                    : "outline"
+                              }
+                              className="text-[10px]"
+                            >
+                              {expense.status || "PENDING"}
+                            </Badge>
+                          </div>
+
+                          {expense.description && (
+                            <p className="text-sm text-muted-foreground">
+                              {expense.description}
+                            </p>
+                          )}
+
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-2 text-xs">
+                            <p>
+                              <span className="text-muted-foreground">
+                                Amount:
+                              </span>{" "}
+                              <span className="font-medium text-foreground">
+                                {expense.amount} {expense.currency}
+                              </span>
+                            </p>
+                            <p>
+                              <span className="text-muted-foreground">
+                                Date:
+                              </span>{" "}
+                              <span className="font-medium text-foreground">
+                                {expense.expenseDate}
+                              </span>
+                            </p>
+                            <p>
+                              <span className="text-muted-foreground">
+                                Paid By:
+                              </span>{" "}
+                              <span className="font-medium text-foreground">
+                                {expense.paid_by}
+                              </span>
+                            </p>
+                            <p>
+                              <span className="text-muted-foreground">
+                                Action taken By:
+                              </span>{" "}
+                              <span
+                                className={
+                                  expense.approved_by
+                                    ? "font-medium text-foreground"
+                                    : "text-orange-500 italic"
+                                }
+                              >
+                                {expense.approved_by || "Pending Approval"}
+                              </span>
+                            </p>
+                          </div>
+
+                          {expense.remark && (
+                            <p className="text-xs bg-muted/50 p-2 rounded mt-2 border-l-2 border-primary/30">
+                              <span className="font-semibold">Remark:</span>{" "}
+                              {expense.remark}
+                            </p>
+                          )}
                         </div>
                       </div>
+
+                      {expense.status == "SUBMITTED" && (
+                        <div className="flex items-center gap-2 self-end md:self-center">
+                          {/* Approve Action */}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-green-600 hover:bg-green-50"
+                              >
+                                Approve
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Approve Expense?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Add a message or remark for this approval.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <div className="space-y-2 py-2">
+                                <Label htmlFor="approveMessage">
+                                  Approval Message
+                                </Label>
+                                <Input
+                                  id="approveMessage"
+                                  placeholder="e.g., Valid travel expense"
+                                  onChange={(e) =>
+                                    setApproveMessage(e.target.value)
+                                  }
+                                />
+                              </div>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() =>
+                                    handleApproveExpense(expense.id || "")
+                                  }
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  Confirm
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+
+                          {/* Reject Action */}
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-destructive border-destructive/20 hover:bg-destructive/5"
+                              >
+                                Reject
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Reject Expense?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Please provide a reason for rejection.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <div className="space-y-2 py-2">
+                                <Label htmlFor="rejectMessage">
+                                  Reason for Rejection
+                                </Label>
+                                <Input
+                                  id="rejectMessage"
+                                  placeholder="e.g., Missing receipt"
+                                  onChange={(e) =>
+                                    setRejectMessage(e.target.value)
+                                  }
+                                />
+                              </div>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() =>
+                                    handleRejectExpense(expense.id || "")
+                                  }
+                                  className="bg-destructive hover:bg-destructive/90"
+                                >
+                                  Reject
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground">No Members</p>
+                <div className="text-center py-6 border-2 border-dashed rounded-lg">
+                  <p className="text-muted-foreground">
+                    No expenses recorded for this trip.
+                  </p>
+                </div>
               )}
             </CardContent>
           </Card>

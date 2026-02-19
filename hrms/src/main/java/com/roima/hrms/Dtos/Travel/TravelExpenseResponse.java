@@ -1,5 +1,6 @@
 package com.roima.hrms.Dtos.Travel;
 
+import com.roima.hrms.Core.Enums.ExpenseStatus;
 import com.roima.hrms.Core.Enums.ExpenseType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -19,7 +20,7 @@ public class TravelExpenseResponse {
 
     private UUID Id;
 
-    private UUID paid_by;
+    private String paid_by;
 
     private ExpenseType expense_type;
 
@@ -33,5 +34,11 @@ public class TravelExpenseResponse {
 
     private LocalDate expenseDate;
 
-    private UUID approved_by;
+    private String approved_by;
+
+    private String remark;
+
+    private ExpenseStatus status;
+
+    private String createdBy;
 }
