@@ -89,9 +89,17 @@ public class TravelExpenseServiceImpl implements TravelExpenseService {
     @Override
     public TravelExpenseResponse addTravelExpense(UUID travelId, TravelExpenseRequest dto) {
 
+
+        var currentUser = securityUtil.getCurrentUser();
+
         var travelExpense = travelMapper.ToTravelExpense(dto);
 
         var existingTravel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
+
+        // cant add expense before and after 2 days of travel dates
+        if(dto.getExpenseDate().isAfter(existingTravel.getEnd_date().plusDays(2)) || dto.getExpenseDate().isBefore(existingTravel.getStart_date().minusDays(2))) {
+            throw new RuntimeException("Expense");
+        }
 
         var existingUser = userRepository.findById(dto.getPaid_by()).orElseThrow(() -> new RuntimeException("Member not found."));
 
@@ -102,11 +110,13 @@ public class TravelExpenseServiceImpl implements TravelExpenseService {
         travelExpense.setStatus(ExpenseStatus.SUBMITTED);
         travelExpense.setPaid_by(existingUser);
         travelExpense.setTravel(existingTravel);
+        travelExpense.setCreatedBy(currentUser);
 
         var savedTravelExpense = travelExpenseRepository.save(travelExpense);
 
         existingTravel.getExpenses().add(travelExpense);
         existingUser.getMy_travel_expenses().add(travelExpense);
+        currentUser.getMy_created_expenses().add(travelExpense);
 
         return travelMapper.ToExpenseResponse(savedTravelExpense);
     }

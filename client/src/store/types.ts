@@ -1,9 +1,10 @@
 export type User = {
             id?: string;
-            firstName?: string | null;
-            lastName?: string | null;
+            first_name?: string | null;
+            last_name?: string | null;
             email?: string | null;
             phoneNumber?: string | null;
+            permission: string[];
             isActive?: boolean;
             role?: string | null;
         }; ;

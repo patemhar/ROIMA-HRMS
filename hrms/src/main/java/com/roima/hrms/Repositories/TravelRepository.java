@@ -24,8 +24,6 @@ public interface TravelRepository extends JpaRepository<Travel, UUID> {
     })
     Optional<Travel> findWithDetailsById(UUID id);
 
-//    @Query(value = "SELECT * FROM travels JOIN travel_members ON travels.id = travel_members.travel_id JOIN users ON users.id = travel_members.user_id where users.id = ?1", nativeQuery = true)
-
     @Query("""
             SELECT DISTINCT t
             FROM Travel t
@@ -45,4 +43,5 @@ public interface TravelRepository extends JpaRepository<Travel, UUID> {
             WHERE m.user.reports_to = :userId
             """)
     List<Travel> findByReportsTo(UUID userId);
+
 }

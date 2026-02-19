@@ -221,7 +221,7 @@ public class TravelServiceImpl implements TravelService{
     @Override
     public List<TravelItineraryResponse> getTravelItineraries(UUID travelId) {
 
-        var travelItineraries = travelItineraryRepository.FindByTravelId(travelId);
+        var travelItineraries = travelItineraryRepository.FindByTravel_Id(travelId);
 
         var travelItinerariesResponse = travelItineraries.stream().map(travelMapper::ToItineraryResponse).toList();
 

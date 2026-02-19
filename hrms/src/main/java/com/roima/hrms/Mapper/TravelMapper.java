@@ -230,14 +230,23 @@ public class TravelMapper {
 
         var travelExpenseResponse = new TravelExpenseResponse();
 
-        travelExpenseResponse.setPaid_by(travelExpense.getPaid_by().getId());
+        travelExpenseResponse.setId(travelExpense.getId());
+        travelExpenseResponse.setPaid_by(travelExpense.getPaid_by().getId() + " - " + travelExpense.getPaid_by().getFirst_name() + " " + travelExpense.getPaid_by().getLast_name());
         travelExpenseResponse.setExpense_type(travelExpense.getExpense_type());
-        travelExpenseResponse.setExpenseDate(travelExpense.getExpenseDate());
-        travelExpenseResponse.setAmount(travelExpense.getAmount());
-        travelExpenseResponse.setCurrency(travelExpense.getCurrency());
         travelExpenseResponse.setTitle(travelExpense.getTitle());
         travelExpenseResponse.setDescription(travelExpense.getDescription());
-        travelExpenseResponse.setApproved_by(travelExpense.getApproved_by().getId());
+        travelExpenseResponse.setAmount(travelExpense.getAmount());
+        travelExpenseResponse.setCurrency(travelExpense.getCurrency());
+        travelExpenseResponse.setExpenseDate(travelExpense.getExpenseDate());
+        if(travelExpense.getApproved_by() != null ) {
+            travelExpenseResponse.setApproved_by(travelExpense.getApproved_by().getId() + " - " + travelExpense.getApproved_by().getFirst_name() + " " + travelExpense.getApproved_by().getLast_name());
+        }
+        travelExpenseResponse.setRemark(travelExpense.getRemark());
+        travelExpenseResponse.setStatus(travelExpense.getStatus());
+
+        if(travelExpense.getCreatedBy() != null) {
+            travelExpenseResponse.setCreatedBy(travelExpense.getCreatedBy().getId() + " - " + travelExpense.getCreatedBy().getFirst_name() + " " + travelExpense.getCreatedBy().getLast_name());
+        }
 
         return travelExpenseResponse;
     }

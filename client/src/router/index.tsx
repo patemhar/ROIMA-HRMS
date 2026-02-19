@@ -6,6 +6,8 @@ import { Travel } from "@/pages/travel/Travel";
 import { MainLayout } from "@/layouts/MainLayout";
 import { TravelDetail } from "@/pages/travel/TravelDetail";
 import { AccountSettingsPage } from "@/pages/AccountSettingsPage";
+import { UserManagementPage } from "@/pages/UserManagement";
+import { JobListPage } from "@/pages/jobs/JobListing";
 
 export const router = createBrowserRouter([
     {
@@ -35,6 +37,14 @@ export const router = createBrowserRouter([
             {
                 path: "account",
                 element: <AccountSettingsPage/>
+            },
+            {
+                path: "hr/users",
+                element: <UserManagementPage />
+            }, 
+            {
+                path: "jobs",
+                element: <JobListPage />
             }
         ]
     },
