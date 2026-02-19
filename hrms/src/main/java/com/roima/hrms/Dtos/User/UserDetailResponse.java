@@ -20,7 +20,9 @@ public class UserDetailResponse {
 
     private UUID id;
 
-    private String name;
+    private String first_name;
+
+    private String last_name;
 
     private String email;
 

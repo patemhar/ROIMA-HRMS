@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Setter
 @Getter
@@ -31,12 +33,15 @@ public class SlotBookingRequest extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @OneToMany(mappedBy = "bookingRequest", fetch = FetchType.LAZY)
+    Set<SlotParticipant> participants = new HashSet<>();
+
     @Column(nullable = false)
-    private LocalDateTime requested_at;
+    private LocalDateTime requestedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BookingRequestStatus status;
 
-    private Integer priority_score = 0;
+    private Integer priorityScore = 0;
 }

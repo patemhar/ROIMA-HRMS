@@ -13,7 +13,6 @@ import com.roima.hrms.Repositories.SystemConfigRepository;
 import com.roima.hrms.Service.Interfaces.CloudinaryService;
 import com.roima.hrms.Service.Interfaces.EmailService;
 import com.roima.hrms.Service.Interfaces.JobService;
-import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -80,7 +79,7 @@ public class JobServiceImpl implements JobService {
 
     @Override
     @Transactional
-    public void referFriend(ReferralRequest request, User currentUser) throws IOException, MessagingException {
+    public void referFriend(ReferralRequest request, User currentUser) throws IOException {
 
         Job job = jobRepository.findById(request.getJobId())
                 .orElseThrow(() -> new RuntimeException("Job not found"));

@@ -4,9 +4,12 @@ package com.roima.hrms.Service.Interfaces;
 
 import com.roima.hrms.Dtos.User.UserDetailResponse;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface userService {
 
     UserDetailResponse getUserDetails(UUID userId);
+
+    List<UserDetailResponse> getAllUsers();
 }

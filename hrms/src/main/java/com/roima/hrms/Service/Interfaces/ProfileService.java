@@ -23,4 +23,10 @@ public interface ProfileService {
     ProfileResponseDTO getMyProfile();
 
     ProfileResponseDTO getProfile(UUID userId);
+
+    void addInterest(UUID gameId);
+
+    void removeInterest(UUID gameId);
+
+
 }

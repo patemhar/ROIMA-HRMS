@@ -133,4 +133,14 @@ public class ProfileServiceImpl implements ProfileService {
 
         return mapper.toDto(profile);
     }
+
+    @Override
+    public void addInterest(UUID gameId) {
+
+    }
+
+    @Override
+    public void removeInterest(UUID gameId) {
+
+    }
 }

@@ -3,10 +3,17 @@ package com.roima.hrms.Mapper;
 import com.roima.hrms.Core.Entities.Profile;
 import com.roima.hrms.Dtos.profile.ProfileAdminRequestDTO;
 import com.roima.hrms.Dtos.profile.ProfileResponseDTO;
+import com.roima.hrms.Repositories.GameInterestRepository;
+import com.roima.hrms.Utility.SecurityUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@RequiredArgsConstructor
 public class ProfileMapper {
+
+    private final GameInterestRepository gameInterestRepository;
+    private final SecurityUtil securityUtil;
 
     public ProfileResponseDTO toDto(Profile profile) {
 
@@ -26,6 +33,8 @@ public class ProfileMapper {
             dto.setDepartmentId(profile.getDepartment().getId());
             dto.setDepartmentName(profile.getDepartment().getDepartment_name());
         }
+
+        var gameInterests = gameInterestRepository.getUserInterests(securityUtil.getCurrentUser().getId());
 
         return dto;
     }

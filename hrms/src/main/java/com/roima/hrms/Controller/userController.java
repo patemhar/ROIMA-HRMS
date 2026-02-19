@@ -7,6 +7,7 @@ import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RequestMapping("/users")
@@ -34,6 +35,14 @@ public class userController {
 
         return ApiResponse.success(userService.getUserDetails(user.getId()), "User Details Fetched Successfully.");
 
+    }
+
+    @GetMapping("/all")
+    public ApiResponse<List<UserDetailResponse>> getAllUsers() {
+
+        var users = userService.getAllUsers();
+
+        return ApiResponse.success(users, "Users Fetched successfully");
     }
 
 //    @PatchMapping("/{userId}")

@@ -8,6 +8,7 @@ import com.roima.hrms.Dtos.User.UserDetailResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -24,4 +25,14 @@ public class userServiceImpl implements userService {
 
         return userMapper.ToUserDetailResponse(existingUser);
     }
+
+    @Override
+    public List<UserDetailResponse> getAllUsers() {
+
+        var users = userRepository.findAll();
+
+        return users.stream().map(userMapper::ToUserDetailResponse).toList();
+    }
+
+
 }

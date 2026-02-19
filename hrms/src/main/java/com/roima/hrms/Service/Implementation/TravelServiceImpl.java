@@ -1,10 +1,13 @@
 package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Core.Entities.*;
+import com.roima.hrms.Core.Enums.EntityType;
+import com.roima.hrms.Core.Enums.NotificationType;
 import com.roima.hrms.Core.Enums.TravelStatus;
 import com.roima.hrms.Dtos.Travel.*;
 import com.roima.hrms.Mapper.TravelMapper;
 import com.roima.hrms.Repositories.*;
+import com.roima.hrms.Service.Interfaces.NotificationService;
 import com.roima.hrms.Service.Interfaces.TravelService;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,8 @@ public class TravelServiceImpl implements TravelService{
     private final TravelBookingRepository travelBookingRepository;
     private final TravelItineraryRepository travelItineraryRepository;
     private final SecurityUtil securityUtil;
+    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
 
     private static final Logger logger = LoggerFactory.getLogger(TravelServiceImpl.class);
 
@@ -59,6 +64,8 @@ public class TravelServiceImpl implements TravelService{
 
                 var savedTravelMember = travelMemberRepo.save(member);
 
+                notificationService.createNew(existingUser, currentUser, NotificationType.TRAVEL, EntityType.TRAVEL, "New Travel", "You are added into a travel plan. Travel Id: " + savedTravel.getId());
+
                 // memory
                 savedTravel.getMembers().add(savedTravelMember);
                 existingUser.getMy_travel().add(savedTravelMember);
@@ -81,6 +88,11 @@ public class TravelServiceImpl implements TravelService{
     public List<TravelResponseSummary> getMyTravel() {
 
         var allTravels = travelRepository.findByMemberUserId(securityUtil.getCurrentUser().getId());
+
+        notificationService.notifyUser(
+                securityUtil.getCurrentUser().getId(),
+            "Your booking for slot 5PM is confirmed"
+        );
 
         return allTravels.stream().map(travelMapper::ToTravelResSum).toList();
     }

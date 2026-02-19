@@ -15,7 +15,7 @@ import lombok.Setter;
 @Table(name = "system_config")
 public class SystemConfig extends BaseEntity{
 
-    private String key_name;
+    private String keyName;
 
     private String value;
 }

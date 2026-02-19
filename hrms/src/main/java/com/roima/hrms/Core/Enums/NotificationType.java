@@ -7,5 +7,6 @@ public enum NotificationType {
     SLOT_CANCELLED,
     BIRTHDAY,
     WORK_ANNIVERSARY,
-    SYSTEM
+    SYSTEM,
+    TRAVEL
 }

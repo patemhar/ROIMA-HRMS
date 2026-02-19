@@ -46,5 +46,5 @@ public class GameSlot extends BaseEntity {
     private GameBookingCycle game_cycle;
 
     @OneToMany(mappedBy = "slot")
-    private List<SlotBooking> bookings;
+    private List<SlotBookingRequest> bookingRequests;
 }

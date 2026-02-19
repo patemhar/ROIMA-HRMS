@@ -53,6 +53,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/swagger-ui/**").permitAll()
+                        .requestMatchers("/notifications/subscribe/**").permitAll()
                         .anyRequest().authenticated())
 
                 .userDetailsService(userDetailsService)

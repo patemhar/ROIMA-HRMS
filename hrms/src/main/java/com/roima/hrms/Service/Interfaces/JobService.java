@@ -6,7 +6,6 @@ import com.roima.hrms.Dtos.job.JobRequestDto;
 import com.roima.hrms.Dtos.job.JobResponseDto;
 import com.roima.hrms.Dtos.job.ReferralRequest;
 import com.roima.hrms.Dtos.job.ShareJobRequest;
-import jakarta.mail.MessagingException;
 
 import java.io.IOException;
 import java.util.List;
@@ -22,5 +21,5 @@ public interface JobService {
 
     void shareJob(ShareJobRequest request, User currentUser);
 
-    void referFriend(ReferralRequest request, User currentUser) throws IOException, MessagingException;
+    void referFriend(ReferralRequest request, User currentUser) throws IOException;
 }
