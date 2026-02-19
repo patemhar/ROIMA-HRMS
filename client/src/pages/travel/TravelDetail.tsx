@@ -23,7 +23,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -35,9 +34,6 @@ import {
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/spinner";
 import { getErrorMessage } from "@/utils/error";
-
-type Schemas = components["schemas"];
-type ApiResult<T> = Promise<ApiResponse<T>>;
 
 import {
   Collapsible,
@@ -53,8 +49,6 @@ import {
   useTravelById,
 } from "@/hooks/travel/travel.hooks";
 import { useForm } from "react-hook-form";
-import type { components } from "@/types/api";
-import type { ApiResponse } from "@/types/http";
 import { toast } from "react-toastify";
 import {
   AlertDialog,
@@ -107,6 +101,7 @@ export const TravelDetail = () => {
     },
   });
 
+  // expense 
   const {
     register: expenseRegister,
     handleSubmit: expenseSubmit,
@@ -126,6 +121,7 @@ export const TravelDetail = () => {
 
   const startDateTime = watchItinerary("startDateTime");
 
+  // itinerary handler
   const onItinerarySubmit = async (data: any) => {
     try {
       if (!travelId) {
@@ -168,6 +164,7 @@ export const TravelDetail = () => {
     }
   };
 
+  // expense approval handler
   const handleApproveExpense = async (expenseId: string) => {
     try {
       const response = await approveExpense.mutateAsync({
@@ -182,6 +179,7 @@ export const TravelDetail = () => {
     }
   };
 
+  // reject expense handler
   const handleRejectExpense = async (expenseId: string) => {
     try {
       const response = await rejectExpense.mutateAsync({
@@ -242,7 +240,6 @@ export const TravelDetail = () => {
         </div>
       )}
 
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
@@ -258,7 +255,6 @@ export const TravelDetail = () => {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
-        {/* Main Details */}
         <div className="lg:col-span-2 space-y-6">
           {/* Travel Information */}
           <Card>
@@ -334,14 +330,13 @@ export const TravelDetail = () => {
                     </DialogDescription>
                   </DialogHeader>
 
-                  {/* Wrap content in a form */}
                   <form
                     onSubmit={itinerarySubmit(onItinerarySubmit)}
                     className="space-y-4 py-4"
                   >
                     <div className="grid gap-4">
                       <div className="grid grid-cols-2 gap-4">
-                        {/* Title */}
+
                         <div className="space-y-2">
                           <Label htmlFor="title">Title *</Label>
                           <Input
@@ -358,7 +353,6 @@ export const TravelDetail = () => {
                           )}
                         </div>
 
-                        {/* Description */}
                         <div className="space-y-2">
                           <Label htmlFor="description">Description *</Label>
                           <Input
@@ -376,7 +370,6 @@ export const TravelDetail = () => {
                         </div>
                       </div>
 
-                      {/* Start Date Time */}
                       <div className="space-y-2">
                         <Label htmlFor="startDateTime">Start Date Time *</Label>
                         <Input
@@ -393,7 +386,6 @@ export const TravelDetail = () => {
                         )}
                       </div>
 
-                      {/* End Date Time */}
                       <div className="space-y-2">
                         <Label htmlFor="endDateTime">End Date Time *</Label>
                         <Input
@@ -417,7 +409,6 @@ export const TravelDetail = () => {
                         )}
                       </div>
 
-                      {/* Location */}
                       <div className="space-y-2">
                         <Label htmlFor="location">Location *</Label>
                         <Input
@@ -690,7 +681,6 @@ export const TravelDetail = () => {
                     )}
                   </div>
 
-                  {/* Expense Type */}
                   <div className="space-y-2">
                     <Label>Expense Type *</Label>
                     <select
@@ -712,7 +702,6 @@ export const TravelDetail = () => {
                     )}
                   </div>
 
-                  {/* Amount + Currency */}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Amount *</Label>
@@ -747,7 +736,6 @@ export const TravelDetail = () => {
                     </div>
                   </div>
 
-                  {/* Expense Date */}
                   <div className="space-y-2">
                     <Label>Expense Date *</Label>
                     <Input
@@ -881,7 +869,7 @@ export const TravelDetail = () => {
 
                       {expense.status == "SUBMITTED" && (
                         <div className="flex items-center gap-2 self-end md:self-center">
-                          {/* Approve Action */}
+                          {/* Approvee */}
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button
@@ -927,7 +915,7 @@ export const TravelDetail = () => {
                             </AlertDialogContent>
                           </AlertDialog>
 
-                          {/* Reject Action */}
+                          {/* Reject */}
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button
@@ -990,7 +978,6 @@ export const TravelDetail = () => {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Scheduled By */}
           <Card>
             <CardHeader>
               <CardTitle>Created By</CardTitle>
@@ -1002,7 +989,6 @@ export const TravelDetail = () => {
             </CardContent>
           </Card>
 
-          {/* Travel Members */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1039,7 +1025,6 @@ export const TravelDetail = () => {
             </CardContent>
           </Card>
 
-          {/* Actions */}
         </div>
       </div>
     </div>

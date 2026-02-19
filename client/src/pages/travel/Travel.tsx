@@ -69,7 +69,7 @@ export const Travel = () => {
     handleSubmit,
     reset,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<Schemas["TravelRequest"]>({
     mode: "onChange",
     defaultValues: {
