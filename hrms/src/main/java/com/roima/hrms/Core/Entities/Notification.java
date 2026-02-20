@@ -28,10 +28,7 @@ public class Notification extends BaseEntity {
     private User actor;
 
     @Enumerated(EnumType.STRING)
-    private NotificationType type;
-
-    @Enumerated(EnumType.STRING)
-    private EntityType entityType;
+    private NotificationType notification_type;
 
     private String title;
 

@@ -23,7 +23,7 @@ public class ProfileController {
 
     // hr create
     @PostMapping
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER003')")
     public ApiResponse<ProfileResponseDTO> createProfile(
             @RequestBody ProfileAdminRequestDTO request) {
 
@@ -35,7 +35,7 @@ public class ProfileController {
 
     // hr update
     @PatchMapping("/{profileId}")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER005')")
     public ApiResponse<ProfileResponseDTO> updateProfile(
             @PathVariable UUID profileId,
             @RequestBody ProfileAdminRequestDTO request) {
@@ -48,7 +48,7 @@ public class ProfileController {
 
     // employee update own profile
     @PatchMapping("/me")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER005')")
     public ApiResponse<ProfileResponseDTO> updateMyProfile(
             @RequestBody ProfileSelfUpdateDTO request) {
 
@@ -59,7 +59,7 @@ public class ProfileController {
     }
 
     @PostMapping("/me/avatar")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER005')")
     public ApiResponse<Void> uploadAvatar (
             @RequestParam MultipartFile file
     ) throws IOException {
@@ -69,6 +69,7 @@ public class ProfileController {
     }
 
     @GetMapping("/me")
+    @PreAuthorize("hasAuthority('PER004')")
     public ApiResponse<ProfileResponseDTO> getMyProfile() {
         return ApiResponse.success(
                 profileService.getMyProfile(),
@@ -77,12 +78,29 @@ public class ProfileController {
     }
 
     @GetMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('HR','MANAGER')")
+    @PreAuthorize("hasAuthority('PER004')")
     public ApiResponse<ProfileResponseDTO> getProfile(@PathVariable UUID userId) {
         return ApiResponse.success(
                 profileService.getProfile(userId),
                 "Profile fetched successfully"
         );
     }
-}
 
+    @PostMapping("/interests/{gameId}")
+    @PreAuthorize("hasAuthority('PER005')")
+    public ApiResponse<Void> addInterest (
+            @PathVariable UUID gameId
+    ) {
+        profileService.addInterest(gameId);
+        return ApiResponse.success(null, "Interest added successfully");
+    }
+
+    @DeleteMapping("/interests/{gameId}")
+    @PreAuthorize("hasAuthority('PER005')")
+    public ApiResponse<Void> deleteInterest (
+            @PathVariable UUID gameId
+    ) {
+        profileService.removeInterest(gameId);
+        return ApiResponse.success(null, "Interest removed successfully");
+    }
+}

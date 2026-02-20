@@ -2,10 +2,18 @@ package com.roima.hrms.Repositories;
 
 import com.roima.hrms.Core.Entities.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.UUID;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
+
+    @Query("""
+        UPDATE Notification n
+        SET n.isRead = true
+        WHERE n.id = :notificationId
+    """)
+    void markAsRead(UUID notificationId);
 }
