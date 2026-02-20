@@ -23,6 +23,6 @@ public class GameBookingCycle extends BaseEntity {
 
     private LocalDateTime cycle_end;
 
-    @OneToMany(mappedBy = "game_cycle", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "gameCycle", fetch = FetchType.LAZY)
     private Set<GameSlot> cycle_slots = new HashSet<>();
 }

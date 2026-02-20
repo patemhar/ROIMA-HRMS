@@ -2,10 +2,7 @@ package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Core.Entities.*;
 import com.roima.hrms.Core.Enums.BookingRequestStatus;
-import com.roima.hrms.Dtos.game.GameCreateRequestDto;
-import com.roima.hrms.Dtos.game.GameResponseDto;
-import com.roima.hrms.Dtos.game.GameSlotBookingRequestDto;
-import com.roima.hrms.Dtos.game.GameSlotBookingRequestResponse;
+import com.roima.hrms.Dtos.game.*;
 import com.roima.hrms.Mapper.GameMapper;
 import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Service.Interfaces.gameService;
@@ -15,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -95,6 +93,24 @@ public class gameServiceImpl implements gameService {
         var games = gameRepository.findAll();
 
         return games.stream().map(gameMapper::toGameResponseDto).toList();
+    }
+
+    @Override
+    public List<SlotResponseDto> getGameSlots(UUID gameId, LocalDate date) {
+
+        var currentCycle = gameBookingCycleRepository.getCurrentCycle(gameId);
+
+        var gameSlots = gameSlotRepository.findSlotByDate(gameId, currentCycle.get().getId(), date);
+
+        return gameSlots.stream().map(gameMapper::toSlotResponse).toList();
+    }
+
+    @Override
+    public GameCycleReponseDto getGameCycle(UUID gameId) {
+
+        var currentCycle = gameBookingCycleRepository.getCurrentCycle(gameId).orElseThrow(() -> new RuntimeException("No Cycle Found"));
+
+        return gameMapper.toGameCycleResponse(currentCycle);
     }
 
     @Override

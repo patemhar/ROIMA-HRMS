@@ -38,12 +38,9 @@ public class GameSlot extends BaseEntity {
     @Column(nullable = false)
     private LocalTime endTime;
 
-    @Column(nullable = false)
-    private Integer maxPlayers;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cycle_id")
-    private GameBookingCycle game_cycle;
+    private GameBookingCycle gameCycle;
 
     @OneToMany(mappedBy = "slot")
     private List<SlotBookingRequest> bookingRequests;

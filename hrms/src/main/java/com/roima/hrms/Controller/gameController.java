@@ -69,4 +69,10 @@ public class gameController {
         return ApiResponse.success(slots, "Slots fetched for " + date);
     }
 
+    @GetMapping("/{gameId}/cycle")
+    public ApiResponse<GameCycleReponseDto> getGameCycle(
+            @PathVariable UUID gameId
+    ) {
+        return ApiResponse.success(gameService.getGameCycle(gameId), "Game cycle fetched successfully.");
+    }
 }

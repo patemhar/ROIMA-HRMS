@@ -1,11 +1,13 @@
 package com.roima.hrms.Mapper;
 
 import com.roima.hrms.Core.Entities.Game;
+import com.roima.hrms.Core.Entities.GameBookingCycle;
+import com.roima.hrms.Core.Entities.GameSlot;
 import com.roima.hrms.Core.Entities.SlotBookingRequest;
-import com.roima.hrms.Dtos.game.GameCreateRequestDto;
-import com.roima.hrms.Dtos.game.GameResponseDto;
-import com.roima.hrms.Dtos.game.GameSlotBookingRequestResponse;
+import com.roima.hrms.Dtos.game.*;
 import com.roima.hrms.Repositories.GameInterestRepository;
+import com.roima.hrms.Repositories.GameSlotRepository;
+import com.roima.hrms.Repositories.SlotBookingRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
@@ -16,9 +18,18 @@ public class GameMapper {
 
     private ModelMapper modelMapper;
     private GameInterestRepository gameInterestRepository;
+    private SlotBookingRequestRepository slotBookingRequestRepository;
+    private GameSlotRepository gameSlotRepository;
 
-    public GameMapper(ModelMapper modelMapper, GameInterestRepository gameInterestRepository) {
+    public GameMapper(
+            ModelMapper modelMapper,
+            GameInterestRepository gameInterestRepository,
+            SlotBookingRequestRepository slotBookingRequestRepository,
+            GameSlotRepository gameSlotRepository
+    ) {
         this.modelMapper = modelMapper;
+        this.gameInterestRepository = gameInterestRepository;
+        this.slotBookingRequestRepository = slotBookingRequestRepository;
         this.gameInterestRepository = gameInterestRepository;
     }
 
@@ -81,5 +92,36 @@ public class GameMapper {
         }
 
         return game;
+    }
+
+    public SlotResponseDto toSlotResponse (GameSlot gameSlot) {
+
+        var slotResponse = new SlotResponseDto();
+
+        slotResponse.setId(gameSlot.getId());
+        slotResponse.setGameId(gameSlot.getGame().getId());
+        slotResponse.setSlotDate(gameSlot.getSlotDate());
+        slotResponse.setStartTime(gameSlot.getStartTime());
+        slotResponse.setEndTime(gameSlot.getEndTime());
+
+        var queue = slotBookingRequestRepository.getQueueCount(gameSlot.getId());
+        slotResponse.setQueueCount(queue);
+
+        return slotResponse;
+    }
+
+    public GameCycleReponseDto toGameCycleResponse (GameBookingCycle gameBookingCycle) {
+
+        var gameCycleResponse = new GameCycleReponseDto();
+
+        gameCycleResponse.setCycleId(gameBookingCycle.getId());
+        gameCycleResponse.setCycle_start(gameBookingCycle.getCycle_start());
+        gameCycleResponse.setCycle_end(gameBookingCycle.getCycle_end());
+
+        var totalSlots = gameSlotRepository.getTotalSlots(gameBookingCycle.getId());
+
+        gameCycleResponse.setTotal_slots(totalSlots);
+
+        return gameCycleResponse;
     }
 }
