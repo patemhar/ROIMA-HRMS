@@ -25,5 +25,5 @@ public class ProfileResponseDTO {
     private UUID departmentId;
     private String departmentName;
 
-    private List<String> gameInterests;
+    private List<UUID> gameInterests;
 }

@@ -117,6 +117,10 @@ public class AuthServiceImpl implements AuthService {
 
         String refreshToken = extractCookie(request, "refresh_token");
 
+        if (refreshToken == null) {
+            throw new RuntimeException("Refresh token not found");
+        }
+
         RefreshToken token = refreshTokenRepository
                 .findByTokenHash(refreshToken)
                 .orElseThrow(() ->
@@ -149,6 +153,11 @@ public class AuthServiceImpl implements AuthService {
     public void logout(HttpServletRequest request, HttpServletResponse response) {
 
         String refreshToken = extractCookie(request, "refresh_token");
+
+        if (refreshToken == null) {
+            clearCookie(response, "refresh_token");
+            return;
+        }
 
         var userId = jwtUtil.extractUsername(refreshToken);
 
@@ -203,4 +212,3 @@ public class AuthServiceImpl implements AuthService {
         response.addCookie(cookie);
     }
 }
-

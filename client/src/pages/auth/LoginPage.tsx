@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { authService } from "@/services/authService";
 import { useAuth } from "@/store";
 import type { components } from "@/types/api";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 
 const STAFF_ROLES = new Set(["HR", "EMPLOYEE", "MANAGER"]);
 

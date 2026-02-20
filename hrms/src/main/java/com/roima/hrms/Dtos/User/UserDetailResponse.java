@@ -28,7 +28,7 @@ public class UserDetailResponse {
 
     private LocalDateTime last_login;
 
-    private boolean is_active;
+    private Boolean is_active;
 
     private String role;
 

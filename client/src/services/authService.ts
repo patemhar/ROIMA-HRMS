@@ -28,10 +28,15 @@ class AuthService {
     }
 
     async refreshToken() : ApiResult<Schemas["AuthResponseDto"]> {
+        
         const response = await apiClient.refreshToken();
 
-        if(response.success && response.data?.accessToken) {
-            this.setAccessToken(response.data?.accessToken);
+        if(response.success && response.data?.accessToken && response.data.userDetailResponse) {
+            useAuth.getState().auth.setAuth(
+                response.data.accessToken, 
+                response.data.userDetailResponse,
+                response.data.userDetailResponse?.role
+            );
         }
 
         return response;
@@ -39,6 +44,19 @@ class AuthService {
 
     getProfile() : ApiResult<Schemas["UserDetailResponse"]> {
         return apiClient.getProfile();
+    }
+
+    updateMyUser(
+        data: Schemas["UserSelfUpdateDTO"]
+    ) : ApiResult<Schemas["UserDetailResponse"]> {
+        return apiClient.updateMyUser(data);
+    }
+
+    updateUserByHR(
+        userId: string,
+        data: Schemas["UserAdminUpdateDTO"]
+    ) : ApiResult<Schemas["UserDetailResponse"]> {
+        return apiClient.updateUserByHR(userId, data);
     }
 
     logout() : ApiResult<void> {

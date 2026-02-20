@@ -16,7 +16,7 @@ public class UserMapper {
         userDetailResponse.setLast_name(user.getLast_name());
         userDetailResponse.setEmail(user.getEmail());
         userDetailResponse.setRole(user.getRole().getName());
-        userDetailResponse.set_active(user.is_active());
+        userDetailResponse.setIs_active(user.isActive());
         userDetailResponse.setLast_login(user.getLast_login());
 
         if(user.getReports_to() != null) {
