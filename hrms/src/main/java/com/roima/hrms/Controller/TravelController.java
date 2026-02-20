@@ -1,12 +1,12 @@
 package com.roima.hrms.Controller;
 
 import com.roima.hrms.Core.Entities.ExpenseDocument;
+import com.roima.hrms.Core.Entities.Notification;
 import com.roima.hrms.Core.Entities.TravelDocument;
+import com.roima.hrms.Core.Enums.EntityType;
+import com.roima.hrms.Core.Enums.NotificationType;
 import com.roima.hrms.Dtos.Travel.*;
-import com.roima.hrms.Service.Interfaces.ExpenseDocumentService;
-import com.roima.hrms.Service.Interfaces.TravelDocumentService;
-import com.roima.hrms.Service.Interfaces.TravelExpenseService;
-import com.roima.hrms.Service.Interfaces.TravelService;
+import com.roima.hrms.Service.Interfaces.*;
 import com.roima.hrms.Dtos.ApiResponse;
 import com.roima.hrms.Dtos.DocUploadResponse;
 import com.roima.hrms.Utility.SecurityUtil;
@@ -31,12 +31,12 @@ public class TravelController {
     private final TravelExpenseService travelExpenseService;
     private final ExpenseDocumentService expenseDocumentService;
     private final SecurityUtil securityUtil;
-
+    private final NotificationService notificationService;
 
     // Travel
 
     @PostMapping
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER010')")
     public ApiResponse<TravelResponseSummary> createTravel(
             @RequestBody TravelRequest request) {
 
@@ -47,7 +47,7 @@ public class TravelController {
     }
 
     @GetMapping("/{travelId}")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<TravelResponse> getTravel(
             @PathVariable UUID travelId) {
 
@@ -58,8 +58,19 @@ public class TravelController {
     }
 
     @GetMapping("/my")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<List<TravelResponseSummary>> getMyTravels() {
+
+        var currentUser = securityUtil.getCurrentUser();
+
+        notificationService.createNew(
+                currentUser,
+                currentUser,
+                NotificationType.TRAVEL,
+                "Travel fetched successfully",
+                "Travel fetched successfully"
+        );
+
 
         return ApiResponse.success(
                 travelService.getMyTravel(),
@@ -69,7 +80,7 @@ public class TravelController {
 
     // travels that are created by user
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAnyRole('MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<List<TravelResponseSummary>> getUserTravels(
             @PathVariable UUID userId
     ) {
@@ -81,7 +92,7 @@ public class TravelController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<List<TravelResponseSummary>> getAllTravels() {
 
         return ApiResponse.success(
@@ -91,7 +102,7 @@ public class TravelController {
     }
 
     @PatchMapping("/{travelId}")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER012')")
     public ApiResponse<Void> updateTravel(
             @PathVariable UUID travelId,
             @RequestBody TravelUpdateRequest request
@@ -103,7 +114,7 @@ public class TravelController {
     }
 
     @DeleteMapping("/{travelId}")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER013')")
     public ApiResponse<Void> deleteTravel(@PathVariable UUID travelId) {
 
         travelService.deleteTravel(travelId);
@@ -115,7 +126,7 @@ public class TravelController {
     // Travel Member
 
     @PostMapping("/{travelId}/members")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER012')")
     public ApiResponse<Set<TravelMemberResponse>> addMember(
             @PathVariable UUID travelId,
             @RequestBody TravelMemberRequest request) {
@@ -128,7 +139,7 @@ public class TravelController {
 
 
     @DeleteMapping("/members/{memberId}")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER012')")
     public ApiResponse<Void> deleteMember(
             @PathVariable UUID memberId
     ) {
@@ -141,7 +152,7 @@ public class TravelController {
     // Travel Itinerary
 
     @PostMapping("/{travelId}/itinerary")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER012')")
     public ApiResponse<TravelItineraryResponse> addItinerary(
             @PathVariable UUID travelId,
             @RequestBody TravelItineraryRequest request) {
@@ -153,7 +164,7 @@ public class TravelController {
     }
 
     @GetMapping("/{travelId}/itinerary")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<List<TravelItineraryResponse>> getItinerary(
             @PathVariable UUID travelId) {
 
@@ -164,7 +175,7 @@ public class TravelController {
     }
 
     @PatchMapping("/itinerary/{itineraryId}")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER012')")
     public ApiResponse<Void> updateItinerary(
             @PathVariable UUID itineraryId,
             @RequestBody TravelItineraryRequest request
@@ -178,7 +189,7 @@ public class TravelController {
     // Travel Booking
 
     @PostMapping("/{travelId}/booking")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER012')")
     public ApiResponse<TravelBookingResponse> addBooking (
             @PathVariable UUID travelId,
             @RequestBody TravelBookingRequest request) {
@@ -190,7 +201,7 @@ public class TravelController {
     }
 
     @GetMapping("/{travelId}/booking")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<List<TravelBookingResponse>> getBookings (
             @PathVariable UUID travelId) {
 
@@ -201,7 +212,7 @@ public class TravelController {
     }
 
     @PatchMapping("booking/{bookingId}")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER012')")
     public ApiResponse<Void> updateBooking (
             @PathVariable UUID bookingId,
             @RequestBody TravelBookingRequest request
@@ -212,7 +223,7 @@ public class TravelController {
     }
 
     @DeleteMapping("booking/{bookingId}")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER013')")
     public ApiResponse<Void> deleteBooking (
             @PathVariable UUID bookingId
     ) {
@@ -225,7 +236,7 @@ public class TravelController {
     // Travel Doc
 
     @PostMapping("/{travelId}/documents")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<DocUploadResponse> uploadTravelDocument(
             @PathVariable UUID travelId,
             @RequestParam("files") MultipartFile[] files) throws IOException {
@@ -237,7 +248,7 @@ public class TravelController {
     }
 
     @GetMapping("/{travelId}/documents")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<List<TravelDocument>> getTravelDocuments(
             @PathVariable UUID travelId) {
 
@@ -251,7 +262,7 @@ public class TravelController {
     // Expense
 
     @PostMapping("/{travelId}/expenses")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','HR', 'MANAGER')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<TravelExpenseResponse> addExpense(
             @PathVariable UUID travelId,
             @RequestBody TravelExpenseRequest request) {
@@ -263,7 +274,7 @@ public class TravelController {
     }
 
     @GetMapping("/{travelId}/expenses")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<List<TravelExpenseResponse>> getExpenses(
             @PathVariable UUID travelId) {
 
@@ -274,7 +285,7 @@ public class TravelController {
     }
 
     @PutMapping("/expenses/{expenseId}/approve")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER014')")
     public ApiResponse<Void> approveExpense(
             @PathVariable UUID expenseId,
             @RequestBody String remark) {
@@ -284,7 +295,7 @@ public class TravelController {
     }
 
     @PutMapping("/expenses/{expenseId}/reject")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER014')")
     public ApiResponse<Void> rejectExpense(
             @PathVariable UUID expenseId,
             @RequestBody String remark) {
@@ -297,7 +308,7 @@ public class TravelController {
     // Expense Doc
 
     @PostMapping("/expenses/{expenseId}/documents")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','HR')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<DocUploadResponse> uploadExpenseDocs(
             @PathVariable UUID expenseId,
             @RequestParam("files") MultipartFile[] files) throws IOException {
@@ -309,7 +320,7 @@ public class TravelController {
     }
 
     @GetMapping("/expenses/{expenseId}/documents")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER011')")
     public ApiResponse<List<ExpenseDocument>> getExpenseDocs(
             @PathVariable UUID expenseId) {
 

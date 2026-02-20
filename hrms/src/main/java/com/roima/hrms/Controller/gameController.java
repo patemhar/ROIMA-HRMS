@@ -2,15 +2,13 @@ package com.roima.hrms.Controller;
 
 import com.cloudinary.Api;
 import com.roima.hrms.Dtos.ApiResponse;
-import com.roima.hrms.Dtos.game.GameCreateRequestDto;
-import com.roima.hrms.Dtos.game.GameResponseDto;
-import com.roima.hrms.Dtos.game.GameSlotBookingRequestDto;
-import com.roima.hrms.Dtos.game.GameSlotBookingRequestResponse;
+import com.roima.hrms.Dtos.game.*;
 import com.roima.hrms.Service.Interfaces.gameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -59,6 +57,16 @@ public class gameController {
             @RequestBody GameSlotBookingRequestDto request
     ) {
         return ApiResponse.success(gameService.makeRequest(request), "Booking request successfully");
+    }
+
+    @GetMapping("/{gameId}/slots/{date}")
+    public ApiResponse<List<SlotResponseDto>> getGameSlots(
+            @PathVariable UUID gameId,
+            @PathVariable LocalDate date
+    ) {
+        var slots = gameService.getGameSlots(gameId, date);
+
+        return ApiResponse.success(slots, "Slots fetched for " + date);
     }
 
 }
