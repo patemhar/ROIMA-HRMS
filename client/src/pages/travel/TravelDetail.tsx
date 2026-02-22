@@ -4,18 +4,14 @@ import {
   ArrowLeft,
   Calendar,
   Users,
-  Phone,
   User,
   Plus,
-  Wallet,
-  Receipt,
+  Upload,
+  Trash2,
 } from "lucide-react";
 import {
   Card,
-  CardAction,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -42,14 +38,18 @@ import {
 } from "@/components/ui/collapsible";
 
 import {
-  useAddExpense,
+  useAddBooking,
   useAddItinerary,
-  useApproveExpense,
-  useRejectExpense,
+  useAddMember,
+  useDeleteMember,
   useTravelById,
+  useUpdateItinerary,
+  useUpdateTravel,
+  useUploadTravelDocs,
+  useDeleteTravelDocument,
 } from "@/hooks/travel/travel.hooks";
 import { useForm } from "react-hook-form";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,8 +62,21 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { DateTimeDisplay } from "@/utils/dateUtils";
+import { useAuth } from "@/store";
+import { hasPermission, PermissionCode } from "@/constants/permissions";
+import { useGetAllUsers } from "@/hooks/util/util.hooks";
 
 export const TravelDetail = () => {
+
+  const permissions = useAuth((state) => state.auth.user?.permission);
+  const user = useAuth((state) => state.auth.user);
+  const isHR = user?.role === "HR";
+  
+  const canUpdateTravel = hasPermission(
+    permissions,
+    PermissionCode.TRAVEL_MANAGE,
+  );
+ 
   const { id: travelId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -71,17 +84,28 @@ export const TravelDetail = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [itineraryDialogOpen, setItineraryDialogOpen] =
     useState<boolean>(false);
-  const [expenseDialogOpen, setExpenseDialogOpen] = useState<boolean>(false);
+  const [bookingDialogOpen, setBookingDialogOpen] = useState<boolean>(false);
+  const [documentUploadOpen, setDocumentUploadOpen] = useState<boolean>(false);
+  const [updateTravelDialogOpen, setUpdateTravelDialogOpen] = useState<boolean>(false);
+  const [addMemberDialogOpen, setAddMemberDialogOpen] = useState<boolean>(false);
+  const [updateItineraryDialogOpen, setUpdateItineraryDialogOpen] = useState<boolean>(false);
+  const [uploadFiles, setUploadFiles] = useState<File[]>([]);
 
-  const [approveMessage, setApproveMessage] = useState("");
-  const [rejectMessage, setRejectMessage] = useState("");
+  const [selectedItinerary, setSelectedItinerary] = useState<any>(null);
 
   // Mutations
-  const approveExpense = useApproveExpense();
-  const rejectExpense = useRejectExpense();
-  const addExpense = useAddExpense();
   const addItinerary = useAddItinerary();
+  const addBooking = useAddBooking();
+  const addMember = useAddMember();
+  const deleteMember = useDeleteMember();
+  const updateTravel = useUpdateTravel();
+  const updateItinerary = useUpdateItinerary();
+  
   const travelDetailQuery = useTravelById(travelId!);
+  const uploadTravelDocs = useUploadTravelDocs(travelId!);
+  const deleteTravelDocument = useDeleteTravelDocument();
+
+  const users = useGetAllUsers().data || [];
 
   // itinerary
   const {
@@ -101,21 +125,22 @@ export const TravelDetail = () => {
     },
   });
 
-  // expense 
+  //booking
   const {
-    register: expenseRegister,
-    handleSubmit: expenseSubmit,
-    reset: resetExpense,
-    formState: { errors: expenseErrors },
+    register: bookingRegister,
+    handleSubmit: bookingSubmit,
+    reset: bookingExpense,
+    formState: { errors: bookingErrors },
   } = useForm({
     mode: "onChange",
     defaultValues: {
-      title: "",
-      paid_by: "",
-      expense_type: "",
+      bookingType: "OTHER",
+      provider_name: "",
+      booking_reference: "",
       amount: 0,
-      currency: "INR",
-      expenseDate: "",
+      currency: "",
+      start_dateTime: "",
+      end_dateTime: "",
     },
   });
 
@@ -143,55 +168,203 @@ export const TravelDetail = () => {
     }
   };
 
-  // Handler for Expense
-  const onExpenseSubmit = async (data: any) => {
+  // booking handler
+  const onBookingSubmit = async (data: any) => {
     try {
       if (!travelId) {
         toast.error("TravelId missing");
         return;
       }
 
-      const response = await addExpense.mutateAsync({ id: travelId, data });
+      const response = await addBooking.mutateAsync({ id: travelId, data });
 
-      setSuccessMessage(response.message || "Expense recorded successfully!");
-      toast.success(response.message || "Expense recorded successfully!");
+      setSuccessMessage(response.message || "Booking added successfully!");
+      toast.success(response.message || "Booking added successfully!");
 
-      setExpenseDialogOpen(false);
-      resetExpense();
+      setBookingDialogOpen(false);
+      bookingExpense();
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
       toast.error(getErrorMessage(error));
     }
   };
 
-  // expense approval handler
-  const handleApproveExpense = async (expenseId: string) => {
+  // document upload handler
+  const handleDocumentUpload = async () => {
+    if (uploadFiles.length === 0) {
+      toast.error("Please select at least one file");
+      return;
+    }
+
     try {
-      const response = await approveExpense.mutateAsync({
-        expenseId,
-        data: approveMessage,
+      await uploadTravelDocs.mutateAsync(uploadFiles);
+      toast.success("Documents uploaded successfully");
+      setSuccessMessage("Documents uploaded successfully");
+      setDocumentUploadOpen(false);
+      setUploadFiles([]);
+      travelDetailQuery.refetch();
+    } catch (error) {
+      const errorMsg = getErrorMessage(error);
+      toast.error(errorMsg);
+      setErrorMessage(errorMsg);
+    }
+  };
+
+  // update travel form
+  const {
+    register: updateTravelRegister,
+    handleSubmit: updateTravelSubmit,
+    reset: resetUpdateTravel,
+    setValue: setUpdateTravelValue,
+    formState: { errors: updateTravelErrors },
+  } = useForm({
+    mode: "onChange",
+    defaultValues: {
+      title: "",
+      description: "",
+      destination: "",
+      start_date: "",
+      end_date: "",
+    },
+  });
+
+  // add member form
+  const {
+    register: addMemberRegister,
+    handleSubmit: addMemberSubmit,
+    reset: resetAddMember,
+    formState: { errors: addMemberErrors },
+  } = useForm({
+    mode: "onChange",
+    defaultValues: {
+      userId: "",
+    },
+  });
+
+  // update itinerary form
+  const {
+    register: updateItineraryRegister,
+    handleSubmit: updateItinerarySubmit,
+    reset: resetUpdateItinerary,
+    setValue: setUpdateItineraryValue,
+    formState: { errors: updateItineraryErrors },
+  } = useForm({
+    mode: "onChange",
+    defaultValues: {
+      title: "",
+      description: "",
+      startDateTime: "",
+      endDateTime: "",
+      location: "",
+    },
+  });
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      const validFiles = fileArray.filter((file) => {
+        // 10MB
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error(`${file.name} is too large (max 10MB)`);
+          return false;
+        }
+        return true;
       });
 
-      toast.success(response.message || "Expense approved successfully.");
-      setSuccessMessage(response.message || "Expense Approved Successfully");
+      setUploadFiles((prev) => [...prev, ...validFiles]);
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // update travel handler
+  const onUpdateTravelSubmit = async (data: any) => {
+    try {
+      if (!travelId) {
+        toast.error("TravelId missing");
+        return;
+      }
+
+      await updateTravel.mutateAsync({ id: travelId, data });
+      toast.success("Travel updated successfully");
+      setUpdateTravelDialogOpen(false);
+      resetUpdateTravel();
+      travelDetailQuery.refetch();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  // add member handler
+  const onAddMemberSubmit = async (data: any) => {
+    try {
+      if (!travelId) {
+        toast.error("TravelId missing");
+        return;
+      }
+
+      await addMember.mutateAsync({ travelId, userId: data.userId });
+      toast.success("Member added successfully");
+      setAddMemberDialogOpen(false);
+      resetAddMember();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  // update itinerary handler
+  const onUpdateItinerarySubmit = async (data: any) => {
+    try {
+      if (!selectedItinerary) {
+        toast.error("No itinerary selected");
+        return;
+      }
+
+      await updateItinerary.mutateAsync({ id: selectedItinerary.itineraryId, data });
+      toast.success("Itinerary updated successfully");
+      setUpdateItineraryDialogOpen(false);
+      resetUpdateItinerary();
+      setSelectedItinerary(null);
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  // delete member handler
+  const handleDeleteMember = async (memberId: string) => {
+    try {
+      await deleteMember.mutateAsync({ memberId, travelId: travelId! });
+      toast.success("Member removed successfully");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
   };
 
-  // reject expense handler
-  const handleRejectExpense = async (expenseId: string) => {
+  // delete document handler
+  const handleDeleteDocument = async (docId: string) => {
     try {
-      const response = await rejectExpense.mutateAsync({
-        expenseId,
-        data: rejectMessage,
-      });
-
-      toast.success(response.message || "Expense Rejected successfully.");
-      setSuccessMessage(response.message || "Expense Rejected Successfully");
+      await deleteTravelDocument.mutateAsync({ docId, travelId: travelId! });
+      toast.success("Document deleted successfully");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
+  };
+
+  // open update itinerary dialog
+  const openUpdateItineraryDialog = (itinerary: any) => {
+    setSelectedItinerary(itinerary);
+    setUpdateItineraryValue("title", itinerary.title);
+    setUpdateItineraryValue("description", itinerary.description);
+    setUpdateItineraryValue("startDateTime", itinerary.startDateTime);
+    setUpdateItineraryValue("endDateTime", itinerary.endDateTime);
+    setUpdateItineraryValue("location", itinerary.location);
+    setUpdateItineraryDialogOpen(true);
   };
 
   if (travelDetailQuery.isLoading) {
@@ -224,7 +397,7 @@ export const TravelDetail = () => {
     );
   }
 
-  const travel = travelDetailQuery.data;
+  const travel = travelDetailQuery.data!;
 
   return (
     <div className="space-y-6">
@@ -259,9 +432,136 @@ export const TravelDetail = () => {
           {/* Travel Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Travel Information
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Travel Information
+                </div>
+                {canUpdateTravel && (
+                  <Dialog
+                    open={updateTravelDialogOpen}
+                    onOpenChange={(open) => {
+                      setUpdateTravelDialogOpen(open);
+                      if (!open) resetUpdateTravel();
+                      if (open) {
+                        setUpdateTravelValue("title", travel?.title || "");
+                        setUpdateTravelValue("description", travel?.description || "");
+                        setUpdateTravelValue("destination", travel?.destination || "");
+                        setUpdateTravelValue("start_date", travel?.start_date || "");
+                        setUpdateTravelValue("end_date", travel?.end_date || "");
+                      }
+                    }}
+                  >
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        Update Travel
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Update Travel</DialogTitle>
+                        <DialogDescription>
+                          Update travel details.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <form
+                        onSubmit={updateTravelSubmit(onUpdateTravelSubmit)}
+                        className="space-y-4 py-4"
+                      >
+                        <div className="grid gap-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="travel-title">Title *</Label>
+                              <Input
+                                id="travel-title"
+                                placeholder="Travel Title"
+                                {...updateTravelRegister("title", {
+                                  required: "Title is required",
+                                })}
+                              />
+                              {updateTravelErrors.title && (
+                                <p className="text-sm text-destructive">
+                                  {updateTravelErrors.title.message as string}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="travel-destination">Destination *</Label>
+                              <Input
+                                id="travel-destination"
+                                placeholder="Destination"
+                                {...updateTravelRegister("destination", {
+                                  required: "Destination is required",
+                                })}
+                              />
+                              {updateTravelErrors.destination && (
+                                <p className="text-sm text-destructive">
+                                  {updateTravelErrors.destination.message as string}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="travel-description">Description</Label>
+                            <Input
+                              id="travel-description"
+                              placeholder="Travel description"
+                              {...updateTravelRegister("description")}
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Start Date *</Label>
+                              <Input
+                                type="date"
+                                {...updateTravelRegister("start_date", {
+                                  required: "Start date is required",
+                                })}
+                              />
+                              {updateTravelErrors.start_date && (
+                                <p className="text-sm text-destructive">
+                                  {updateTravelErrors.start_date.message as string}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>End Date *</Label>
+                              <Input
+                                type="date"
+                                {...updateTravelRegister("end_date", {
+                                  required: "End date is required",
+                                })}
+                              />
+                              {updateTravelErrors.end_date && (
+                                <p className="text-sm text-destructive">
+                                  {updateTravelErrors.end_date.message as string}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <DialogFooter className="mt-6">
+                          <Button
+                            variant="outline"
+                            type="button"
+                            onClick={() => setUpdateTravelDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button type="submit" disabled={updateTravel.isPending}>
+                            {updateTravel.isPending ? "Updating..." : "Update Travel"}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -308,6 +608,7 @@ export const TravelDetail = () => {
           <div className="space-y-3">
             <div className="flex justify-between">
               <p className="text-sm font-medium">Travel Itinerary</p>
+              {isHR && (
               <Dialog
                 open={itineraryDialogOpen}
                 onOpenChange={(open) => {
@@ -336,7 +637,6 @@ export const TravelDetail = () => {
                   >
                     <div className="grid gap-4">
                       <div className="grid grid-cols-2 gap-4">
-
                         <div className="space-y-2">
                           <Label htmlFor="title">Title *</Label>
                           <Input
@@ -443,6 +743,134 @@ export const TravelDetail = () => {
                   </form>
                 </DialogContent>
               </Dialog>
+              )}
+
+              {/* Update Itinerary Dialog */}
+              {isHR && (
+              <Dialog
+                open={updateItineraryDialogOpen}
+                onOpenChange={(open) => {
+                  setUpdateItineraryDialogOpen(open);
+                  if (!open) {
+                    resetUpdateItinerary();
+                    setSelectedItinerary(null);
+                  }
+                }}
+              >
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Update Itinerary</DialogTitle>
+                    <DialogDescription>
+                      Update itinerary details.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <form
+                    onSubmit={updateItinerarySubmit(onUpdateItinerarySubmit)}
+                    className="space-y-4 py-4"
+                  >
+                    <div className="grid gap-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="update-title">Title *</Label>
+                          <Input
+                            id="update-title"
+                            placeholder="Itinerary Title"
+                            {...updateItineraryRegister("title", {
+                              required: "Title is required",
+                            })}
+                          />
+                          {updateItineraryErrors.title && (
+                            <p className="text-sm text-destructive">
+                              {updateItineraryErrors.title.message as string}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="update-description">Description *</Label>
+                          <Input
+                            id="update-description"
+                            placeholder="Short description"
+                            {...updateItineraryRegister("description", {
+                              required: "Description is required",
+                            })}
+                          />
+                          {updateItineraryErrors.description && (
+                            <p className="text-sm text-destructive">
+                              {updateItineraryErrors.description.message as string}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="update-startDateTime">Start Date Time *</Label>
+                        <Input
+                          id="update-startDateTime"
+                          type="datetime-local"
+                          {...updateItineraryRegister("startDateTime", {
+                            required: "Start time is required",
+                          })}
+                        />
+                        {updateItineraryErrors.startDateTime && (
+                          <p className="text-sm text-destructive">
+                            {updateItineraryErrors.startDateTime.message as string}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="update-endDateTime">End Date Time *</Label>
+                        <Input
+                          id="update-endDateTime"
+                          type="datetime-local"
+                          {...updateItineraryRegister("endDateTime", {
+                            required: "End time is required",
+                          })}
+                        />
+                        {updateItineraryErrors.endDateTime && (
+                          <p className="text-sm text-destructive">
+                            {updateItineraryErrors.endDateTime.message as string}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="update-location">Location *</Label>
+                        <Input
+                          id="update-location"
+                          placeholder="Meeting point or address"
+                          {...updateItineraryRegister("location", {
+                            required: "Location is required",
+                          })}
+                        />
+                        {updateItineraryErrors.location && (
+                          <p className="text-sm text-destructive">
+                            {updateItineraryErrors.location.message as string}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <DialogFooter className="mt-6">
+                      <Button
+                        variant="outline"
+                        type="button"
+                        onClick={() => setUpdateItineraryDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={updateItinerary.isPending}>
+                        {updateItinerary.isPending
+                          ? "Updating..."
+                          : "Update Itinerary"}
+                      </Button>
+                    </DialogFooter>
+                  </form>
+                </DialogContent>
+              </Dialog>
+              )}
             </div>
             {travel.itineraries?.length === 0 && (
               <p className="text-muted-foreground text-sm">
@@ -456,17 +884,28 @@ export const TravelDetail = () => {
                   className="rounded-lg border border-slate-200 bg-white/80 px-4 py-3"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-sm font-bold">{entry.title}</div>
-                    <div className="text-muted-foreground">
-                      {entry.description}
+                    <div className="flex-1">
+                      <div className="text-sm font-bold">{entry.title}</div>
+                      <div className="text-muted-foreground">
+                        {entry.description}
+                      </div>
+                      <div className="font-medium text-sm">
+                        {DateTimeDisplay(entry.startDateTime || "")} →{" "}
+                        {DateTimeDisplay(entry.endDateTime || "")}
+                      </div>
+                      <span className="text-xs text-medium">
+                        {entry.location}
+                      </span>
                     </div>
-                    <div className="font-medium text-sm">
-                      {DateTimeDisplay(entry.startDateTime || "")} →{" "}
-                      {DateTimeDisplay(entry.endDateTime || "")}
-                    </div>
-                    <span className="text-xs text-medium">
-                      {entry.location}
-                    </span>
+                    {isHR && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openUpdateItineraryDialog(entry)}
+                      >
+                        Update
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -475,9 +914,172 @@ export const TravelDetail = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Bookings ({travel.travel_bookings?.length || 0})
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Bookings ({travel.travel_bookings?.length || 0})
+                </div>
+                {canUpdateTravel && (
+                  <Dialog
+                    open={bookingDialogOpen}
+                    onOpenChange={(open) => {
+                      setBookingDialogOpen(open);
+                      if (!open) bookingExpense();
+                    }}
+                  >
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Booking
+                      </Button>
+                    </DialogTrigger>
+
+                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Add Booking</DialogTitle>
+                        <DialogDescription>
+                          Add booking details for this travel.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <form
+                        onSubmit={bookingSubmit(onBookingSubmit)}
+                        className="space-y-4 py-4"
+                      >
+                        <div className="grid gap-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Booking Type *</Label>
+                              <select
+                                className={`w-full border rounded-md h-10 px-2 bg-background ${bookingErrors.bookingType ? "border-destructive" : ""}`}
+                                {...bookingRegister("bookingType", {
+                                  required: "Please select a type",
+                                })}
+                              >
+                                <option value="">Select type</option>
+                                <option value="FLIGHT">Flight</option>
+                                <option value="HOTEL">Hotel</option>
+                                <option value="TRAIN">Train</option>
+                                <option value="BUS">Bus</option>
+                                <option value="CAR_RENTAL">Car Rental</option>
+                                <option value="OTHER">Other</option>
+                              </select>
+                              {bookingErrors.bookingType && (
+                                <p className="text-sm text-destructive">
+                                  {bookingErrors.bookingType.message as string}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="provider-name">Provider Name *</Label>
+                              <Input
+                                id="provider-name"
+                                placeholder="e.g., Air India, Marriott"
+                                {...bookingRegister("provider_name", {
+                                  required: "Provider name is required",
+                                })}
+                              />
+                              {bookingErrors.provider_name && (
+                                <p className="text-sm text-destructive">
+                                  {bookingErrors.provider_name.message as string}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="booking-reference">Booking Reference</Label>
+                            <Input
+                              id="booking-reference"
+                              placeholder="Booking confirmation number"
+                              {...bookingRegister("booking_reference")}
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Amount *</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                placeholder="0.00"
+                                {...bookingRegister("amount", {
+                                  valueAsNumber: true,
+                                  required: "Amount is required",
+                                  min: {
+                                    value: 0.01,
+                                    message: "Amount must be greater than 0",
+                                  },
+                                })}
+                              />
+                              {bookingErrors.amount && (
+                                <p className="text-sm text-destructive">
+                                  {bookingErrors.amount.message as string}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>Currency *</Label>
+                              <Input
+                                placeholder="INR, USD, etc."
+                                {...bookingRegister("currency", {
+                                  required: "Currency is required",
+                                })}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Start Date Time *</Label>
+                              <Input
+                                type="datetime-local"
+                                {...bookingRegister("start_dateTime", {
+                                  required: "Start time is required",
+                                })}
+                              />
+                              {bookingErrors.start_dateTime && (
+                                <p className="text-sm text-destructive">
+                                  {bookingErrors.start_dateTime.message as string}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label>End Date Time *</Label>
+                              <Input
+                                type="datetime-local"
+                                {...bookingRegister("end_dateTime", {
+                                  required: "End time is required",
+                                })}
+                              />
+                              {bookingErrors.end_dateTime && (
+                                <p className="text-sm text-destructive">
+                                  {bookingErrors.end_dateTime.message as string}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <DialogFooter className="mt-6">
+                          <Button
+                            variant="outline"
+                            type="button"
+                            onClick={() => setBookingDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button type="submit" disabled={addBooking.isPending}>
+                            {addBooking.isPending ? "Adding..." : "Add Booking"}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -530,7 +1132,90 @@ export const TravelDetail = () => {
                     Travel Documents ({travel.travelDocument?.length || 0})
                   </div>
 
-                  <CollapsibleTrigger>Show documents</CollapsibleTrigger>
+                  <div className="flex items-center gap-2">
+                    {isHR && (
+                    <Dialog open={documentUploadOpen} onOpenChange={setDocumentUploadOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          <Upload className="h-4 w-4 mr-2" />
+                          Upload Documents
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-lg">
+                        <DialogHeader>
+                          <DialogTitle>Upload Travel Documents</DialogTitle>
+                          <DialogDescription>
+                            Upload visual documentation for this travel (receipts, tickets, etc.)
+                          </DialogDescription>
+                        </DialogHeader>
+
+                        <div className="space-y-4 py-4">
+                          <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                            <Input
+                              id="doc-upload"
+                              type="file"
+                              multiple
+                              accept="image/*,application/pdf"
+                              onChange={handleFileSelect}
+                              className="hidden"
+                            />
+                            <label htmlFor="doc-upload" className="cursor-pointer">
+                              <div className="text-sm text-muted-foreground">
+                                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                                <p className="font-medium">Click to upload documents</p>
+                                <p className="text-xs">PNG, JPG, PDF (max. 10MB each)</p>
+                              </div>
+                            </label>
+                          </div>
+
+                          {uploadFiles.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-sm font-medium">Selected files ({uploadFiles.length}):</p>
+                              <div className="space-y-2 max-h-48 overflow-y-auto">
+                                {uploadFiles.map((file, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center justify-between p-2 bg-muted rounded text-sm"
+                                  >
+                                    <span className="truncate">{file.name}</span>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => removeFile(index)}
+                                    >
+                                      ✕
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        <DialogFooter>
+                          <Button
+                            variant="outline"
+                            onClick={() => {
+                              setDocumentUploadOpen(false);
+                              setUploadFiles([]);
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleDocumentUpload}
+                            disabled={uploadTravelDocs.isPending || uploadFiles.length === 0}
+                          >
+                            {uploadTravelDocs.isPending ? "Uploading..." : "Upload Documents"}
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                    )}
+
+                    <CollapsibleTrigger>Show documents</CollapsibleTrigger>
+                  </div>
                 </CardTitle>
               </CardHeader>
               <CollapsibleContent>
@@ -546,12 +1231,12 @@ export const TravelDetail = () => {
                             href={travelDoc.fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
+                            className="block"
                           >
-                            <div className="absolute inset-0 z-30 object-cover" />
                             <img
                               src={travelDoc.fileUrl}
                               alt="document cover"
-                              className="relative aspect-video w-full object-cover brightness-95 rounded-t-xl"
+                              className="aspect-video w-full object-cover brightness-95 rounded-t-xl"
                             />
                           </a>
                           <CardHeader>
@@ -585,395 +1270,33 @@ export const TravelDetail = () => {
                                     {travelDoc.uploadedAt}
                                   </p>
                                 </div>
+                                {isHR && (
+                                  <div className="flex justify-end mt-2">
+                                    <Button
+                                      variant="destructive"
+                                      size="sm"
+                                      className="h-8 px-2"
+                                      onClick={() => handleDeleteDocument(travelDoc.id!)}
+                                      disabled={deleteTravelDocument.isPending}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
                             </CardContent>
                           </CardHeader>
                         </Card>
-
-                        // <div
-                        //   key={travelDoc.id}
-                        //   className="flex items-center justify-between p-3 border rounded-lg gap-6"
-                        // >
-                        //   <img src={travelDoc.fileUrl} className="max-w-50 max-h-30"/>
-
-                        //   <div className="flex flex-col gap-5">
-                        //     <div>
-                        //       <Label htmlFor="uploadedBy">Uploaded By</Label>
-                        //       <p id="uploadedBy">{travelDoc.uploadedBy}</p>
-                        //     </div>
-                        //     <div>
-                        //       <Label htmlFor="uploadedAt">Uploaded At</Label>
-                        //       <p id="uploadedAt">{travelDoc.uploadedAt}</p>
-                        //     </div>
-                        //   </div>
-                        // </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">No Bookings</p>
+                    <p className="text-muted-foreground">No Travel Docs</p>
                   )}
                 </CardContent>
               </CollapsibleContent>
             </Collapsible>
           </Card>
 
-          <Dialog
-            open={expenseDialogOpen}
-            onOpenChange={(open) => {
-              setExpenseDialogOpen(open);
-              if (!open) resetExpense();
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button variant="outline" className="bg-black text-white">
-                Add Expense
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Add Expense</DialogTitle>
-                <DialogDescription>
-                  Enter expense details for this travel.
-                </DialogDescription>
-              </DialogHeader>
-
-              {/* Use expenseSubmit wrapper here */}
-              <form
-                onSubmit={expenseSubmit(onExpenseSubmit)}
-                className="space-y-5 py-4"
-              >
-                <div className="grid gap-4">
-                  {/* Title */}
-                  <div className="space-y-2">
-                    <Label htmlFor="expense-title">Title *</Label>
-                    <Input
-                      id="expense-title"
-                      placeholder="e.g., Dinner with client"
-                      className={
-                        expenseErrors.title ? "border-destructive" : ""
-                      }
-                      {...expenseRegister("title", {
-                        required: "Title is required",
-                      })}
-                    />
-                    {expenseErrors.title && (
-                      <p className="text-sm text-destructive">
-                        {expenseErrors.title.message as string}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Paid By */}
-                  <div className="space-y-2">
-                    <Label htmlFor="paid_by">Paid By *</Label>
-                    <Input
-                      id="paid_by"
-                      placeholder="Name of employee"
-                      {...expenseRegister("paid_by", {
-                        required: "Who paid for this?",
-                      })}
-                    />
-                    {expenseErrors.paid_by && (
-                      <p className="text-sm text-destructive">
-                        {expenseErrors.paid_by.message as string}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Expense Type *</Label>
-                    <select
-                      className={`w-full border rounded-md h-10 px-2 bg-background ${expenseErrors.expense_type ? "border-destructive" : ""}`}
-                      {...expenseRegister("expense_type", {
-                        required: "Please select a type",
-                      })}
-                    >
-                      <option value="">Select type</option>
-                      <option value="TRANSPORTATION">Transportation</option>
-                      <option value="ACCOMMODATION">Accommodation</option>
-                      <option value="MEALS">Meals</option>
-                      <option value="ENTERTAINMENT">Entertainment</option>
-                    </select>
-                    {expenseErrors.expense_type && (
-                      <p className="text-sm text-destructive">
-                        {expenseErrors.expense_type.message as string}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Amount *</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="0.00"
-                        {...expenseRegister("amount", {
-                          valueAsNumber: true,
-                          required: "Amount is required",
-                          min: {
-                            value: 0.01,
-                            message: "Amount must be greater than 0",
-                          },
-                        })}
-                      />
-                      {expenseErrors.amount && (
-                        <p className="text-sm text-destructive">
-                          {expenseErrors.amount.message as string}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Currency *</Label>
-                      <Input
-                        placeholder="INR, USD, etc."
-                        {...expenseRegister("currency", {
-                          required: "Currency is required",
-                        })}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Expense Date *</Label>
-                    <Input
-                      type="date"
-                      {...expenseRegister("expenseDate", {
-                        required: "Date is required",
-                      })}
-                    />
-                    {expenseErrors.expenseDate && (
-                      <p className="text-sm text-destructive">
-                        {expenseErrors.expenseDate.message as string}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setExpenseDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={addExpense.isPending}>
-                    {addExpense.isPending ? "Adding..." : "Add Expense"}
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Receipt className="h-5 w-5" />
-                Expenses ({travel.expenses?.length || 0})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {travel.expenses && travel.expenses.length > 0 ? (
-                <div className="space-y-4">
-                  {travel.expenses.map((expense) => (
-                    <div
-                      key={expense.id}
-                      className="flex flex-col md:flex-row md:items-center justify-between p-4 border rounded-xl bg-card hover:shadow-sm transition-shadow gap-4"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="mt-1 bg-primary/10 p-2 rounded-lg">
-                          <Wallet className="h-5 w-5 text-primary" />
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-lg">
-                              {expense.title}
-                            </p>
-                            <Badge
-                              variant="secondary"
-                              className="text-[10px] uppercase"
-                            >
-                              {expense.expense_type}
-                            </Badge>
-                            <Badge
-                              variant={
-                                expense.status === "APPROVED"
-                                  ? "default"
-                                  : expense.status === "REJECTED"
-                                    ? "destructive"
-                                    : "outline"
-                              }
-                              className="text-[10px]"
-                            >
-                              {expense.status || "PENDING"}
-                            </Badge>
-                          </div>
-
-                          {expense.description && (
-                            <p className="text-sm text-muted-foreground">
-                              {expense.description}
-                            </p>
-                          )}
-
-                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-2 text-xs">
-                            <p>
-                              <span className="text-muted-foreground">
-                                Amount:
-                              </span>{" "}
-                              <span className="font-medium text-foreground">
-                                {expense.amount} {expense.currency}
-                              </span>
-                            </p>
-                            <p>
-                              <span className="text-muted-foreground">
-                                Date:
-                              </span>{" "}
-                              <span className="font-medium text-foreground">
-                                {expense.expenseDate}
-                              </span>
-                            </p>
-                            <p>
-                              <span className="text-muted-foreground">
-                                Paid By:
-                              </span>{" "}
-                              <span className="font-medium text-foreground">
-                                {expense.paid_by}
-                              </span>
-                            </p>
-                            <p>
-                              <span className="text-muted-foreground">
-                                Action taken By:
-                              </span>{" "}
-                              <span
-                                className={
-                                  expense.approved_by
-                                    ? "font-medium text-foreground"
-                                    : "text-orange-500 italic"
-                                }
-                              >
-                                {expense.approved_by || "Pending Approval"}
-                              </span>
-                            </p>
-                          </div>
-
-                          {expense.remark && (
-                            <p className="text-xs bg-muted/50 p-2 rounded mt-2 border-l-2 border-primary/30">
-                              <span className="font-semibold">Remark:</span>{" "}
-                              {expense.remark}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {expense.status == "SUBMITTED" && (
-                        <div className="flex items-center gap-2 self-end md:self-center">
-                          {/* Approvee */}
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-green-600 hover:bg-green-50"
-                              >
-                                Approve
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Approve Expense?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Add a message or remark for this approval.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <div className="space-y-2 py-2">
-                                <Label htmlFor="approveMessage">
-                                  Approval Message
-                                </Label>
-                                <Input
-                                  id="approveMessage"
-                                  placeholder="e.g., Valid travel expense"
-                                  onChange={(e) =>
-                                    setApproveMessage(e.target.value)
-                                  }
-                                />
-                              </div>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleApproveExpense(expense.id || "")
-                                  }
-                                  className="bg-green-600 hover:bg-green-700"
-                                >
-                                  Confirm
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-
-                          {/* Reject */}
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-destructive border-destructive/20 hover:bg-destructive/5"
-                              >
-                                Reject
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  Reject Expense?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Please provide a reason for rejection.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <div className="space-y-2 py-2">
-                                <Label htmlFor="rejectMessage">
-                                  Reason for Rejection
-                                </Label>
-                                <Input
-                                  id="rejectMessage"
-                                  placeholder="e.g., Missing receipt"
-                                  onChange={(e) =>
-                                    setRejectMessage(e.target.value)
-                                  }
-                                />
-                              </div>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleRejectExpense(expense.id || "")
-                                  }
-                                  className="bg-destructive hover:bg-destructive/90"
-                                >
-                                  Reject
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 border-2 border-dashed rounded-lg">
-                  <p className="text-muted-foreground">
-                    No expenses recorded for this trip.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </div>
 
         {/* Sidebar */}
@@ -991,9 +1314,95 @@ export const TravelDetail = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Travel Members ({travel.travelMembers?.length || 0})
+              <CardTitle>Expenses</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => navigate(`/employee/travels/${travelId}/expenses`)}
+              >
+                Manage Expenses
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Travel Members ({travel.travelMembers?.length || 0})
+                </div>
+                {canUpdateTravel && (
+                  <Dialog
+                    open={addMemberDialogOpen}
+                    onOpenChange={(open) => {
+                      setAddMemberDialogOpen(open);
+                      if (!open) resetAddMember();
+                    }}
+                  >
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Member
+                      </Button>
+                    </DialogTrigger>
+
+                    <DialogContent className="max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle>Add Travel Member</DialogTitle>
+                        <DialogDescription>
+                          Add a user as a member to this travel.
+                        </DialogDescription>
+                      </DialogHeader>
+
+                      <form
+                        onSubmit={addMemberSubmit(onAddMemberSubmit)}
+                        className="space-y-4 py-4"
+                      >
+                        <div className="grid gap-4">
+                          <div className="space-y-2">
+                            <Label>User *</Label>
+                            <select
+                              className={`w-full border rounded-md h-10 px-2 bg-background ${addMemberErrors.userId ? "border-destructive" : ""}`}
+                              {...addMemberRegister("userId", {
+                                required: "Please select a user",
+                              })}
+                            >
+                              <option value="">Select user</option>
+                              {users
+                                .filter(user => !travel.travelMembers?.some(member => member.member_id === user.userId))
+                                .map((user) => (
+                                  <option key={user.userId} value={user.userId!}>
+                                    {user.name}
+                                  </option>
+                                ))}
+                            </select>
+                            {addMemberErrors.userId && (
+                              <p className="text-sm text-destructive">
+                                {addMemberErrors.userId.message as string}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <DialogFooter className="mt-6">
+                          <Button
+                            variant="outline"
+                            type="button"
+                            onClick={() => setAddMemberDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button type="submit" disabled={addMember.isPending}>
+                            {addMember.isPending ? "Adding..." : "Add Member"}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1016,6 +1425,38 @@ export const TravelDetail = () => {
                           </p>
                         </div>
                       </div>
+                      {canUpdateTravel && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive border-destructive/20 hover:bg-destructive/5"
+                            >
+                              Remove
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Remove Member?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to remove {member.name} from this travel?
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteMember(member.id || "")}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                Remove
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1024,7 +1465,6 @@ export const TravelDetail = () => {
               )}
             </CardContent>
           </Card>
-
         </div>
       </div>
     </div>

@@ -37,198 +37,112 @@ public class TravelController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('PER010')")
-    public ApiResponse<TravelResponseSummary> createTravel(
-            @RequestBody TravelRequest request) {
-
-        return ApiResponse.success(
-                travelService.createTravel(request),
-                "Travel created successfully"
-        );
+    public ApiResponse<TravelResponseSummary> createTravel(@RequestBody TravelRequest request) {
+        return ApiResponse.success(travelService.createTravel(request), "Travel created successfully");
     }
 
     @GetMapping("/{travelId}")
-    @PreAuthorize("hasAuthority('PER011')")
-    public ApiResponse<TravelResponse> getTravel(
-            @PathVariable UUID travelId) {
-
-        return ApiResponse.success(
-                travelService.getTravel(travelId),
-                "Travel fetched successfully"
-        );
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<TravelResponse> getTravel(@PathVariable UUID travelId) {
+        return ApiResponse.success(travelService.getTravel(travelId), "Travel fetched successfully");
     }
 
     @GetMapping("/my")
-    @PreAuthorize("hasAuthority('PER011')")
+    @PreAuthorize("hasAuthority('PER010')")
     public ApiResponse<List<TravelResponseSummary>> getMyTravels() {
-
-        var currentUser = securityUtil.getCurrentUser();
-
-        notificationService.createNew(
-                currentUser,
-                currentUser,
-                NotificationType.TRAVEL,
-                "Travel fetched successfully",
-                "Travel fetched successfully"
-        );
-
-
-        return ApiResponse.success(
-                travelService.getMyTravel(),
-                "Travels fetched successfully"
-        );
+        return ApiResponse.success(travelService.getMyTravel(), "Travels fetched successfully");
     }
 
     // travels that are created by user
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAuthority('PER011')")
-    public ApiResponse<List<TravelResponseSummary>> getUserTravels(
-            @PathVariable UUID userId
-    ) {
-
-        return ApiResponse.success(
-                travelService.getTravelsForUser(userId),
-                "Travels fetched successfully"
-        );
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<List<TravelResponseSummary>> getUserTravels(@PathVariable UUID userId) {
+        return ApiResponse.success(travelService.getTravelsForUser(userId), "Travels fetched successfully");
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('PER011')")
+    @PreAuthorize("hasAuthority('PER010')")
     public ApiResponse<List<TravelResponseSummary>> getAllTravels() {
-
-        return ApiResponse.success(
-                travelService.getTravels(),
-                "Travels fetched successfully"
-        );
+        return ApiResponse.success(travelService.getTravels(), "Travels fetched successfully");
     }
 
     @PatchMapping("/{travelId}")
-    @PreAuthorize("hasAuthority('PER012')")
-    public ApiResponse<Void> updateTravel(
-            @PathVariable UUID travelId,
-            @RequestBody TravelUpdateRequest request
-    ) {
-
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<Void> updateTravel(@PathVariable UUID travelId, @RequestBody TravelUpdateRequest request) {
         travelService.updateTravel(travelId, request);
-
         return ApiResponse.success(null, "Travel updated successfully.");
     }
 
     @DeleteMapping("/{travelId}")
-    @PreAuthorize("hasAuthority('PER013')")
+    @PreAuthorize("hasAuthority('PER010')")
     public ApiResponse<Void> deleteTravel(@PathVariable UUID travelId) {
-
         travelService.deleteTravel(travelId);
-
         return ApiResponse.success(null, "Travel deleted successfully");
     }
 
 
     // Travel Member
 
-    @PostMapping("/{travelId}/members")
-    @PreAuthorize("hasAuthority('PER012')")
-    public ApiResponse<Set<TravelMemberResponse>> addMember(
-            @PathVariable UUID travelId,
-            @RequestBody TravelMemberRequest request) {
-
-        return ApiResponse.success(
-                travelService.addTravelMember(travelId, request),
-                "Member added successfully"
-        );
+    @PostMapping("/{travelId}/members/{userId}")
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<TravelMemberResponse> addMember(@PathVariable UUID travelId, @PathVariable UUID userId) {
+        return ApiResponse.success(travelService.addTravelMember(travelId, userId), "Member added successfully");
     }
 
 
     @DeleteMapping("/members/{memberId}")
-    @PreAuthorize("hasAuthority('PER012')")
-    public ApiResponse<Void> deleteMember(
-            @PathVariable UUID memberId
-    ) {
-
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<Void> deleteMember(@PathVariable UUID memberId) {
         travelService.deleteMember(memberId);
-
-        return ApiResponse.success( null, "Member Removed Successfully.");
+        return ApiResponse.success(null, "Member Removed Successfully.");
     }
 
     // Travel Itinerary
 
     @PostMapping("/{travelId}/itinerary")
-    @PreAuthorize("hasAuthority('PER012')")
-    public ApiResponse<TravelItineraryResponse> addItinerary(
-            @PathVariable UUID travelId,
-            @RequestBody TravelItineraryRequest request) {
-
-        return ApiResponse.success(
-                travelService.addTravelItinerary(travelId, request),
-                "Itinerary added successfully"
-        );
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<TravelItineraryResponse> addItinerary(@PathVariable UUID travelId, @RequestBody TravelItineraryRequest request) {
+        return ApiResponse.success(travelService.addTravelItinerary(travelId, request), "Itinerary added successfully");
     }
 
     @GetMapping("/{travelId}/itinerary")
-    @PreAuthorize("hasAuthority('PER011')")
-    public ApiResponse<List<TravelItineraryResponse>> getItinerary(
-            @PathVariable UUID travelId) {
-
-        return ApiResponse.success(
-                travelService.getTravelItineraries(travelId),
-                "Itinerary fetched successfully"
-        );
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<List<TravelItineraryResponse>> getItinerary(@PathVariable UUID travelId) {
+        return ApiResponse.success(travelService.getTravelItineraries(travelId), "Itinerary fetched successfully");
     }
 
     @PatchMapping("/itinerary/{itineraryId}")
-    @PreAuthorize("hasAuthority('PER012')")
-    public ApiResponse<Void> updateItinerary(
-            @PathVariable UUID itineraryId,
-            @RequestBody TravelItineraryRequest request
-    ) {
-
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<Void> updateItinerary(@PathVariable UUID itineraryId, @RequestBody TravelItineraryRequest request) {
         travelService.updateItinerary(itineraryId, request);
-
         return ApiResponse.success(null, "Itinerary updated successfully");
     }
 
     // Travel Booking
 
     @PostMapping("/{travelId}/booking")
-    @PreAuthorize("hasAuthority('PER012')")
-    public ApiResponse<TravelBookingResponse> addBooking (
-            @PathVariable UUID travelId,
-            @RequestBody TravelBookingRequest request) {
-
-        return ApiResponse.success(
-                travelService.addTravelBooking(travelId, request),
-                "Booking added successfully"
-        );
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<TravelBookingResponse> addBooking(@PathVariable UUID travelId, @RequestBody TravelBookingRequest request) {
+        return ApiResponse.success(travelService.addTravelBooking(travelId, request), "Booking added successfully");
     }
 
     @GetMapping("/{travelId}/booking")
-    @PreAuthorize("hasAuthority('PER011')")
-    public ApiResponse<List<TravelBookingResponse>> getBookings (
-            @PathVariable UUID travelId) {
-
-        return ApiResponse.success(
-                travelService.getTravelBookings(travelId),
-                "Bookings fetched successfully"
-        );
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<List<TravelBookingResponse>> getBookings(@PathVariable UUID travelId) {
+        return ApiResponse.success(travelService.getTravelBookings(travelId), "Bookings fetched successfully");
     }
 
     @PatchMapping("booking/{bookingId}")
-    @PreAuthorize("hasAuthority('PER012')")
-    public ApiResponse<Void> updateBooking (
-            @PathVariable UUID bookingId,
-            @RequestBody TravelBookingRequest request
-    ) {
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<Void> updateBooking(@PathVariable UUID bookingId, @RequestBody TravelBookingRequest request) {
         travelService.updateBooking(bookingId, request);
-
         return ApiResponse.success(null, "Booking updated successfully.");
     }
 
     @DeleteMapping("booking/{bookingId}")
-    @PreAuthorize("hasAuthority('PER013')")
-    public ApiResponse<Void> deleteBooking (
-            @PathVariable UUID bookingId
-    ) {
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<Void> deleteBooking(@PathVariable UUID bookingId) {
         travelService.deleteBooking(bookingId);
-
         return ApiResponse.success(null, "Booking deleted successfully.");
     }
 
@@ -236,97 +150,79 @@ public class TravelController {
     // Travel Doc
 
     @PostMapping("/{travelId}/documents")
-    @PreAuthorize("hasAuthority('PER011')")
-    public ApiResponse<DocUploadResponse> uploadTravelDocument(
-            @PathVariable UUID travelId,
-            @RequestParam("files") MultipartFile[] files) throws IOException {
-
-        return ApiResponse.success(
-                travelDocumentService.addTravelDocs(travelId, files),
-                "Document uploaded successfully"
-        );
+    @PreAuthorize("hasAuthority('PER021')")
+    public ApiResponse<DocUploadResponse> uploadTravelDocument(@PathVariable UUID travelId, @RequestParam("files") MultipartFile[] files) throws IOException {
+        return ApiResponse.success(travelDocumentService.addTravelDocs(travelId, files), "Document uploaded successfully");
     }
 
     @GetMapping("/{travelId}/documents")
-    @PreAuthorize("hasAuthority('PER011')")
-    public ApiResponse<List<TravelDocument>> getTravelDocuments(
-            @PathVariable UUID travelId) {
+    @PreAuthorize("hasAuthority('PER021')")
+    public ApiResponse<List<TravelDocumentResponseDto>> getTravelDocuments(@PathVariable UUID travelId) {
+        return ApiResponse.success(travelDocumentService.getTravelDocs(travelId), "Documents fetched successfully");
+    }
 
-        return ApiResponse.success(
-                travelDocumentService.getTravelDocs(travelId),
-                "Documents fetched successfully"
-        );
+    @DeleteMapping("/documents/{docId}")
+    @PreAuthorize("hasAuthority('PER021')")
+    public ApiResponse<Void> deleteTravelDocument(@PathVariable UUID docId) {
+        travelDocumentService.deleteTravelDoc(docId);
+        return ApiResponse.success(null, "Document deleted successfully");
     }
 
 
     // Expense
 
     @PostMapping("/{travelId}/expenses")
-    @PreAuthorize("hasAuthority('PER011')")
-    public ApiResponse<TravelExpenseResponse> addExpense(
-            @PathVariable UUID travelId,
-            @RequestBody TravelExpenseRequest request) {
-
-        return ApiResponse.success(
-                travelExpenseService.addTravelExpense(travelId, request),
-                "Expense added successfully"
-        );
+    @PreAuthorize("hasAuthority('PER021')")
+    public ApiResponse<TravelExpenseResponse> addExpense(@PathVariable UUID travelId, @RequestBody TravelExpenseRequest request) {
+        return ApiResponse.success(travelExpenseService.addTravelExpense(travelId, request), "Expense added successfully");
     }
 
     @GetMapping("/{travelId}/expenses")
-    @PreAuthorize("hasAuthority('PER011')")
-    public ApiResponse<List<TravelExpenseResponse>> getExpenses(
-            @PathVariable UUID travelId) {
-
-        return ApiResponse.success(
-                travelExpenseService.getAllExpenses(travelId),
-                "Expenses fetched successfully"
-        );
+    @PreAuthorize("hasAuthority('PER021')")
+    public ApiResponse<List<TravelExpenseResponse>> getExpenses(@PathVariable UUID travelId) {
+        return ApiResponse.success(travelExpenseService.getAllExpenses(travelId), "Expenses fetched successfully");
     }
 
     @PutMapping("/expenses/{expenseId}/approve")
     @PreAuthorize("hasAuthority('PER014')")
-    public ApiResponse<Void> approveExpense(
-            @PathVariable UUID expenseId,
-            @RequestBody String remark) {
-
+    public ApiResponse<Void> approveExpense(@PathVariable UUID expenseId, @RequestBody String remark) {
         travelExpenseService.approveExpense(expenseId, remark);
         return ApiResponse.success(null, "Expense approved");
     }
 
     @PutMapping("/expenses/{expenseId}/reject")
     @PreAuthorize("hasAuthority('PER014')")
-    public ApiResponse<Void> rejectExpense(
-            @PathVariable UUID expenseId,
-            @RequestBody String remark) {
-
+    public ApiResponse<Void> rejectExpense(@PathVariable UUID expenseId, @RequestBody String remark) {
         travelExpenseService.rejectExpense(expenseId, remark);
         return ApiResponse.success(null, "Expense rejected");
+    }
+
+    @DeleteMapping("/expenses/{expenseId}")
+    @PreAuthorize("hasAuthority('PER021')")
+    public ApiResponse<Void> deleteExpense(@PathVariable UUID expenseId) {
+        travelExpenseService.deleteExpense(expenseId);
+        return ApiResponse.success(null, "Expense deleted successfully");
     }
 
 
     // Expense Doc
 
     @PostMapping("/expenses/{expenseId}/documents")
-    @PreAuthorize("hasAuthority('PER011')")
-    public ApiResponse<DocUploadResponse> uploadExpenseDocs(
-            @PathVariable UUID expenseId,
-            @RequestParam("files") MultipartFile[] files) throws IOException {
-
-        return ApiResponse.success(
-                expenseDocumentService.addExpenseDocs(expenseId, files),
-                "Expense documents uploaded"
-        );
+    @PreAuthorize("hasAuthority('PER021')")
+    public ApiResponse<DocUploadResponse> uploadExpenseDocs(@PathVariable UUID expenseId, @RequestParam("files") MultipartFile[] files) throws IOException {
+        return ApiResponse.success(expenseDocumentService.addExpenseDocs(expenseId, files), "Expense documents uploaded");
     }
 
     @GetMapping("/expenses/{expenseId}/documents")
-    @PreAuthorize("hasAuthority('PER011')")
-    public ApiResponse<List<ExpenseDocument>> getExpenseDocs(
-            @PathVariable UUID expenseId) {
+    @PreAuthorize("hasAuthority('PER021')")
+    public ApiResponse<List<ExpenseDocumentResponseDto>> getExpenseDocs(@PathVariable UUID expenseId) {
+        return ApiResponse.success(expenseDocumentService.getTravelExpenseDocs(expenseId), "Expense documents fetched");
+    }
 
-        return ApiResponse.success(
-                expenseDocumentService.getTravelExpenseDocs(expenseId),
-                "Expense documents fetched"
-        );
+    @DeleteMapping("/expenses/documents/{docId}")
+    @PreAuthorize("hasAuthority('PER021')")
+    public ApiResponse<Void> deleteExpenseDocument(@PathVariable UUID docId) {
+        expenseDocumentService.deleteExpenseDoc(docId);
+        return ApiResponse.success(null, "Expense document deleted successfully");
     }
 }

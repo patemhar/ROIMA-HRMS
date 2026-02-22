@@ -47,6 +47,18 @@ class jobService {
             data
         )
     }
+
+    getJobSharingRecords() : ApiResult<Schemas["JobSharingRecordResponseDto"][]> {
+        return apiClient.get<Schemas["JobSharingRecordResponseDto"][]>(
+            '/api/jobs/sharing-records'
+        )
+    }
+
+    getReferrals() : ApiResult<Schemas["ReferralResponseDto"][]> {
+        return apiClient.get<Schemas["ReferralResponseDto"][]>(
+            '/api/jobs/referrals'
+        )
+    }
 }
 
 export const JobService = new jobService();

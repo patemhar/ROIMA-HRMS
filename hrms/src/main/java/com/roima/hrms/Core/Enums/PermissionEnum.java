@@ -2,38 +2,37 @@ package com.roima.hrms.Core.Enums;
 
 public enum PermissionEnum {
     // User permissions
-    USER_READ("PER001", "Read user details"),
-    USER_UPDATE("PER002", "Update user details"),
-    USER_UPDATE_ADMIN("PER053", "Permission to update user details as admin"),
+    USER_SELF_UPDATE("PER001", "Update own user account"),
+    USER_MANAGE("PER002", "Manage all users (HR/Admin)"),
 
     // Profile permissions
-    PROFILE_CREATE("PER003", "Create profile"),
-    PROFILE_READ("PER004", "Read profiles"),
-    PROFILE_UPDATE("PER005", "Update profiles"),
+    PROFILE_SELF_MANAGE("PER003", "Manage own profile"),
+    PROFILE_MANAGE("PER004", "Manage all profiles (HR/Admin)"),
 
     // Job permissions
-    JOB_CREATE("PER006", "Create job"),
-    JOB_READ("PER007", "Read jobs"),
-    JOB_UPDATE("PER008", "Update job"),
-    JOB_DELETE("PER009", "Delete job"),
+    JOB_VIEW("PER005", "View jobs"),
+    JOB_MANAGE("PER006", "Manage jobs (HR)"),
 
     // Travel permissions
-    TRAVEL_CREATE("PER010", "Create travel"),
-    TRAVEL_READ("PER011", "Read travels"),
-    TRAVEL_UPDATE("PER012", "Update travel"),
-    TRAVEL_DELETE("PER013", "Delete travel"),
+    TRAVEL_VIEW("PER007", "View travels"),
+    TRAVEL_MANAGE("PER010", "Manage travels"),
     TRAVEL_APPROVE("PER014", "Approve travel expenses"),
 
     // Game permissions
-    GAME_CREATE("PER015", "Create game"),
-    GAME_READ("PER016", "Read games"),
-    GAME_UPDATE("PER017", "Update game"),
+    GAME_VIEW("PER016", "View games"),
+    GAME_MANAGE("PER015", "Manage games"),
 
     // OrgChart permissions
     ORG_READ("PER018", "Read org chart"),
 
     // Util permissions
     UTIL_READ("PER019", "Read utility data"),
+
+    TRAVEL_DOC("PER021", "Manage travel documents"),
+
+    ACHIEVEMENT("PER022", "Achievements"),
+
+    ADMIN("PER053", "Admin permissions"),
 
     // Notification permissions
     NOTIFICATION_SUBSCRIBE("PER020", "Subscribe to notifications");

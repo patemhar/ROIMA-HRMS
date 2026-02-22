@@ -30,7 +30,7 @@ public class JobMapper {
         job.setApplication_deadline(dto.getApplication_deadline());
         job.setMin_experience(dto.getMin_experience());
         job.setLocation(dto.getLocation());
-        job.set_active(dto.is_active());
+        job.setIsActive(true);
 
         // Mapping Relationships
         if (dto.getDepartment_id() != null) {

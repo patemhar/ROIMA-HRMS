@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -79,6 +80,15 @@ public class notificationServiceImpl implements NotificationService {
     public void markAsRead(UUID notificationId) {
         notificationRepository.markAsRead(notificationId);
     }
+
+    @Override
+    public List<notificationResponseDto> getUnreadNotifications(UUID userId) {
+        List<Notification> unreadNotifications = notificationRepository.findUnreadByUserId(userId);
+        return unreadNotifications.stream()
+                .map(notificationMapper::ToNotificationRespones)
+                .toList();
+    }
+
 }
 
 // -------------------------------------------------------------------------

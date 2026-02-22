@@ -1,7 +1,9 @@
 export const gameKeys = {
 
-    all: ["game"] as const
-
+    all: ["game"] as const,
+    cycleByGameId: (gameId: string) => ["cycle", gameId] as const, 
+    gameById: (gameId: string) => ["games", gameId] as const,
+    slotsByGame: (gameId: string, date: string) => ["game", "slots", gameId, date] as const
 }
 
 export const normalCacheConfig = {

@@ -35,8 +35,6 @@ public class TravelResponse {
 
     private List<TravelItineraryResponse> itineraries = new ArrayList<>();
 
-    private List<TravelExpenseResponse> expenses = new ArrayList<>();
-
     private List<TravelBookingResponse> travel_bookings = new ArrayList<>();
 
     private List<TravelDocResponse> travelDocument = new ArrayList<>();

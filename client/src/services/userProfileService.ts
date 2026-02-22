@@ -17,10 +17,11 @@ class UserProfileService {
   }
 
   async updateProfile (
+    profileId: string,
     data: Schemas["ProfileAdminRequestDTO"]
   ) : ApiResult<Schemas["ProfileResponseDTO"]> {
     return apiClient.patch(
-      '/profiles',
+      `/profiles/${profileId}`,
       data
     )
   }

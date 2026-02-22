@@ -1,21 +1,14 @@
-import { useEffect, useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+﻿import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import { User, Upload, Edit2, Save, X } from "lucide-react";
+import { Upload, User } from "lucide-react";
 import { ProfileInfoCard } from "@/components/Account/ProfileInfoCard";
+import { MyAccountCard } from "@/components/Account/MyAccountCard";
+import { GameInterestsCard } from "@/components/Account/GameInterestsCard";
 import {
-  useAccountDetails,
-  useAddInterest,
   useCreateProfile,
   useMyProfile,
-  useRemoveInterest,
   useUploadAvatar,
-  useUpdateMyUser,
   useUpdateUserByHR,
 } from "@/hooks/user/user.hooks";
 import OrgChartComponent from "@/components/orgChart/orgChart";
@@ -40,11 +33,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useGetAllDepartments, useGetAllGames, useGetAllRoles, useGetAllUsers } from "@/hooks/util/util.hooks";
+import {
+  useGetAllDepartments,
+  useGetAllRoles,
+  useGetAllUsers,
+} from "@/hooks/util/util.hooks";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/utils/error";
+import type { components } from "@/types/api";
+import { DateTimeDisplay } from "@/utils/dateUtils";
 
-const emptyProfileForm = {
+type Schemas = components["schemas"];
+
+const emptyCreateProfileForm: Schemas["ProfileAdminRequestDTO"] = {
   userId: "",
   empNumber: "",
   departmentId: "",
@@ -54,472 +55,360 @@ const emptyProfileForm = {
   location: "",
 };
 
+const emptyUpdateUserForm = {
+  userId: "",
+  firstName: "",
+  lastName: "",
+  email: "",
+  roleId: "",
+  reportsToId: "",
+  isActive: "true",
+};
+
 export const AccountSettingsPage = () => {
   const role = useAuth((state) => state.auth.user?.role);
   const permissions = useAuth((state) => state.auth.user?.permission);
   const canReadOrgChart = hasPermission(
     permissions,
-    PermissionCode.ORG_CHART_READ,
+    PermissionCode.ORG_READ,
   );
-  const canManageHrProfiles = role === "HR";
+  const isHR = role === "HR";
 
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [updateAccountDialogOpen, setUpdateAccountDialogOpen] = useState(false);
-  const [createForm, setCreateForm] = useState(emptyProfileForm);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [isEditingAccount, setIsEditingAccount] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
-  const [accountEditForm, setAccountEditForm] = useState({
-    first_name: "",
-    last_name: "",
-    email: "",
-    role: "",
-    reports_to: "",
-    is_active: "true",
-    userId: "",
-  });
-  
-  const [adminAccountEditForm, setAdminAccountEditForm] = useState({
-    userId: "",
-    first_name: "",
-    last_name: "",
-    email: "",
-    role: "",
-    reports_to: "",
-    is_active: "true",
-  });
-
-  const useAccountDetailsQuery = useAccountDetails();
-  const accountDetails = useAccountDetailsQuery.data;
+  // Queries
   const myProfileQuery = useMyProfile();
   const usersQuery = useGetAllUsers();
   const departmentsQuery = useGetAllDepartments();
-  const gamesQuery = useGetAllGames();
-  const getAllRoles = useGetAllRoles();
-
-  const roles = getAllRoles.data ?? [];
+  const rolesQuery = useGetAllRoles();
 
   const users = usersQuery.data ?? [];
   const departments = departmentsQuery.data ?? [];
-  const games = gamesQuery.data ?? [];
+  const roles = rolesQuery.data ?? [];
   const myInterests = myProfileQuery.data?.gameInterests ?? [];
 
-  const getUserName = (userId: string): string => {
-    const user = users.find(u => u.userId === userId);
-    return user ? user.name || userId : userId;
-  };
-
-  const createProfileMutation = useCreateProfile();
-  const addInterestMutation = useAddInterest();
-  const uploadAvatarMutation = useUploadAvatar();
-  const removeInterestMutation = useRemoveInterest();
-  const updateMyUserMutation = useUpdateMyUser();
+  // Mutations
   const updateUserByHRMutation = useUpdateUserByHR();
+  const createProfileMutation = useCreateProfile();
+  const uploadAvatarMutation = useUploadAvatar();
 
-  useEffect(() => {
-    if (!accountDetails) return;
-
-    setAccountEditForm({
-      first_name: accountDetails.first_name ?? "",
-      last_name: accountDetails.last_name ?? "",
-      email: accountDetails.email ?? "",
-      role: accountDetails.role ?? "",
-      reports_to: accountDetails.reports_to ?? "",
-      is_active: accountDetails.is_active?.toString() ?? "true",
-      userId: accountDetails.id ?? "",
-    });
-  }, [accountDetails]);
-
-  const handleCreateProfile = async () => {
-    try {
-      await createProfileMutation.mutateAsync({
-        userId: createForm.userId,
-        empNumber: createForm.empNumber,
-        departmentId: createForm.departmentId,
-        joinedDate: createForm.joinedDate,
-        phone: createForm.phone,
-        bio: createForm.bio,
-        location: createForm.location,
-      });
-
-      toast.success("Profile created successfully");
-      setCreateDialogOpen(false);
-      setCreateForm(emptyProfileForm);
-      myProfileQuery.refetch();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create profile");
-    }
-  };
-
-  const handleAddInterest = async (gameId: string) => {
-
-    if (myInterests.includes(gameId)) {
-      toast.error("You already have this interest");
-      return;
-    }
-
-    try {
-      await addInterestMutation.mutateAsync(gameId);
-      toast.success("Interest added successfully");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-      console.error("Error adding interest:", error);
-    }
-  };
-
-  const handleRemoveInterest = async (gameId: string) => {
-    try {
-      await removeInterestMutation.mutateAsync(gameId);
-      toast.success("Interest removed successfully");
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-      console.error("Error removing interest:", error);
-    }
-  };
+  // Avatar state
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { 
-        toast.error("File size must be less than 5MB");
-        return;
-      }
-      if (!file.type.startsWith("image/")) {
-        toast.error("File must be an inage");
-        return;
-      }
-      setAvatarFile(file);
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
     }
+    if (!file.type.startsWith("image/")) {
+      toast.error("File must be an image");
+      return;
+    }
+    setAvatarFile(file);
   };
 
   const handleAvatarUpload = async () => {
-   
     if (!avatarFile) {
       toast.error("Please select an image");
       return;
     }
-
     try {
-     
       await uploadAvatarMutation.mutateAsync(avatarFile);
-     
       toast.success("Avatar uploaded successfully");
       setAvatarFile(null);
     } catch (error) {
-     
-      const errorMessage = error instanceof Error ? error.message : "Failed to upload avatar";
-      toast.error(errorMessage);
-      console.error("Error uploading avatar:", error);
-    }
-  };
-
-  const handleSaveAccountEdit = async () => {
-    try {
-      const baseData = {
-        firstName: accountEditForm.first_name,
-        lastName: accountEditForm.last_name,
-        email: accountEditForm.email,
-      };
-
-      if (canManageHrProfiles) {
-        await updateUserByHRMutation.mutateAsync({
-          userId: accountEditForm.userId,
-          data: {
-            ...baseData,
-            roleId: accountEditForm.role,
-            reportsToId: accountEditForm.reports_to,
-            isActive: accountEditForm.is_active === "true",
-          } as any,
-        });
-      } else {
-        await updateMyUserMutation.mutateAsync(baseData);
-      }
-
-      toast.success("Account updated successfully");
-      setIsEditingAccount(false);
-      useAccountDetailsQuery.refetch();
-    } catch (error) {
-      setErrorMessage(getErrorMessage(error));
       toast.error(getErrorMessage(error));
-      console.error("Error updating account:", error);
     }
   };
 
-  const handleSaveAdminAccountEdit = async () => {
+  // HR: Create Profile dialog
+  const [createProfileOpen, setCreateProfileOpen] = useState(false);
+  const [createProfileForm, setCreateProfileForm] = useState(
+    emptyCreateProfileForm,
+  );
+
+  const handleCreateProfile = async () => {
+    try {
+      await createProfileMutation.mutateAsync(createProfileForm);
+      toast.success("Profile created successfully");
+      setCreateProfileOpen(false);
+      setCreateProfileForm(emptyCreateProfileForm);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  // HR: Update User Account dialog
+  const [updateUserOpen, setUpdateUserOpen] = useState(false);
+  const [updateUserForm, setUpdateUserForm] = useState(emptyUpdateUserForm);
+
+  const handleSelectUserForAccountUpdate = (userId: string) => {
+    const user = users.find((u) => u.userId === userId);
+    setUpdateUserForm({
+      userId,
+      firstName: user?.name?.split(" ")[0] ?? "",
+      lastName: user?.name?.split(" ").slice(1).join(" ") ?? "",
+      email: "",
+      roleId: "",
+      reportsToId: "",
+      isActive: "true",
+    });
+  };
+
+  const handleUpdateUserAccount = async () => {
     try {
       await updateUserByHRMutation.mutateAsync({
-        userId: adminAccountEditForm.userId,
+        userId: updateUserForm.userId,
         data: {
-          firstName: adminAccountEditForm.first_name,
-          lastName: adminAccountEditForm.last_name,
-          email: adminAccountEditForm.email,
-          roleId: adminAccountEditForm.role,
-          reportsToId: adminAccountEditForm.reports_to,
-          isActive: adminAccountEditForm.is_active === "true",
-        } as any,
+          firstName: updateUserForm.firstName || undefined,
+          lastName: updateUserForm.lastName || undefined,
+          email: updateUserForm.email || undefined,
+          roleId: updateUserForm.roleId || undefined,
+          reportsToId: updateUserForm.reportsToId || undefined,
+          isActive: updateUserForm.isActive === "true",
+        },
       });
-
-      toast.success("Account updated successfully");
-      setUpdateAccountDialogOpen(false);
-      setAdminAccountEditForm({
-        userId: "",
-        first_name: "",
-        last_name: "",
-        email: "",
-        role: "",
-        reports_to: "",
-        is_active: "true",
-      });
-      usersQuery.refetch();
+      toast.success("User account updated successfully");
+      setUpdateUserOpen(false);
+      setUpdateUserForm(emptyUpdateUserForm);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Failed to update account";
-      toast.error(errorMessage);
-      console.error("Error updating account:", error);
+      toast.error(getErrorMessage(error));
     }
   };
-
-  const handleSelectUserForAdminUpdate = (userId: string) => {
-    const user = users.find(u => u.userId === userId);
-    if (user) {
-      setAdminAccountEditForm({
-        userId: user.userId || "",
-        first_name: user.name?.split(" ")[0] ?? "",
-        last_name: user.name?.split(" ").slice(1).join(" ") ?? "",
-        email: "",
-        role: "",
-        reports_to: "",
-        is_active: "true",
-      });
-    }
-  };
-
-  console.log(accountDetails?.is_active);
 
   return (
     <div className="container mx-auto max-w-4xl py-8 space-y-6">
-
-    {/* Success/Error Messages */}
-    {successMessage && (
-      <div className="bg-green-50 text-green-800 p-3 rounded-md text-sm">
-        {successMessage}
-      </div>
-    )}
-    {errorMessage && (
-      <div className="bg-red-50 text-red-800 p-3 rounded-md text-sm">
-        {errorMessage}
-      </div>
-    )}
-
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
         <p className="text-muted-foreground mt-2">
-          Manage your account information and security
+          Manage your account, profile, and preferences
         </p>
       </div>
 
-      {canManageHrProfiles && (
+      {/* HR Management */}
+      {isHR && (
         <Card>
           <CardHeader>
-            <CardTitle>HR Profile Management</CardTitle>
+            <CardTitle>HR Management</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
-            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button>Create Profile</Button>
-                </DialogTrigger>
-              <DialogContent className="max-w-lg">
+            {/* Create Profile */}
+            <Dialog
+              open={createProfileOpen}
+              onOpenChange={(o) => {
+                setCreateProfileOpen(o);
+                if (!o) setCreateProfileForm(emptyCreateProfileForm);
+              }}
+            >
+              <DialogTrigger asChild>
+                <Button>Create Employee Profile</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Create Profile</DialogTitle>
+                  <DialogTitle>Create Employee Profile</DialogTitle>
                   <DialogDescription>
-                    Create a profile.
+                    Create a new employment profile for a user.
                   </DialogDescription>
                 </DialogHeader>
-
                 <div className="grid gap-3 py-2">
-                  <Label>User</Label>
+                  <Label>User *</Label>
                   <Select
-                    value={createForm.userId}
-                    onValueChange={(value) =>
-                      setCreateForm((prev) => ({ ...prev, userId: value }))
+                    value={createProfileForm.userId}
+                    onValueChange={(v) =>
+                      setCreateProfileForm((p) => ({ ...p, userId: v }))
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue
-                        placeholder={usersQuery.isLoading ? "Loading users..." : "Select user"}
-                      />
+                      <SelectValue placeholder="Select user" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {users.map((user) => (
-                          <SelectItem key={user.userId} value={user.userId!}>
-                            {user.name}
+                        {users.map((u) => (
+                          <SelectItem key={u.userId} value={u.userId!}>
+                            {u.name}
                           </SelectItem>
                         ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-
                   <Label>Employee Number</Label>
                   <Input
-                    value={createForm.empNumber}
+                    value={createProfileForm.empNumber ?? ""}
                     onChange={(e) =>
-                      setCreateForm((prev) => ({ ...prev, empNumber: e.target.value }))
+                      setCreateProfileForm((p) => ({
+                        ...p,
+                        empNumber: e.target.value,
+                      }))
                     }
                     placeholder="EMP-001"
                   />
-
-                  <Label>Department</Label>
+                  <Label>Department *</Label>
                   <Select
-                    value={createForm.departmentId}
-                    onValueChange={(value) =>
-                      setCreateForm((prev) => ({ ...prev, departmentId: value }))
+                    value={createProfileForm.departmentId}
+                    onValueChange={(v) =>
+                      setCreateProfileForm((p) => ({ ...p, departmentId: v }))
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue
-                        placeholder={
-                          departmentsQuery.isLoading
-                            ? "Loading departments..."
-                            : "Select department"
-                        }
-                      />
+                      <SelectValue placeholder="Select department" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {departments.map((department) => (
+                        {departments.map((d) => (
                           <SelectItem
-                            key={department.departmentId}
-                            value={department.departmentId!}
+                            key={d.departmentId}
+                            value={d.departmentId!}
                           >
-                            {department.name}
+                            {d.name}
                           </SelectItem>
                         ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-
                   <Label>Joined Date</Label>
                   <Input
                     type="date"
-                    value={createForm.joinedDate}
+                    value={createProfileForm.joinedDate ?? ""}
                     onChange={(e) =>
-                      setCreateForm((prev) => ({ ...prev, joinedDate: e.target.value }))
+                      setCreateProfileForm((p) => ({
+                        ...p,
+                        joinedDate: e.target.value,
+                      }))
                     }
                   />
-
                   <Label>Phone</Label>
                   <Input
-                    value={createForm.phone}
+                    value={createProfileForm.phone ?? ""}
                     onChange={(e) =>
-                      setCreateForm((prev) => ({ ...prev, phone: e.target.value }))
+                      setCreateProfileForm((p) => ({
+                        ...p,
+                        phone: e.target.value,
+                      }))
                     }
-                    placeholder="Phone"
+                    placeholder="+91 12345 67890"
                   />
-
                   <Label>Bio</Label>
                   <Input
-                    value={createForm.bio}
+                    value={createProfileForm.bio ?? ""}
                     onChange={(e) =>
-                      setCreateForm((prev) => ({ ...prev, bio: e.target.value }))
+                      setCreateProfileForm((p) => ({
+                        ...p,
+                        bio: e.target.value,
+                      }))
                     }
-                    placeholder="Bio"
+                    placeholder="Short bio"
                   />
-
                   <Label>Location</Label>
                   <Input
-                    value={createForm.location}
+                    value={createProfileForm.location ?? ""}
                     onChange={(e) =>
-                      setCreateForm((prev) => ({ ...prev, location: e.target.value }))
+                      setCreateProfileForm((p) => ({
+                        ...p,
+                        location: e.target.value,
+                      }))
                     }
-                    placeholder="Location"
+                    placeholder="City, Country"
                   />
                 </div>
-
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setCreateProfileOpen(false)}
+                  >
                     Cancel
                   </Button>
                   <Button
                     onClick={handleCreateProfile}
-                    disabled={createProfileMutation.isPending || !createForm.userId}
+                    disabled={
+                      createProfileMutation.isPending ||
+                      !createProfileForm.userId ||
+                      !createProfileForm.departmentId
+                    }
                   >
-                    {createProfileMutation.isPending ? "Creating..." : "Create"}
+                    {createProfileMutation.isPending
+                      ? "Creating..."
+                      : "Create Profile"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
 
-            <Dialog open={updateAccountDialogOpen} onOpenChange={setUpdateAccountDialogOpen}>
+            {/* Update User Account */}
+            <Dialog
+              open={updateUserOpen}
+              onOpenChange={(o) => {
+                setUpdateUserOpen(o);
+                if (!o) setUpdateUserForm(emptyUpdateUserForm);
+              }}
+            >
               <DialogTrigger asChild>
                 <Button variant="outline">Update User Account</Button>
               </DialogTrigger>
-              <DialogContent className="max-w-lg">
+              <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Update User Account</DialogTitle>
                   <DialogDescription>
-                    Update a user's account details including role and manager assignment.
+                    Update a user's credentials, role, and manager.
                   </DialogDescription>
                 </DialogHeader>
-
                 <div className="grid gap-3 py-2">
-                  <Label>User</Label>
+                  <Label>Select User *</Label>
                   <Select
-                    value={adminAccountEditForm.userId}
-                    onValueChange={(value) => {
-                      handleSelectUserForAdminUpdate(value);
-                    }}
+                    value={updateUserForm.userId}
+                    onValueChange={handleSelectUserForAccountUpdate}
                   >
                     <SelectTrigger>
-                      <SelectValue
-                        placeholder={usersQuery.isLoading ? "Loading users..." : "Select user"}
-                      />
+                      <SelectValue placeholder="Select user" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {users.map((user) => (
-                          <SelectItem key={user.userId} value={user.userId!}>
-                            {user.name}
+                        {users.map((u) => (
+                          <SelectItem key={u.userId} value={u.userId!}>
+                            {u.name}
                           </SelectItem>
                         ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-
                   <Label>First Name</Label>
                   <Input
-                    value={adminAccountEditForm.first_name}
+                    value={updateUserForm.firstName}
                     onChange={(e) =>
-                      setAdminAccountEditForm((prev) => ({ ...prev, first_name: e.target.value }))
+                      setUpdateUserForm((p) => ({
+                        ...p,
+                        firstName: e.target.value,
+                      }))
                     }
                     placeholder="First name"
                   />
-
                   <Label>Last Name</Label>
                   <Input
-                    value={adminAccountEditForm.last_name}
+                    value={updateUserForm.lastName}
                     onChange={(e) =>
-                      setAdminAccountEditForm((prev) => ({ ...prev, last_name: e.target.value }))
+                      setUpdateUserForm((p) => ({
+                        ...p,
+                        lastName: e.target.value,
+                      }))
                     }
                     placeholder="Last name"
                   />
-
                   <Label>Email</Label>
                   <Input
                     type="email"
-                    value={adminAccountEditForm.email}
+                    value={updateUserForm.email}
                     onChange={(e) =>
-                      setAdminAccountEditForm((prev) => ({ ...prev, email: e.target.value }))
+                      setUpdateUserForm((p) => ({
+                        ...p,
+                        email: e.target.value,
+                      }))
                     }
-                    placeholder="Email"
+                    placeholder="email@example.com"
                   />
-
                   <Label>Role</Label>
                   <Select
-                    value={adminAccountEditForm.role}
-                    onValueChange={(value) =>
-                      setAdminAccountEditForm((prev) => ({ ...prev, role: value }))
+                    value={updateUserForm.roleId}
+                    onValueChange={(v) =>
+                      setUpdateUserForm((p) => ({ ...p, roleId: v }))
                     }
                   >
                     <SelectTrigger>
@@ -527,22 +416,19 @@ export const AccountSettingsPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {
-                          roles.map((role) => (
-                            <SelectItem key={role.id} value={role.id || ""}>
-                              {role.name}
-                            </SelectItem>
-                          ))
-                        }
+                        {roles.map((r) => (
+                          <SelectItem key={r.id} value={r.id!}>
+                            {r.name}
+                          </SelectItem>
+                        ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-
                   <Label>Reports To</Label>
                   <Select
-                    value={adminAccountEditForm.reports_to}
-                    onValueChange={(value) =>
-                      setAdminAccountEditForm((prev) => ({ ...prev, reports_to: value }))
+                    value={updateUserForm.reportsToId}
+                    onValueChange={(v) =>
+                      setUpdateUserForm((p) => ({ ...p, reportsToId: v }))
                     }
                   >
                     <SelectTrigger>
@@ -550,44 +436,46 @@ export const AccountSettingsPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {users
-                          .map((user) => (
-                            <SelectItem key={user.userId} value={user.userId!}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
+                        {users.map((u) => (
+                          <SelectItem key={u.userId} value={u.userId!}>
+                            {u.name}
+                          </SelectItem>
+                        ))}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
-
-                  <Label>Is Active</Label>
+                  <Label>Status</Label>
                   <Select
-                    value={adminAccountEditForm.is_active}
-                    onValueChange={(value) =>
-                      setAdminAccountEditForm((prev) => ({ ...prev, is_active: value }))
+                    value={updateUserForm.isActive}
+                    onValueChange={(v) =>
+                      setUpdateUserForm((p) => ({ ...p, isActive: v }))
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectGroup>
-                        <SelectItem value="true">Active</SelectItem>
-                        <SelectItem value="false">Inactive</SelectItem>
-                      </SelectGroup>
+                      <SelectItem value="true">Active</SelectItem>
+                      <SelectItem value="false">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setUpdateAccountDialogOpen(false)}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setUpdateUserOpen(false)}
+                  >
                     Cancel
                   </Button>
                   <Button
-                    onClick={handleSaveAdminAccountEdit}
-                    disabled={updateUserByHRMutation.isPending || !adminAccountEditForm.userId}
+                    onClick={handleUpdateUserAccount}
+                    disabled={
+                      updateUserByHRMutation.isPending || !updateUserForm.userId
+                    }
                   >
-                    {updateUserByHRMutation.isPending ? "Updating..." : "Update"}
+                    {updateUserByHRMutation.isPending
+                      ? "Updating..."
+                      : "Update Account"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -596,232 +484,18 @@ export const AccountSettingsPage = () => {
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <User className="h-5 w-5" />
-              <CardTitle>User Account</CardTitle>
-            </div>
-            {!isEditingAccount && (
-              <button
-                onClick={() => setIsEditingAccount(true)}
-                className="p-2 hover:bg-accent rounded-md transition-colors"
-                title="Edit account"
-              >
-                <Edit2 className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-        </CardHeader>
+      {/* My Account */}
+      <MyAccountCard />
 
-        <CardContent>
-          {isEditingAccount ? (
-            <div className="space-y-4">
-              {/* Regular fields */}
-              <div>
-                <Label htmlFor="first_name" className="text-sm font-medium">First Name</Label>
-                <Input
-                  id="first_name"
-                  value={accountEditForm.first_name}
-                  onChange={(e) =>
-                    setAccountEditForm((prev) => ({
-                      ...prev,
-                      first_name: e.target.value,
-                    }))
-                  }
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="last_name" className="text-sm font-medium">Last Name</Label>
-                <Input
-                  id="last_name"
-                  value={accountEditForm.last_name}
-                  onChange={(e) =>
-                    setAccountEditForm((prev) => ({
-                      ...prev,
-                      last_name: e.target.value,
-                    }))
-                  }
-                  className="mt-1"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="email" className="text-sm font-medium">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={accountEditForm.email}
-                  onChange={(e) =>
-                    setAccountEditForm((prev) => ({
-                      ...prev,
-                      email: e.target.value,
-                    }))
-                  }
-                  className="mt-1"
-                />
-              </div>
-
-              {/* HR-only fields */}
-              {canManageHrProfiles && (
-                <>
-                  <div>
-                    <Label htmlFor="role" className="text-sm font-medium">Role</Label>
-                    <Select
-                      value={accountEditForm.role}
-                      onValueChange={(value) =>
-                        setAccountEditForm((prev) => ({
-                          ...prev,
-                          role: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="EMPLOYEE">Employee</SelectItem>
-                          <SelectItem value="HR">HR</SelectItem>
-                          <SelectItem value="MANAGER">Manager</SelectItem>
-                          <SelectItem value="ADMIN">Admin</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="reports_to" className="text-sm font-medium">Reports To</Label>
-                    <Select
-                      value={accountEditForm.reports_to}
-                      onValueChange={(value) =>
-                        setAccountEditForm((prev) => ({
-                          ...prev,
-                          reports_to: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select manager" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          {users.map((user) => (
-                            <SelectItem key={user.userId} value={user.userId!}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="is_active" className="text-sm font-medium">Is Active</Label>
-                    <Select
-                      value={accountEditForm.is_active}
-                      onValueChange={(value) =>
-                        setAccountEditForm((prev) => ({
-                          ...prev,
-                          is_active: value,
-                        }))
-                      }
-                    >
-                      <SelectTrigger className="mt-1">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectItem value="true">Active</SelectItem>
-                          <SelectItem value="false">Inactive</SelectItem>
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
-
-              {/* Action buttons */}
-              <div className="flex gap-2 justify-end pt-4">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsEditingAccount(false);
-                    setAccountEditForm({
-                      first_name: accountDetails?.first_name ?? "",
-                      last_name: accountDetails?.last_name ?? "",
-                      email: accountDetails?.email ?? "",
-                      role: accountDetails?.role ?? "",
-                      reports_to: accountDetails?.reports_to ?? "",
-                      is_active: accountDetails?.is_active?.toString() ?? "true",
-                      userId: accountDetails?.id ?? "",
-                    });
-                  }}
-                  disabled={updateMyUserMutation.isPending || updateUserByHRMutation.isPending}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleSaveAccountEdit}
-                  disabled={updateMyUserMutation.isPending || updateUserByHRMutation.isPending}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  {updateMyUserMutation.isPending || updateUserByHRMutation.isPending
-                    ? "Saving..."
-                    : "Save"}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Name</Label>
-                <p className="text-sm font-medium">{accountDetails?.first_name} {accountDetails?.last_name}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Email</Label>
-                <p className="text-sm font-medium">{accountDetails?.email}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Last Login</Label>
-                <p className="text-sm font-medium">{accountDetails?.last_login}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">Role</Label>
-                <p className="text-sm font-medium">{accountDetails?.role}</p>
-              </div>
-              {canManageHrProfiles && (
-                <>
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Reports to</Label>
-                    <p className="text-sm font-medium">
-                      {accountDetails?.reports_to ? getUserName(accountDetails.reports_to) : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Is Active</Label>
-                    <p className="text-sm font-medium">{accountDetails?.is_active ? "True" : "False"}</p>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Account info card */}
+      {/* My Profile (phone, bio, location) */}
       <ProfileInfoCard />
 
-      {/* avatar */}
+      {/* Profile Avatar */}
       <Card>
         <CardHeader>
           <CardTitle>Profile Avatar</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <div className="flex items-center gap-6">
             <div className="shrink-0">
               {myProfileQuery.data?.avatarUrl ? (
@@ -836,7 +510,6 @@ export const AccountSettingsPage = () => {
                 </div>
               )}
             </div>
-
             <div className="flex-1 space-y-3">
               <div>
                 <Label htmlFor="avatar-upload" className="text-sm font-medium">
@@ -853,7 +526,6 @@ export const AccountSettingsPage = () => {
                   JPG, PNG or GIF (max. 5MB)
                 </p>
               </div>
-
               {avatarFile && (
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-muted-foreground">
@@ -874,83 +546,10 @@ export const AccountSettingsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Game Interests Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Game Interests</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label className="text-sm font-medium mb-2 block">Your Interests</Label>
-            {myInterests.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {myInterests.map((gameId: string) => {
-                  const game = games.find((g) => g.id === gameId);
-                  if (!game) return null;
-                  return (
-                    <div
-                      key={gameId}
-                      className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg"
-                    >
-                      <span className="text-sm font-medium">
-                        {game.name}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-5 w-5 p-0"
-                        onClick={() => handleRemoveInterest(gameId)}
-                        disabled={removeInterestMutation.isPending}
-                      >
-                        ×
-                      </Button>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No interests added yet
-              </p>
-            )}
-          </div>
+      {/* Game Interests */}
+      <GameInterestsCard />
 
-          <div>
-            <Label className="text-sm font-medium mb-2 block">
-              Available Games
-            </Label>
-            {gamesQuery.isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading games...</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {games
-                  .filter((game) => !myInterests.includes(game.id!))
-                  .map((game) => (
-                    <div
-                      key={game.id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div>
-                        <p className="text-sm font-medium">{game.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {game.description}
-                        </p>
-                      </div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleAddInterest(game.id!)}
-                        disabled={addInterestMutation.isPending}
-                      >
-                        Add
-                      </Button>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
+      {/* Org Chart */}
       {canReadOrgChart && <OrgChartComponent />}
     </div>
   );

@@ -1,11 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useState } from "react";
 import {
   Briefcase,
   CalendarDays,
   MapPin,
   Plus,
-  Search,
   Share,
   User,
 } from "lucide-react";
@@ -21,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
-import { DateTimeDisplay } from "@/utils/dateUtils";
+import { DateDisplay } from "@/utils/dateUtils";
 import { getErrorMessage } from "@/utils/error";
 import {
   useCreateJob,
@@ -51,8 +49,20 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { hasPermission, PermissionCode } from "@/constants/permissions";
+import { useAuth } from "@/store";
+import { useGetAllUsers, useGetAllDepartments } from "@/hooks/util/util.hooks";
 
 export const JobListPage = () => {
+  const permissions = useAuth((state) => state.auth.user?.permission);
+  const canCreateJob = hasPermission(permissions, PermissionCode.JOB_MANAGE);
+
+  const usersQuery = useGetAllUsers();
+  const users = usersQuery.data || [];
+  
+  const departmentsQuery = useGetAllDepartments();
+  const departments = departmentsQuery.data || [];
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -205,13 +215,7 @@ export const JobListPage = () => {
     }
   };
 
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    setRefferForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+
 
   return (
     <div className="space-y-6">
@@ -227,7 +231,7 @@ export const JobListPage = () => {
       )}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Explore roles</h1>
+          <h1 className="text-2xl font-bold">Explore Current Job Openings</h1>
           <p className="text-muted-foreground">
             Find openings that org currently have.
           </p>
@@ -236,13 +240,14 @@ export const JobListPage = () => {
 
       <div className="flex justify-between">
         {/* Create Dialog */}
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Position
-            </Button>
-          </DialogTrigger>
+        {canCreateJob && (
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Position
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create Job Position</DialogTitle>
@@ -265,31 +270,49 @@ export const JobListPage = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="create-department">Department *</Label>
-                  <Input
-                    id="create-department"
+                  <Select
                     value={createForm.department}
-                    onChange={(e) =>
+                    onValueChange={(value) =>
                       setCreateForm({
                         ...createForm,
-                        department: e.target.value,
+                        department: value,
                       })
                     }
-                    placeholder="e.g. Engineering"
-                  />
+                  >
+                    <SelectTrigger id="create-department">
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-emerald-50">
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.departmentId} value={dept.departmentId!}>
+                          {dept.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="default-reviewer">Default Reviewer *</Label>
-                  <Input
-                    id="default-reviewer"
+                  <Select
                     value={createForm.defaultReviewerId}
-                    onChange={(e) =>
+                    onValueChange={(value) =>
                       setCreateForm({
                         ...createForm,
-                        defaultReviewerId: e.target.value,
+                        defaultReviewerId: value,
                       })
                     }
-                    placeholder="revierer id"
-                  />
+                  >
+                    <SelectTrigger id="default-reviewer">
+                      <SelectValue placeholder="Select default reviewer" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-emerald-50">
+                      {users.map((user) => (
+                        <SelectItem key={user.userId} value={user.userId!}>
+                          {user.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -414,7 +437,7 @@ export const JobListPage = () => {
                   }
                   placeholder="Job description..."
                   rows={4}
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
               <div className="space-y-2">
@@ -432,7 +455,7 @@ export const JobListPage = () => {
                   }
                   placeholder="Job responsibilities..."
                   rows={4}
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
               <div className="space-y-2">
@@ -450,7 +473,7 @@ export const JobListPage = () => {
                   }
                   placeholder="Required qualifications..."
                   rows={4}
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
             </div>
@@ -472,105 +495,90 @@ export const JobListPage = () => {
                 {createMutation.isPending ? "Creating..." : "Create Position"}
               </Button>
             </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Share Job Dialog */}
+        <Dialog open={shareJobOpen} onOpenChange={setShareJobOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Share Job Position</DialogTitle>
+              <DialogDescription>
+                Fill in the details to share job position via mail.
+              </DialogDescription>
+            </DialogHeader>
+
+            <Label htmlFor="jobId">Job Id *</Label>
+            <Input
+              id="jobId"
+              value={shareJobId}
+              disabled
+              placeholder="e.g. Job Id"
+            />
+            <Label htmlFor="recipientMails">Recipient Mails *</Label>
+            <Input
+              id="recipientMails"
+              value={recipientMails}
+              onChange={(e) => setRecipienMails([e.target.value])}
+              placeholder="e.g. comma separated recipient mails"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleShareJobPosition()}
+            >
+              {shareJobMutation.isPending ? "Sharing..." : "Share Position"}
+            </Button>
           </DialogContent>
         </Dialog>
 
-        <div className="gap-2 flex">
-          <Dialog open={shareJobOpen} onOpenChange={setShareJobOpen}>
-            <DialogTrigger>
-              <Button>
-                <Share className="mr-2 h-4 w-4" />
-                Share any job
-              </Button>
-            </DialogTrigger>
+        {/* Refer Friend Dialog */}
+        <Dialog open={referFriendOpen} onOpenChange={setReferFriendOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Refer Friend</DialogTitle>
+              <DialogDescription>
+                Fill in the details to refer your friend.
+              </DialogDescription>
+            </DialogHeader>
 
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Share Job Position</DialogTitle>
-                <DialogDescription>
-                  Fill in the details to share job position via mail.
-                </DialogDescription>
-              </DialogHeader>
-
-              <Label htmlFor="jobId">Job Id *</Label>
-              <Input
-                id="jobId"
-                value={shareJobId}
-                onChange={(e) => setShareJobId(e.target.value)}
-                placeholder="e.g. Job Id"
-              />
-              <Label htmlFor="recipientMails">Recipient Mails *</Label>
-              <Input
-                id="recipientMails"
-                value={recipientMails}
-                onChange={(e) => setRecipienMails([e.target.value])}
-                placeholder="e.g. comma spaerated recipient mails"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleShareJobPosition()}
-              >
-                {shareJobMutation.isPending ? "Sharing..." : "Share Position"}
-              </Button>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog open={referFriendOpen} onOpenChange={setReferFriendOpen}>
-            <DialogTrigger>
-              <Button>
-                <User className="mr-2 h-4 w-4" />
-                Reffer Friend
-              </Button>
-            </DialogTrigger>
-
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Reffer Friend</DialogTitle>
-                <DialogDescription>
-                  Fill in the details to reffer your friend.
-                </DialogDescription>
-              </DialogHeader>
-
-              <Label htmlFor="jobId">Job Id *</Label>
-              <Input
-                id="jobId"
-                value={refferForm.jobId}
-                onChange={(e) => setRefferForm((prev) => ({
-                    ...prev, jobId: e.target.value
-                }))}
-                placeholder="e.g. Job Id"
-                required
-              />
-              <Label htmlFor="friendName">Friend Name: </Label>
-              <Input
-                id="friendName"
-                value={refferForm.friendName}
-                onChange={(e) => setRefferForm((prev) => ({
-                    ...prev, friendName: e.target.value
-                }))}
-                placeholder="e.g. Kartik Patel"
-              />
-              <Label htmlFor="friendEmail">Friend Email: </Label>
-              <Input
-                id="friendEmail"
-                value={refferForm.friendEmail}
-                onChange={(e) => setRefferForm((prev) => ({
-                    ...prev, friendEmail: e.target.value
-                }))}
-                placeholder="e.g. abc@gmail.com"
-              />
-              <Label htmlFor="note">Note: </Label>
-              <Input
-                id="note"
-                value={refferForm.note}
-                onChange={(e) => setRefferForm((prev) => ({
-                    ...prev, note: e.target.value
-                }))}
-                placeholder="e.g. About Your Friend"
-                type="textarea"
-              />
-              <Label htmlFor="cv">CV: </Label>
+            <Label htmlFor="jobId">Job Id *</Label>
+            <Input
+              id="jobId"
+              value={refferForm.jobId}
+              disabled
+              placeholder="e.g. Job Id"
+            />
+            <Label htmlFor="friendName">Friend Name: </Label>
+            <Input
+              id="friendName"
+              value={refferForm.friendName}
+              onChange={(e) => setRefferForm((prev) => ({
+                  ...prev, friendName: e.target.value
+              }))}
+              placeholder="e.g. Kartik Patel"
+            />
+            <Label htmlFor="friendEmail">Friend Email: </Label>
+            <Input
+              id="friendEmail"
+              value={refferForm.friendEmail}
+              onChange={(e) => setRefferForm((prev) => ({
+                  ...prev, friendEmail: e.target.value
+              }))}
+              placeholder="e.g. abc@gmail.com"
+            />
+            <Label htmlFor="note">Note: </Label>
+            <Input
+              id="note"
+              value={refferForm.note}
+              onChange={(e) => setRefferForm((prev) => ({
+                  ...prev, note: e.target.value
+              }))}
+              placeholder="e.g. About Your Friend"
+              type="textarea"
+            />
+            <Label htmlFor="cv">CV: </Label>
               <Input
                 id="cv"
                 onChange={(e) => {
@@ -590,7 +598,6 @@ export const JobListPage = () => {
               </Button>
             </DialogContent>
           </Dialog>
-        </div>
       </div>
 
       {jobQuery.isLoading ? (
@@ -624,7 +631,7 @@ export const JobListPage = () => {
                     {job.application_deadline && (
                       <Badge variant="secondary" className="shrink-0">
                         <CalendarDays className="h-3 w-3 mr-1" />
-                        Apply by {DateTimeDisplay(job.application_deadline)}
+                        Apply by {DateDisplay(job.application_deadline)}
                       </Badge>
                     )}
                   </div>
@@ -688,6 +695,35 @@ export const JobListPage = () => {
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
+
+                  {/* Share and Refer Buttons */}
+                  <div className="flex flex-wrap gap-2 pt-4 border-t">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShareJobId(job.id);
+                        setShareJobOpen(true);
+                      }}
+                    >
+                      <Share className="mr-2 h-4 w-4" />
+                      Share
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setRefferForm((prev) => ({
+                          ...prev,
+                          jobId: job.id || "",
+                        }));
+                        setReferFriendOpen(true);
+                      }}
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Refer Friend
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

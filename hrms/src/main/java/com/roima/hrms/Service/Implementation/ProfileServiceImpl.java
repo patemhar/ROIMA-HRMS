@@ -1,16 +1,15 @@
 package com.roima.hrms.Service.Implementation;
 
 
-import com.roima.hrms.Core.Entities.Department;
-import com.roima.hrms.Core.Entities.GameInterest;
-import com.roima.hrms.Core.Entities.Profile;
-import com.roima.hrms.Core.Entities.User;
+import com.roima.hrms.Core.Entities.*;
+import com.roima.hrms.Dtos.game.UserCycleStatsDto;
 import com.roima.hrms.Dtos.profile.ProfileAdminRequestDTO;
 import com.roima.hrms.Dtos.profile.ProfileResponseDTO;
 import com.roima.hrms.Dtos.profile.ProfileSelfUpdateDTO;
 import com.roima.hrms.Exception.IOException;
 import com.roima.hrms.Exception.ResourceNotFoundException;
 import com.roima.hrms.Mapper.ProfileMapper;
+import com.roima.hrms.Mapper.UserCycleStatsMapper;
 import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Service.Interfaces.ProfileService;
 import com.roima.hrms.Utility.SecurityUtil;
@@ -18,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,6 +34,9 @@ public class ProfileServiceImpl implements ProfileService {
     private final CloudinaryServiceImpl cloudinaryService;
     private final GameInterestRepository gameInterestRepository;
     private final GameRepository gameRepository;
+    private final UserCycleStatsRepository userCycleStatsRepository;
+    private final UserCycleStatsMapper userCycleStatsMapper;
+    private final GameBookingCycleRepository gameBookingCycleRepository;
 
     private static final String PROFILE_NOT_FOUND = "Profile not found";
     private static final String ACCESS_DENIED = "Access denied";
@@ -72,7 +77,6 @@ public class ProfileServiceImpl implements ProfileService {
         ensureHr(securityUtil.getCurrentUser());
 
         Profile profile = profileRepository.findById(profileId).orElseThrow(() -> new RuntimeException(PROFILE_NOT_FOUND));
-
 
         var updatedProfile = mapper.updateProfile(profile, request);
 
@@ -158,6 +162,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         // Check if interest already exists
         if (gameInterestRepository.existsByUserAndGame(currentUser.getId(), gameId)) {
+            // Interest already exists, do nothing
             return;
         }
 
@@ -171,6 +176,26 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public void removeInterest(UUID gameId) {
         gameInterestRepository.deleteInterest(securityUtil.getCurrentUser().getId(), gameId);
+    }
+
+    @Override
+    public List<UserCycleStatsDto> getUserGameStats(boolean latest) {
+        User currentUser = securityUtil.getCurrentUser();
+
+        List<UserCycleStats> stats = userCycleStatsRepository.findByUserId(currentUser.getId());
+
+        if (latest) {
+            List<UserCycleStats> currentStats = new ArrayList<>();
+            for (UserCycleStats stat : stats) {
+                Optional<GameBookingCycle> currentCycle = gameBookingCycleRepository.getCurrentCycle(stat.getGame().getId());
+                if (currentCycle.isPresent() && currentCycle.get().getId().equals(stat.getGameCycle().getId())) {
+                    currentStats.add(stat);
+                }
+            }
+            return currentStats.stream().map(userCycleStatsMapper::toDto).toList();
+        } else {
+            return stats.stream().map(userCycleStatsMapper::toDto).toList();
+        }
     }
 
     private void ensureHr(User user) {

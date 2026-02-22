@@ -36,6 +36,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/notifications/{notificationId}/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["markAsRead"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/achievements/{postId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPost"];
+        put: operations["updatePost"];
+        post?: never;
+        delete: operations["deletePost"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/achievements/comments/{commentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateComment"];
+        post?: never;
+        delete: operations["deleteComment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/travels": {
         parameters: {
             query?: never;
@@ -52,7 +100,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/travels/{travelId}/members": {
+    "/travels/{travelId}/members/{userId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -180,6 +228,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/profiles/interests/{gameId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["addInterest"];
+        delete: operations["deleteInterest"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["createGame"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/book": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["makeBookingRequest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/register": {
         parameters: {
             query?: never;
@@ -292,6 +388,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/achievements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAchievementFeed"];
+        put?: never;
+        post: operations["createPost"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/achievements/{postId}/like": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["likePost"];
+        delete: operations["unlikePost"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/achievements/{postId}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getComments"];
+        put?: never;
+        post: operations["addComment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUserDetails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateUserByHR"];
+        trace?: never;
+    };
+    "/users/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateMyUser"];
+        trace?: never;
+    };
     "/travels/{travelId}": {
         parameters: {
             query?: never;
@@ -372,20 +548,36 @@ export interface paths {
         patch: operations["updateMyProfile"];
         trace?: never;
     };
-    "/users/{userId}": {
+    "/games/{gameId}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getUserDetails"];
+        get: operations["getGame"];
         put?: never;
         post?: never;
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["updateGame"];
+        trace?: never;
+    };
+    "/games/bookings/{bookingId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["cancelBooking"];
         trace?: never;
     };
     "/users/my": {
@@ -468,6 +660,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/profiles/game-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUserGameStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/org/{userId}": {
         parameters: {
             query?: never;
@@ -475,7 +683,103 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getFollowingLayer"];
+        get: operations["getDescendingLayer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/unread": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUnreadNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/subscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["subscribe"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{gameId}/slots/{date}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGameSlots"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{gameId}/my-booking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getUserActiveBooking"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{gameId}/cycle": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getGameCycle"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllGames"];
         put?: never;
         post?: never;
         delete?: never;
@@ -532,6 +836,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/util/games": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllGames_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/util/dept": {
         parameters: {
             query?: never;
@@ -540,6 +860,38 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getAllDepartments"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/sharing-records": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getJobSharingRecords"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/referrals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getReferrals"];
         put?: never;
         post?: never;
         delete?: never;
@@ -564,6 +916,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/achievements/{postId}/likes/count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getLikeCount"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/achievements/{postId}/liked": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["isPostLiked"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/achievements/user/{userId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPostsByUser"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/achievements/tag/{tag}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPostsByTag"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/travels/members/{memberId}": {
         parameters: {
             query?: never;
@@ -575,6 +991,54 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["deleteMember"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/travels/expenses/{expenseId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteExpense"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/travels/expenses/documents/{docId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteExpenseDocument"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/travels/documents/{docId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteTravelDocument"];
         options?: never;
         head?: never;
         patch?: never;
@@ -605,8 +1069,58 @@ export interface components {
             message?: string;
             data?: Record<string, never>;
         };
-        TravelMemberRequest: {
-            member_ids?: string[];
+        CreatePostRequest: {
+            title?: string;
+            description?: string;
+            tags?: string;
+            visibility?: string;
+        };
+        ApiResponsePostDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["PostDto"];
+        };
+        CommentDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            postId?: string;
+            /** Format: uuid */
+            authorId?: string;
+            authorName?: string;
+            text?: string;
+            /** Format: date-time */
+            createdDate?: string;
+        };
+        PostDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            authorId?: string;
+            authorName?: string;
+            title?: string;
+            description?: string;
+            tags?: string;
+            /** Format: date-time */
+            createdDate?: string;
+            visibility?: string;
+            /** Format: int32 */
+            likeCount?: number;
+            /** Format: int32 */
+            commentCount?: number;
+            comments?: components["schemas"]["CommentDto"][];
+            recentLikers?: string[];
+            mediaUrls?: string[];
+            systemGenerated?: boolean;
+            likedByCurrentUser?: boolean;
+        };
+        CommentRequest: {
+            text?: string;
+        };
+        ApiResponseCommentDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["CommentDto"];
         };
         TravelRequest: {
             title?: string;
@@ -616,7 +1130,6 @@ export interface components {
             /** Format: date */
             end_date?: string;
             destination?: string;
-            travelMemberIds?: components["schemas"]["TravelMemberRequest"];
         };
         ApiResponseTravelResponseSummary: {
             success?: boolean;
@@ -647,10 +1160,10 @@ export interface components {
             createdByName?: string;
             travel_members?: components["schemas"]["TravelMemberResponse"][];
         };
-        ApiResponseSetTravelMemberResponse: {
+        ApiResponseTravelMemberResponse: {
             success?: boolean;
             message?: string;
-            data?: components["schemas"]["TravelMemberResponse"][];
+            data?: components["schemas"]["TravelMemberResponse"];
         };
         TravelItineraryRequest: {
             title?: string;
@@ -788,6 +1301,65 @@ export interface components {
             /** Format: uuid */
             departmentId?: string;
             departmentName?: string;
+            gameInterests?: string[];
+        };
+        GameCreateRequestDto: {
+            name?: string;
+            description?: string;
+            operatingStartTime?: components["schemas"]["LocalTime"];
+            operatingEndTime?: components["schemas"]["LocalTime"];
+            /** Format: int32 */
+            slotDurationMinutes?: number;
+            /** Format: int32 */
+            maxPlayers?: number;
+        };
+        LocalTime: {
+            /** Format: int32 */
+            hour?: number;
+            /** Format: int32 */
+            minute?: number;
+            /** Format: int32 */
+            second?: number;
+            /** Format: int32 */
+            nano?: number;
+        };
+        ApiResponseGameResponseDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["GameResponseDto"];
+        };
+        GameResponseDto: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            description?: string;
+            startTime?: components["schemas"]["LocalTime"];
+            endTime?: components["schemas"]["LocalTime"];
+            /** Format: int32 */
+            slotDurationMinutes?: number;
+            /** Format: int32 */
+            maxPlayersPerSlot?: number;
+            /** Format: int32 */
+            interestedCount?: number;
+        };
+        GameSlotBookingRequestDto: {
+            /** Format: uuid */
+            slotId?: string;
+            participants?: string[];
+        };
+        ApiResponseGameSlotBookingRequestResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["GameSlotBookingRequestResponse"];
+        };
+        GameSlotBookingRequestResponse: {
+            /** Format: uuid */
+            slotRequestId?: string;
+            requestedBy?: string;
+            /** Format: date-time */
+            requestedAt?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED";
         };
         RegisterRequestDto: {
             first_name?: string;
@@ -830,10 +1402,10 @@ export interface components {
             email?: string;
             /** Format: date-time */
             last_login?: string;
+            is_active?: boolean;
             role?: string;
             reports_to?: string;
             permission?: string[];
-            is_active?: boolean;
         };
         ApiResponseString: {
             success?: boolean;
@@ -900,6 +1472,26 @@ export interface components {
             /** Format: binary */
             cvFile?: string;
         };
+        UserAdminUpdateDTO: {
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+            /** Format: uuid */
+            roleId?: string;
+            /** Format: uuid */
+            reportsToId?: string;
+            isActive?: boolean;
+        };
+        ApiResponseUserDetailResponse: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["UserDetailResponse"];
+        };
+        UserSelfUpdateDTO: {
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+        };
         TravelUpdateRequest: {
             title?: string;
             description?: string;
@@ -913,11 +1505,6 @@ export interface components {
             phone?: string;
             bio?: string;
             location?: string;
-        };
-        ApiResponseUserDetailResponse: {
-            success?: boolean;
-            message?: string;
-            data?: components["schemas"]["UserDetailResponse"];
         };
         ApiResponseListUserDetailResponse: {
             success?: boolean;
@@ -955,7 +1542,6 @@ export interface components {
             status?: "PLANNED" | "ONGOING" | "COMPLETED" | "CANCELLED";
             travelMembers?: components["schemas"]["TravelMemberResponse"][];
             itineraries?: components["schemas"]["TravelItineraryResponse"][];
-            expenses?: components["schemas"]["TravelExpenseResponse"][];
             travel_bookings?: components["schemas"]["TravelBookingResponse"][];
             travelDocument?: components["schemas"]["TravelDocResponse"][];
             /** Format: uuid */
@@ -974,475 +1560,124 @@ export interface components {
             message?: string;
             data?: components["schemas"]["TravelExpenseResponse"][];
         };
-        ApiResponseListTravelDocument: {
+        ApiResponseListTravelDocumentResponseDto: {
             success?: boolean;
             message?: string;
-            data?: components["schemas"]["TravelDocument"][];
+            data?: components["schemas"]["TravelDocumentResponseDto"][];
         };
-        Comment: {
+        TravelDocumentResponseDto: {
             /** Format: uuid */
             id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            user?: components["schemas"]["User"];
-            post?: components["schemas"]["Post"];
-            content?: string;
-        };
-        Department: {
+            docUrl?: string;
+            uploadedBy?: string;
             /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            department_name?: string;
-            department_code?: string;
-            employees?: components["schemas"]["Profile"][];
-            job_openings?: components["schemas"]["Job"][];
-        };
-        ExpenseDocument: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            uploadedBy?: components["schemas"]["User"];
-            travelExpense?: components["schemas"]["TravelExpense"];
-            doc_url?: string;
-        };
-        Game: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            name?: string;
-            description?: string;
-            operatingStartTime?: components["schemas"]["LocalTime"];
-            operatingEndTime?: components["schemas"]["LocalTime"];
-            /** Format: int32 */
-            slotDurationMinutes?: number;
-            /** Format: int32 */
-            maxPlayers?: number;
-            slots?: components["schemas"]["GameSlot"][];
-            game_interests?: components["schemas"]["GameInterest"][];
-            game_cycle?: components["schemas"]["GameBookingCycle"][];
-        };
-        GameBookingCycle: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            game?: components["schemas"]["Game"];
-            /** Format: date-time */
-            cycle_start?: string;
-            /** Format: date-time */
-            cycle_end?: string;
-            cycle_slots?: components["schemas"]["GameSlot"][];
-        };
-        GameInterest: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            user?: components["schemas"]["User"];
-            game?: components["schemas"]["Game"];
-        };
-        GameSlot: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            game?: components["schemas"]["Game"];
-            /** Format: date */
-            slotDate?: string;
-            startTime?: components["schemas"]["LocalTime"];
-            endTime?: components["schemas"]["LocalTime"];
-            /** Format: int32 */
-            maxPlayers?: number;
-            game_cycle?: components["schemas"]["GameBookingCycle"];
-            booking_requests?: components["schemas"]["SlotBookingRequest"][];
-        };
-        Job: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            title?: string;
-            description?: string;
-            job_responsibilities?: string;
-            required_qualification?: string;
-            employment_type?: string;
-            salary_range?: string;
-            /** @enum {string} */
-            status?: "OPEN" | "CLOSED";
-            /** Format: date */
-            application_deadline?: string;
-            min_experience?: string;
-            location?: string;
-            default_reviewer?: components["schemas"]["User"];
-            department?: components["schemas"]["Department"];
-            created_by?: components["schemas"]["User"];
-            job_referrals?: components["schemas"]["Referral"][];
-            shares?: components["schemas"]["JobSharingRecord"][];
-            is_active?: boolean;
-        };
-        JobSharingRecord: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            user?: components["schemas"]["User"];
-            job?: components["schemas"]["Job"];
-            email?: string;
-        };
-        Like: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            user?: components["schemas"]["User"];
-            post?: components["schemas"]["Post"];
-            like_state?: boolean;
-        };
-        LocalTime: {
-            /** Format: int32 */
-            hour?: number;
-            /** Format: int32 */
-            minute?: number;
-            /** Format: int32 */
-            second?: number;
-            /** Format: int32 */
-            nano?: number;
-        };
-        Notification: {
-            /** Format: int64 */
-            notificationId?: number;
-            recipient?: components["schemas"]["User"];
-            actor?: components["schemas"]["User"];
-            /** @enum {string} */
-            type?: "LIKE" | "COMMENT" | "SLOT_BOOKED" | "SLOT_CANCELLED" | "BIRTHDAY" | "WORK_ANNIVERSARY" | "SYSTEM";
-            /** @enum {string} */
-            entityType?: "POST" | "SLOT" | "BOOKING" | "TRAVEL" | "USER" | "JOB";
-            /** Format: int64 */
-            entityId?: number;
-            title?: string;
-            message?: string;
+            travelId?: string;
             /** Format: date-time */
             createdAt?: string;
-            read?: boolean;
-        };
-        Permission: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            code?: string;
-            name?: string;
-            description?: string;
-        };
-        Post: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            postOwner?: components["schemas"]["User"];
-            title?: string;
-            content?: string;
-            visibility_role?: components["schemas"]["Role"];
-            media?: components["schemas"]["PostMedia"][];
-            likes?: components["schemas"]["Like"][];
-            comments?: components["schemas"]["Comment"][];
-            is_active?: boolean;
-        };
-        PostMedia: {
-            id?: string;
-            post?: components["schemas"]["Post"];
-            media_url?: string;
-        };
-        Profile: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            user?: components["schemas"]["User"];
-            emp_number?: string;
-            phone?: string;
-            bio?: string;
-            avatar_url?: string;
-            /** Format: date */
-            joined_date?: string;
-            department?: components["schemas"]["Department"];
-            location?: string;
-        };
-        Referral: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            referred_by?: components["schemas"]["User"];
-            job?: components["schemas"]["Job"];
-            name?: string;
-            details?: string;
-            doc_url?: string;
-        };
-        RefreshToken: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            tokenHash?: string;
-            userMail?: string;
-            /** Format: date-time */
-            expires_at?: string;
-            /** Format: date-time */
-            revoked_at?: string;
-            replaced_by_tokenHash?: string;
-            reason_revoked?: string;
-            user?: components["schemas"]["User"];
-        };
-        Role: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            name?: string;
-            description?: string;
-            users?: components["schemas"]["User"][];
-            posts?: components["schemas"]["Post"][];
-            rolePermissions?: components["schemas"]["RolePermission"][];
-        };
-        RolePermission: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            role?: components["schemas"]["Role"];
-            permission?: components["schemas"]["Permission"];
-        };
-        SlotBookingRequest: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            slot?: components["schemas"]["GameSlot"];
-            user?: components["schemas"]["User"];
-            /** Format: date-time */
-            requestedAt?: string;
-            /** @enum {string} */
-            status?: "ONHOLD" | "CONFIRMED" | "REJECTED" | "CANCELLED";
-            /** Format: int32 */
-            priorityScore?: number;
-            slotParticipants?: components["schemas"]["SlotParticipant"][];
-        };
-        SlotParticipant: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            bookingRequest?: components["schemas"]["SlotBookingRequest"];
-            user?: components["schemas"]["User"];
-        };
-        Travel: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            title?: string;
-            description?: string;
-            createdBy?: components["schemas"]["User"];
-            /** Format: date */
-            start_date?: string;
-            /** Format: date */
-            end_date?: string;
-            destination?: string;
-            /** @enum {string} */
-            status?: "PLANNED" | "ONGOING" | "COMPLETED" | "CANCELLED";
-            members?: components["schemas"]["TravelMember"][];
-            itineraries?: components["schemas"]["TravelItinerary"][];
-            expenses?: components["schemas"]["TravelExpense"][];
-            travel_bookings?: components["schemas"]["TravelBooking"][];
-            travel_documents?: components["schemas"]["TravelDocument"][];
-        };
-        TravelBooking: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            travel?: components["schemas"]["Travel"];
-            /** @enum {string} */
-            bookingType?: "FLIGHT" | "HOTEL" | "TRAIN" | "BUS" | "CAB" | "OTHER";
-            provider_name?: string;
-            booking_reference?: string;
-            amount?: number;
-            currency?: string;
-            /** Format: date-time */
-            start_dateTime?: string;
-            /** Format: date-time */
-            end_dateTime?: string;
-        };
-        TravelDocument: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            uploadedBy?: components["schemas"]["User"];
-            travel?: components["schemas"]["Travel"];
-            doc_url?: string;
-        };
-        TravelExpense: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            travel?: components["schemas"]["Travel"];
-            paid_by?: components["schemas"]["User"];
-            /** @enum {string} */
-            expense_type?: "TRANSPORTATION" | "ACCOMMODATION" | "MEALS" | "ENTERTAINMENT";
-            title?: string;
-            description?: string;
-            amount?: number;
-            currency?: string;
-            /** Format: date */
-            expenseDate?: string;
-            /** Format: date-time */
-            approved_at?: string;
-            remark?: string;
-            /** @enum {string} */
-            status?: "DRAFT" | "SUBMITTED" | "APPROVED" | "REJECTED";
-            createdBy?: components["schemas"]["User"];
-            approved_by?: components["schemas"]["User"];
-            expense_docs?: components["schemas"]["ExpenseDocument"][];
-        };
-        TravelItinerary: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            travel?: components["schemas"]["Travel"];
-            title?: string;
-            description?: string;
-            /** Format: date-time */
-            startDateTime?: string;
-            /** Format: date-time */
-            endDateTime?: string;
-            location?: string;
-        };
-        TravelMember: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            travel?: components["schemas"]["Travel"];
-            user?: components["schemas"]["User"];
-        };
-        User: {
-            /** Format: uuid */
-            id?: string;
-            /** Format: date-time */
-            created_at?: string;
-            /** Format: date-time */
-            updated_at?: string;
-            first_name: string;
-            last_name?: string;
-            email: string;
-            password_hash: string;
-            /** Format: date-time */
-            last_login?: string;
-            role?: components["schemas"]["Role"];
-            reports_to?: components["schemas"]["User"];
-            reports_to_me?: components["schemas"]["User"][];
-            my_notifications?: components["schemas"]["Notification"][];
-            sent_notifications?: components["schemas"]["Notification"][];
-            profile?: components["schemas"]["Profile"];
-            user_posts?: components["schemas"]["Post"][];
-            my_likes?: components["schemas"]["Like"][];
-            my_comments?: components["schemas"]["Comment"][];
-            travel_created_by_me?: components["schemas"]["Travel"][];
-            jobs_created_by_me?: components["schemas"]["Job"][];
-            my_referrals?: components["schemas"]["Referral"][];
-            my_participation?: components["schemas"]["SlotParticipant"][];
-            my_travel?: components["schemas"]["TravelMember"][];
-            my_travel_docs?: components["schemas"]["TravelDocument"][];
-            my_expense_docs?: components["schemas"]["ExpenseDocument"][];
-            game_interests?: components["schemas"]["GameInterest"][];
-            my_created_expenses?: components["schemas"]["TravelExpense"][];
-            my_travel_expenses?: components["schemas"]["TravelExpense"][];
-            refresh_tokens?: components["schemas"]["RefreshToken"][];
-            my_approved_expenses?: components["schemas"]["TravelExpense"][];
-            my_shared_jobs?: components["schemas"]["JobSharingRecord"][];
-            jobs_under_my_review?: components["schemas"]["Job"][];
-            is_active?: boolean;
         };
         ApiResponseListTravelBookingResponse: {
             success?: boolean;
             message?: string;
             data?: components["schemas"]["TravelBookingResponse"][];
         };
-        ApiResponseListExpenseDocument: {
+        ApiResponseListExpenseDocumentResponseDto: {
             success?: boolean;
             message?: string;
-            data?: components["schemas"]["ExpenseDocument"][];
+            data?: components["schemas"]["ExpenseDocumentResponseDto"][];
         };
-        ApiResponseListNodeResponse: {
-            success?: boolean;
-            message?: string;
-            data?: components["schemas"]["nodeResponse"][];
-        };
-        nodeResponse: {
+        ExpenseDocumentResponseDto: {
             /** Format: uuid */
-            id: string;
-            first_name?: string;
-            last_name?: string;
-            email?: string;
-            role?: string;
-            reports_to?: string;
+            id?: string;
+            docUrl?: string;
+            uploadedBy?: string;
+            /** Format: uuid */
+            expenseId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        ApiResponseListUserCycleStatsDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["UserCycleStatsDto"][];
+        };
+        UserCycleStatsDto: {
+            gameName?: string;
+            /** Format: date-time */
+            cycleStart?: string;
+            /** Format: date-time */
+            cycleEnd?: string;
+            /** Format: int32 */
+            playCount?: number;
+        };
+        ApiResponseListNotificationResponseDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["notificationResponseDto"][];
+        };
+        notificationResponseDto: {
+            /** Format: uuid */
+            id?: string;
+            recipient?: string;
+            actor?: string;
+            /** @enum {string} */
+            type?: "LIKE" | "COMMENT" | "SLOT_BOOKED" | "SLOT_CANCELLED" | "BIRTHDAY" | "WORK_ANNIVERSARY" | "SYSTEM" | "TRAVEL";
+            title?: string;
+            message?: string;
+            read?: boolean;
+            /** Format: date-time */
+            created_at?: string;
+        };
+        SseEmitter: {
+            /** Format: int64 */
+            timeout?: number;
+        };
+        ApiResponseListSlotResponseDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["SlotResponseDto"][];
+        };
+        SlotResponseDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            gameId?: string;
+            /** Format: date */
+            slotDate?: string;
+            startTime?: components["schemas"]["LocalTime"];
+            endTime?: components["schemas"]["LocalTime"];
+            /** Format: int32 */
+            queueCount?: number;
+        };
+        ApiResponseUserActiveBookingDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["UserActiveBookingDto"];
+        };
+        UserActiveBookingDto: {
+            /** Format: uuid */
+            bookingId?: string;
+            /** Format: uuid */
+            slotId?: string;
+            /** Format: date */
+            slotDate?: string;
+            startTime?: components["schemas"]["LocalTime"];
+            endTime?: components["schemas"]["LocalTime"];
+            /** @enum {string} */
+            status?: "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED";
+            requestedBy?: string;
+            /** Format: date-time */
+            requestedAt?: string;
+            participants?: string[];
+        };
+        ApiResponseObject: {
+            success?: boolean;
+            message?: string;
+            data?: Record<string, never>;
+        };
+        ApiResponseListGameResponseDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["GameResponseDto"][];
         };
         ApiResponseListUserOptions: {
             success?: boolean;
@@ -1464,6 +1699,16 @@ export interface components {
             id?: string;
             name?: string;
         };
+        ApiResponseListGameOptions: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["gameOptions"][];
+        };
+        gameOptions: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+        };
         ApiResponseListDepartmentOptions: {
             success?: boolean;
             message?: string;
@@ -1473,6 +1718,62 @@ export interface components {
             /** Format: uuid */
             departmentId?: string;
             name?: string;
+        };
+        ApiResponseListJobSharingRecordResponseDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["JobSharingRecordResponseDto"][];
+        };
+        JobSharingRecordResponseDto: {
+            /** Format: uuid */
+            id?: string;
+            sharedBy?: string;
+            jobTitle?: string;
+            email?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        ApiResponseListReferralResponseDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["ReferralResponseDto"][];
+        };
+        ReferralResponseDto: {
+            /** Format: uuid */
+            id?: string;
+            referredBy?: string;
+            jobTitle?: string;
+            name?: string;
+            details?: string;
+            docUrl?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        ApiResponseListJobResponseDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["JobResponseDto"][];
+        };
+        ApiResponseListPostDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["PostDto"][];
+        };
+        ApiResponseLong: {
+            success?: boolean;
+            message?: string;
+            /** Format: int64 */
+            data?: number;
+        };
+        ApiResponseBoolean: {
+            success?: boolean;
+            message?: string;
+            data?: boolean;
+        };
+        ApiResponseListCommentDto: {
+            success?: boolean;
+            message?: string;
+            data?: components["schemas"]["CommentDto"][];
         };
     };
     responses: never;
@@ -1535,6 +1836,146 @@ export interface operations {
             };
         };
     };
+    markAsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                notificationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    getPost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePostDto"];
+                };
+            };
+        };
+    };
+    updatePost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePostRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePostDto"];
+                };
+            };
+        };
+    };
+    deletePost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    updateComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCommentDto"];
+                };
+            };
+        };
+    };
+    deleteComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
     getAllTravels: {
         parameters: {
             query?: never;
@@ -1585,14 +2026,11 @@ export interface operations {
             header?: never;
             path: {
                 travelId: string;
+                userId: string;
             };
             cookie?: never;
         };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TravelMemberRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
             /** @description OK */
             200: {
@@ -1600,7 +2038,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseSetTravelMemberResponse"];
+                    "*/*": components["schemas"]["ApiResponseTravelMemberResponse"];
                 };
             };
         };
@@ -1718,7 +2156,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListTravelDocument"];
+                    "*/*": components["schemas"]["ApiResponseListTravelDocumentResponseDto"];
                 };
             };
         };
@@ -1812,7 +2250,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListExpenseDocument"];
+                    "*/*": components["schemas"]["ApiResponseListExpenseDocumentResponseDto"];
                 };
             };
         };
@@ -1888,6 +2326,98 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    addInterest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gameId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    deleteInterest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gameId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    createGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameCreateRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGameResponseDto"];
+                };
+            };
+        };
+    };
+    makeBookingRequest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameSlotBookingRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseGameSlotBookingRequestResponse"];
                 };
             };
         };
@@ -2023,7 +2553,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": string;
+                    "*/*": components["schemas"]["ApiResponseVoid"];
                 };
             };
         };
@@ -2047,7 +2577,219 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": string;
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    getAchievementFeed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListPostDto"];
+                };
+            };
+        };
+    };
+    createPost: {
+        parameters: {
+            query?: {
+                files?: string[];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": {
+                    request: components["schemas"]["CreatePostRequest"];
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePostDto"];
+                };
+            };
+        };
+    };
+    likePost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    unlikePost: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    getComments: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListCommentDto"];
+                };
+            };
+        };
+    };
+    addComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCommentDto"];
+                };
+            };
+        };
+    };
+    getUserDetails: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseUserDetailResponse"];
+                };
+            };
+        };
+    };
+    updateUserByHR: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserAdminUpdateDTO"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseUserDetailResponse"];
+                };
+            };
+        };
+    };
+    updateMyUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UserSelfUpdateDTO"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseUserDetailResponse"];
                 };
             };
         };
@@ -2266,12 +3008,12 @@ export interface operations {
             };
         };
     };
-    getUserDetails: {
+    getGame: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                userId: string;
+                gameId: string;
             };
             cookie?: never;
         };
@@ -2283,7 +3025,55 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseUserDetailResponse"];
+                    "*/*": components["schemas"]["ApiResponseGameResponseDto"];
+                };
+            };
+        };
+    };
+    updateGame: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gameId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GameCreateRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    cancelBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                bookingId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
                 };
             };
         };
@@ -2392,7 +3182,29 @@ export interface operations {
             };
         };
     };
-    getFollowingLayer: {
+    getUserGameStats: {
+        parameters: {
+            query?: {
+                latest?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListUserCycleStatsDto"];
+                };
+            };
+        };
+    };
+    getDescendingLayer: {
         parameters: {
             query?: never;
             header?: never;
@@ -2409,7 +3221,134 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListNodeResponse"];
+                    "*/*": components["schemas"]["ApiResponseListUserDetailResponse"];
+                };
+            };
+        };
+    };
+    getUnreadNotifications: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListNotificationResponseDto"];
+                };
+            };
+        };
+    };
+    subscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["SseEmitter"];
+                };
+            };
+        };
+    };
+    getGameSlots: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gameId: string;
+                date: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListSlotResponseDto"];
+                };
+            };
+        };
+    };
+    getUserActiveBooking: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gameId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseUserActiveBookingDto"];
+                };
+            };
+        };
+    };
+    getGameCycle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gameId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseObject"];
+                };
+            };
+        };
+    };
+    getAllGames: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListGameResponseDto"];
                 };
             };
         };
@@ -2476,6 +3415,26 @@ export interface operations {
             };
         };
     };
+    getAllGames_1: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListGameOptions"];
+                };
+            };
+        };
+    };
     getAllDepartments: {
         parameters: {
             query?: never;
@@ -2496,6 +3455,46 @@ export interface operations {
             };
         };
     };
+    getJobSharingRecords: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListJobSharingRecordResponseDto"];
+                };
+            };
+        };
+    };
+    getReferrals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListReferralResponseDto"];
+                };
+            };
+        };
+    };
     getAllActiveJobs: {
         parameters: {
             query?: never;
@@ -2511,7 +3510,95 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["JobResponseDto"][];
+                    "*/*": components["schemas"]["ApiResponseListJobResponseDto"];
+                };
+            };
+        };
+    };
+    getLikeCount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseLong"];
+                };
+            };
+        };
+    };
+    isPostLiked: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                postId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseBoolean"];
+                };
+            };
+        };
+    };
+    getPostsByUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListPostDto"];
+                };
+            };
+        };
+    };
+    getPostsByTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListPostDto"];
                 };
             };
         };
@@ -2522,6 +3609,72 @@ export interface operations {
             header?: never;
             path: {
                 memberId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    deleteExpense: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expenseId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    deleteExpenseDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                docId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    deleteTravelDocument: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                docId: string;
             };
             cookie?: never;
         };

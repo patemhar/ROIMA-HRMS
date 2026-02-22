@@ -5,6 +5,7 @@ import com.roima.hrms.Dtos.game.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface gameService {
@@ -21,5 +22,9 @@ public interface gameService {
 
     List<SlotResponseDto> getGameSlots(UUID gameId, LocalDate date);
 
-    GameCycleReponseDto getGameCycle(UUID gameId);
+    Optional<GameCycleReponseDto> getGameCycle(UUID gameId);
+
+    UserActiveBookingDto getUserActiveBooking(UUID gameId);
+
+    void cancelBooking(UUID bookingId);
 }

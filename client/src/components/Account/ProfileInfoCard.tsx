@@ -138,7 +138,7 @@ export function ProfileInfoCard() {
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-6">
+      <CardContent>
         {/* Display Mode */}
         {!isEditing && (
           <div className="space-y-4">
@@ -181,14 +181,14 @@ export function ProfileInfoCard() {
               <Label className="text-sm font-medium text-muted-foreground">
                 Bio
               </Label>
-              <div className="flex flex-wrap gap-1 mt-1">{profile.bio}</div>
+              <div className="flex flex-wrap gap-1 mt-1 text-sm font-medium">{profile.bio}</div>
             </div>
 
             <div>
               <Label className="text-sm font-medium text-muted-foreground">
                 Location
               </Label>
-              <div className="flex flex-wrap gap-1 mt-1">
+              <div className="flex flex-wrap gap-1 mt-1 text-sm font-medium">
                 {profile.location}
               </div>
             </div>
@@ -197,7 +197,7 @@ export function ProfileInfoCard() {
               <Label className="text-sm font-medium text-muted-foreground">
                 Joined Date
               </Label>
-              <div className="flex flex-wrap gap-1 mt-1">
+              <div className="flex flex-wrap gap-1 mt-1 text-sm font-medium">
                 {profile.joinedDate}
               </div>
             </div>
@@ -206,7 +206,7 @@ export function ProfileInfoCard() {
               <Label className="text-sm font-medium text-muted-foreground">
                 Department
               </Label>
-              <div className="flex flex-wrap gap-1 mt-1">
+              <div className="flex flex-wrap gap-1 mt-1 text-sm font-medium">
                 {profile.departmentId} - {profile.departmentName}
               </div>
             </div>
@@ -218,7 +218,7 @@ export function ProfileInfoCard() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="phone">First Name</Label>
+                <Label htmlFor="phone">Phone</Label>
                 <Input
                   id="phone"
                   value={formData.phone}

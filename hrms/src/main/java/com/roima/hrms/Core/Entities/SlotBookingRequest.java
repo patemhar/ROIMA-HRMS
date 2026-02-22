@@ -16,13 +16,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "booking_requests",
-    uniqueConstraints = {
-        @UniqueConstraint(
-                columnNames = {"slot_id", "user_id"}
-        )
-    }
-)
+@Table(name = "booking_requests")
 public class SlotBookingRequest extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

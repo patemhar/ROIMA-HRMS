@@ -3,7 +3,6 @@ package com.roima.hrms.Repositories;
 import com.roima.hrms.Core.Entities.RefreshToken;
 import com.roima.hrms.Core.Entities.User;
 import jakarta.transaction.Transactional;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +14,6 @@ import java.util.UUID;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID> {
 
-    @EntityGraph(attributePaths = {"user"})
     Optional<RefreshToken> findByTokenHash(String token);
 
     void deleteByUser(User user);

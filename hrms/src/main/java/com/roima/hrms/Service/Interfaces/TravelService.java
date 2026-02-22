@@ -24,7 +24,7 @@ public interface TravelService {
     void deleteMember(UUID memberID);
 
     //Travel Member
-    Set<TravelMemberResponse> addTravelMember(UUID travelId, TravelMemberRequest request);
+    TravelMemberResponse addTravelMember(UUID travelId, UUID userId);
 
     void deleteTravel(UUID travelId);
 

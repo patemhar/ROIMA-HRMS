@@ -6,6 +6,8 @@ import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Service.Interfaces.CloudinaryService;
 import com.roima.hrms.Service.Interfaces.ExpenseDocumentService;
 import com.roima.hrms.Dtos.DocUploadResponse;
+import com.roima.hrms.Dtos.Travel.ExpenseDocumentResponseDto;
+import com.roima.hrms.Mapper.ExpenseDocumentMapper;
 //import com.roima.hrms.Shared.Dtos.Travel.ExpenseDocRequest;
 //import com.roima.hrms.Shared.Dtos.Travel.ExpenseDocResponse;
 //import com.roima.hrms.Shared.Dtos.Travel.TravelDocResponse;
@@ -30,6 +32,7 @@ public class ExpenseDocumentServiceImpl implements ExpenseDocumentService {
     private final TravelRepository travelRepository;
     private final CloudinaryService cloudinaryService;
     private final UserRepository userRepository;
+    private final ExpenseDocumentMapper expenseDocumentMapper;
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
 
     @Override
@@ -37,6 +40,13 @@ public class ExpenseDocumentServiceImpl implements ExpenseDocumentService {
         User user = securityUtil.getCurrentUser();
 
         var existingExpense = travelExpenseRepository.findById(expenseId).orElseThrow(() -> new RuntimeException("No expense found for provided id."));
+
+        boolean allowed = user.getRole().getName().equals("HR") ||
+                memberRepository.existsByTravelIdAndUserId(existingExpense.getTravel().getId(), user.getId());
+
+        if (!allowed) {
+            throw new RuntimeException("Not allowed to upload expense documents");
+        }
 
         var docUploadResponse = new DocUploadResponse();
 
@@ -50,9 +60,9 @@ public class ExpenseDocumentServiceImpl implements ExpenseDocumentService {
 
             var url = cloudinaryService.uploadFile(expenseDoc, "HRMS/Travel Expense");
 
-            if(!url.trim().equals("")) {
+            if(url == null || url.trim().equals("")) {
                 docUploadResponse.getFailedDocs().add(expenseDoc.getName());
-                docUploadResponse.getErrors().add("Failed to upload doc" + expenseDoc.getName());
+                docUploadResponse.getErrors().add("Failed to upload doc " + expenseDoc.getName());
                 continue;
             }
 
@@ -64,7 +74,6 @@ public class ExpenseDocumentServiceImpl implements ExpenseDocumentService {
 
             var savedExpenseDocument = expenseDocumentRepository.save(expenseDocument);
 
-            user.getMy_expense_docs().add(savedExpenseDocument);
             existingExpense.getExpense_docs().add(savedExpenseDocument);
 
             userRepository.save(user);
@@ -77,8 +86,24 @@ public class ExpenseDocumentServiceImpl implements ExpenseDocumentService {
     }
 
     @Override
-    public List<ExpenseDocument> getTravelExpenseDocs(UUID expenseId) {
-        return expenseDocumentRepository.FindByExpenseId(expenseId);
+    public List<ExpenseDocumentResponseDto> getTravelExpenseDocs(UUID expenseId) {
+        List<ExpenseDocument> docs = expenseDocumentRepository.FindByExpenseId(expenseId);
+        return docs.stream().map(expenseDocumentMapper::toDto).toList();
+    }
+
+    @Override
+    public void deleteExpenseDoc(UUID docId) {
+        User user = securityUtil.getCurrentUser();
+
+        var doc = expenseDocumentRepository.findById(docId).orElseThrow(() -> new RuntimeException("Document not found"));
+
+        boolean allowed = user.getRole().getName().equals("HR") ||
+                user.getId().equals(doc.getUploadedBy().getId());
+
+        if (!allowed) {
+            throw new RuntimeException("Not allowed to delete expense documents");
+        }
+
+        expenseDocumentRepository.deleteById(docId);
     }
 }
-

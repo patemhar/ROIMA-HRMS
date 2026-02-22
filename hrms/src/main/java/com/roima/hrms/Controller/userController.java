@@ -22,6 +22,7 @@ public class userController {
     private final SecurityUtil securityUtil;
 
     @GetMapping("/{userId}")
+    @PreAuthorize("hasAuthority('PER002')")
     public ApiResponse<UserDetailResponse> getUserDetails(@PathVariable UUID userId) {
 
         UserDetailResponse response;
@@ -32,6 +33,7 @@ public class userController {
     }
 
     @GetMapping("/my")
+    @PreAuthorize("hasAuthority('PER001')")
     public ApiResponse<UserDetailResponse> getMyDetail() {
 
         var user = securityUtil.getCurrentUser();
@@ -41,6 +43,7 @@ public class userController {
     }
 
     @GetMapping("/all")
+    @PreAuthorize("hasAuthority('PER002')")
     public ApiResponse<List<UserDetailResponse>> getAllUsers() {
 
         var users = userService.getAllUsers();
@@ -49,14 +52,14 @@ public class userController {
     }
 
     @PatchMapping("/me")
-    @PreAuthorize("hasAuthority('PER002')")
+    @PreAuthorize("hasAuthority('PER001')")
     public ApiResponse<UserDetailResponse> updateMyUser(@RequestBody UserSelfUpdateDTO request) {
         UserDetailResponse response = userService.updateMyUser(request);
         return ApiResponse.success(response, "User updated successfully");
     }
 
     @PatchMapping("/{userId}")
-    @PreAuthorize("hasAuthority('PER053')")
+    @PreAuthorize("hasAuthority('PER002')")
     public ApiResponse<UserDetailResponse> updateUserByHR(@PathVariable UUID userId, @RequestBody UserAdminUpdateDTO request) {
         UserDetailResponse response = userService.updateUserByHR(userId, request);
         return ApiResponse.success(response, "User updated successfully");

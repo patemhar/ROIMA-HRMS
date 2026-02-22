@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/store";
 import { useNotificationsStore } from "@/store/notifications";
+import { notificationService } from "@/services/notificationService";
 
 export type notificationResponseDto = {
     id: string;
@@ -18,6 +19,28 @@ export const useNotifications = () => {
 
     const token = useAuth((state) => state.auth.token);
 
+    // Fetch unread notifications on mount/login
+    useEffect(() => {
+        const fetchUnreadNotifications = async () => {
+            if (!token) return;
+            
+            try {
+                const response = await notificationService.getUnreadNotifications();
+                if (response.success && response.data) {
+                    useNotificationsStore.getState().setNotifications(response.data);
+                }
+            } catch (error) {
+                // Silently fail - notifications will be populated via SSE
+                console.warn("Could not fetch unread notifications:", error);
+            }
+        };
+
+        if (token) {
+            fetchUnreadNotifications();
+        }
+    }, [token]);
+
+    // Set up SSE connection for real-time notifications
     useEffect(() => {
         const addNotification = useNotificationsStore.getState().addNotification;
         const baseUrl = "http://localhost:8080";

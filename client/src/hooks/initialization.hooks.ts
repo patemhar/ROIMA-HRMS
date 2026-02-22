@@ -8,7 +8,7 @@ import { toast } from "sonner";
 export function useAuthInitialization() {
   
   const [isInitialized, setIsInitialized] = useState<boolean>();
-  const { logout } = useAuth((state) => state.auth);
+  const logout = useAuth((state) => state.auth.logout);
     
   const initializeAuth = async () => {
     
@@ -38,7 +38,7 @@ export function useAuthInitialization() {
 
     useEffect(() => {
         void initializeAuth();
-    }, []);
+    }, [logout]);
 
     return {
         isInitialized,

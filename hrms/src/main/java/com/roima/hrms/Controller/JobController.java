@@ -2,16 +2,11 @@ package com.roima.hrms.Controller;
 
 import com.roima.hrms.Core.Entities.User;
 import com.roima.hrms.Dtos.ApiResponse;
-import com.roima.hrms.Dtos.job.JobRequestDto;
-import com.roima.hrms.Dtos.job.JobResponseDto;
-import com.roima.hrms.Dtos.job.JobResponseDto;
-import com.roima.hrms.Dtos.job.ReferralRequest;
-import com.roima.hrms.Dtos.job.ShareJobRequest;
+import com.roima.hrms.Dtos.job.*;
 import com.roima.hrms.Mapper.JobMapper;
 import com.roima.hrms.Service.Interfaces.JobService;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,60 +17,55 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/jobs")
+@RequiredArgsConstructor
 public class JobController {
 
     private final JobService jobService;
     private final JobMapper jobMapper;
-    private SecurityUtil securityUtil;
-
-    public JobController(SecurityUtil securityUtil, JobService jobService, JobMapper jobMapper) {
-        this.securityUtil = securityUtil;
-        this.jobService = jobService;
-        this.jobMapper = jobMapper;
-    }
+    private final SecurityUtil securityUtil;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('PER006')")
     public ApiResponse<JobResponseDto> createJob(@RequestBody JobRequestDto requestDto) {
-
         User currentUser = securityUtil.getCurrentUser();
-
-        JobResponseDto response = jobService.createJob(requestDto, currentUser);
-        return ApiResponse.success(response, "Job Created Successfully!");
+        return ApiResponse.success(jobService.createJob(requestDto, currentUser), "Job Created Successfully!");
     }
 
     @DeleteMapping("/{jobId}")
-    public ApiResponse<Void> deleteJob(
-            @PathVariable UUID jobId
-    ) {
+    @PreAuthorize("hasAuthority('PER006')")
+    public ApiResponse<Void> deleteJob(@PathVariable UUID jobId) {
         jobService.deleteJob(jobId);
         return ApiResponse.success(null, "Job deleted successfully");
     }
 
     @GetMapping("/active")
-    public ResponseEntity<List<JobResponseDto>> getAllActiveJobs() {
-        return ResponseEntity.ok(jobService.getActiveJobs().stream()
-                .map(jobMapper::toDto).toList());
+    public ApiResponse<List<JobResponseDto>> getAllActiveJobs() {
+        return ApiResponse.success(jobService.getActiveJobs().stream().map(jobMapper::toDto).toList(), "Active jobs fetched successfully");
+    }
+
+    @GetMapping("/sharing-records")
+    @PreAuthorize("hasAuthority('PER006')")
+    public ApiResponse<List<JobSharingRecordResponseDto>> getJobSharingRecords() {
+        return ApiResponse.success(jobService.getAllJobSharingRecords(), "Job sharing records retrieved successfully");
+    }
+
+    @GetMapping("/referrals")
+    @PreAuthorize("hasAuthority('PER006')")
+    public ApiResponse<List<ReferralResponseDto>> getReferrals() {
+        return ApiResponse.success(jobService.getAllReferrals(), "Referrals retrieved successfully");
     }
 
     @PostMapping("/share")
-    public ResponseEntity<String> shareJob(@RequestBody ShareJobRequest request) {
-        var user = securityUtil.getCurrentUser();
-        try {
-            jobService.shareJob(request, user);
-            return ResponseEntity.ok("Job shared successfully");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error: " + e.getMessage());
-        }
+    @PreAuthorize("hasAuthority('PER005')")
+    public ApiResponse<Void> shareJob(@RequestBody ShareJobRequest request) {
+        jobService.shareJob(request, securityUtil.getCurrentUser());
+        return ApiResponse.success(null, "Job shared successfully");
     }
 
     @PostMapping(value = "/refer", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> referFriend(@ModelAttribute ReferralRequest request) {
-        var user = securityUtil.getCurrentUser();
-        try {
-            jobService.referFriend(request, user);
-            return ResponseEntity.ok("Referral submitted successfully");
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Failed to submit referral");
-        }
+    @PreAuthorize("hasAuthority('PER005')")
+    public ApiResponse<Void> referFriend(@ModelAttribute ReferralRequest request) throws java.io.IOException {
+        jobService.referFriend(request, securityUtil.getCurrentUser());
+        return ApiResponse.success(null, "Referral submitted successfully");
     }
 }

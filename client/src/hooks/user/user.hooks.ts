@@ -108,17 +108,21 @@ export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (
+    mutationFn: async ({
+      profileId,
+      data
+    }: {
+      profileId: string;
       data: Schemas["ProfileAdminRequestDTO"]
-    ) => {
-      const result = await userProfileService.updateProfile(data);
+    }) => {
+      const result = await userProfileService.updateProfile(profileId, data);
       
       if (!result.success)
         throw new Error(result.errors || "Failed to update profile");
 
       return result;
     },
-    onSuccess: (_, data) => {
+    onSuccess: (_, { data }) => {
       queryClient.invalidateQueries({
         queryKey: userKeys.userProfile(data.userId ?? "anonymous"),
       });

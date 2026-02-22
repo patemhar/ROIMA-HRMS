@@ -26,7 +26,13 @@ public class Post extends BaseEntity{
 
     private String content;
 
-    private boolean is_active;
+    private String tags;
+
+    @Column(name = "is_system_generated")
+    private boolean systemGenerated;
+
+    @Column(name = "is_active")
+    private boolean active;
 
     @ManyToOne
     @JoinColumn(name = "visibility_role")

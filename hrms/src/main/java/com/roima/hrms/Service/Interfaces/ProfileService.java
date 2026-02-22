@@ -4,9 +4,11 @@ package com.roima.hrms.Service.Interfaces;
 import com.roima.hrms.Dtos.profile.ProfileAdminRequestDTO;
 import com.roima.hrms.Dtos.profile.ProfileResponseDTO;
 import com.roima.hrms.Dtos.profile.ProfileSelfUpdateDTO;
+import com.roima.hrms.Dtos.game.UserCycleStatsDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 public interface ProfileService {
@@ -28,5 +30,5 @@ public interface ProfileService {
 
     void removeInterest(UUID gameId);
 
-
+    List<UserCycleStatsDto> getUserGameStats(boolean latest);
 }

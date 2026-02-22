@@ -8,6 +8,7 @@ import com.roima.hrms.Dtos.Travel.*;
 import com.roima.hrms.Mapper.TravelMapper;
 import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Service.Interfaces.NotificationService;
+import com.roima.hrms.Service.Interfaces.EmailService;
 import com.roima.hrms.Service.Interfaces.TravelService;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -31,11 +32,7 @@ public class TravelServiceImpl implements TravelService{
     private final SecurityUtil securityUtil;
     private final NotificationRepository notificationRepository;
     private final NotificationService notificationService;
-
-    private static final Logger logger = LoggerFactory.getLogger(TravelServiceImpl.class);
-
-    @Value("${ImageStoreUrl}")
-    private String uploadDir;
+    private final EmailService emailService;
 
     @Override
     public TravelResponseSummary createTravel(TravelRequest dto) {
@@ -49,35 +46,13 @@ public class TravelServiceImpl implements TravelService{
 
         Travel savedTravel = travelRepository.save(travel);
 
-        currentUser.getTravel_created_by_me().add(savedTravel);
-
-        // add members
-        if (dto.getTravelMemberIds() != null) {
-            for (UUID userId : dto.getTravelMemberIds().getMember_ids()) {
-
-                User existingUser = userRepository.findById(userId)
-                        .orElseThrow(() -> new RuntimeException("User not found"));
-
-                TravelMember member = new TravelMember();
-                member.setTravel(savedTravel);
-                member.setUser(existingUser);
-
-                var savedTravelMember = travelMemberRepo.save(member);
-
-                notificationService.createNew(existingUser, currentUser, NotificationType.TRAVEL, EntityType.TRAVEL, "New Travel", "You are added into a travel plan. Travel Id: " + savedTravel.getId());
-
-                // memory
-                savedTravel.getMembers().add(savedTravelMember);
-                existingUser.getMy_travel().add(savedTravelMember);
-            }
-        }
-//        System.out.println("\n\nTravel Members:" + savedTravel.getMembers().toString());
-
         return travelMapper.ToTravelResSum(savedTravel);
     }
 
     @Override
     public TravelResponse getTravel(UUID travelId) {
+
+        validateAccess(travelId);
 
         var existingTravel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
 
@@ -87,14 +62,13 @@ public class TravelServiceImpl implements TravelService{
     @Override
     public List<TravelResponseSummary> getMyTravel() {
 
-        var allTravels = travelRepository.findByMemberUserId(securityUtil.getCurrentUser().getId());
+        User currentUser = securityUtil.getCurrentUser();
 
-        notificationService.notifyUser(
-                securityUtil.getCurrentUser().getId(),
-            "Your booking for slot 5PM is confirmed"
-        );
+        List<Travel> travels = travelRepository.findByMemberUserId(currentUser.getId());
 
-        return allTravels.stream().map(travelMapper::ToTravelResSum).toList();
+        return travels.stream()
+                .map(travelMapper::ToTravelResSum)
+                .toList();
     }
 
 
@@ -127,6 +101,13 @@ public class TravelServiceImpl implements TravelService{
     @Override
     public List<TravelResponseSummary> getTravelsForUser(UUID user_id) {
 
+        User currentUser = securityUtil.getCurrentUser();
+        String role = currentUser.getRole().getName();
+
+        if (!role.equals("HR") && !currentUser.getId().equals(user_id)) {
+            throw new RuntimeException("Access denied");
+        }
+
         List<Travel> user_travels = travelRepository.findByCreatedById(user_id);
 
         return user_travels.stream().map(travelMapper::ToTravelResSum).toList();
@@ -134,37 +115,41 @@ public class TravelServiceImpl implements TravelService{
 
 
     @Override
-    public Set<TravelMemberResponse> addTravelMember(UUID travelId, TravelMemberRequest request) {
+    public TravelMemberResponse addTravelMember(UUID travelId, UUID userId) {
 
         var existingTravel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
 
-        Set<TravelMemberResponse> travelMemberResponses = new HashSet<>();
+        if (existingTravel.getStart_date().isBefore(java.time.LocalDate.now()) || existingTravel.getStart_date().equals(java.time.LocalDate.now())) {
+            throw new RuntimeException("Cannot add members after travel has started");
+        }
 
-        if(request.getMember_ids().isEmpty()) return travelMemberResponses;
+        if(userId == null) {
+            throw new RuntimeException("User ID is required");
+        }
 
-        request.getMember_ids().forEach(memberId -> {
+        User currentUser = securityUtil.getCurrentUser();
+        var existingUser = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Member not found."));
 
-            var existingUser = userRepository.findById(memberId).orElseThrow(() -> new RuntimeException("Member not found."));
+        // Check if member already exists in this travel
+        boolean alreadyExists = travelMemberRepo.existsByTravelIdAndUserId(existingTravel.getId(), existingUser.getId());
+        if (alreadyExists) {
+            throw new RuntimeException("User " + existingUser.getFirst_name() + " " + existingUser.getLast_name() + " is already a member of this travel");
+        }
 
-            var travelMember = new TravelMember();
+        var travelMember = new TravelMember();
+        travelMember.setTravel(existingTravel);
+        travelMember.setUser(existingUser);
 
-            travelMember.setTravel(existingTravel);
-            travelMember.setUser(existingUser);
+        var savedTravelMember = travelMemberRepo.save(travelMember);
 
-            var savedTravelMember = travelMemberRepo.save(travelMember);
+        // Notify the added member
+        String title = "Added to Travel Plan";
+        String message = "You have been added to travel: " + existingTravel.getTitle() +
+            " from " + existingTravel.getStart_date() + " to " + existingTravel.getEnd_date();
+        notificationService.createNew(existingUser, currentUser, NotificationType.TRAVEL, title, message);
+        emailService.sendSimpleMail(existingUser.getEmail(), title, message);
 
-            // memory model user
-            existingUser.getMy_travel().add(savedTravelMember);
-
-            // memory model travel
-            existingTravel.getMembers().add(savedTravelMember);
-
-            travelMemberResponses.add(travelMapper.toMemberResponse(savedTravelMember));
-        });
-
-        travelRepository.save(existingTravel);
-
-        return travelMemberResponses;
+        return travelMapper.toMemberResponse(savedTravelMember);
     }
 
     @Override
@@ -178,10 +163,7 @@ public class TravelServiceImpl implements TravelService{
 
         travelBookingRepository.save(travelBooking);
 
-        // memory
-        existingTravel.getTravel_bookings().add(travelBooking);
 
-        travelRepository.save(existingTravel);
 
         return travelMapper.ToBookingResponse(travelBooking);
     }
@@ -216,16 +198,21 @@ public class TravelServiceImpl implements TravelService{
 
         var existingTravel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
 
+        var travelStart = existingTravel.getStart_date().minusDays(1);
+        var travelEnd = existingTravel.getEnd_date().plusDays(1);
+        var itineraryStart = dto.getStartDateTime().toLocalDate();
+        var itineraryEnd = dto.getEndDateTime().toLocalDate();
+
+        if (itineraryStart.isBefore(travelStart) || itineraryEnd.isAfter(travelEnd)) {
+            throw new RuntimeException("Itinerary dates must be within travel start -1 day to travel end +1 day");
+        }
+
         TravelItinerary travelItinerary = travelMapper.ToTravelItinerary(dto);
 
         travelItinerary.setTravel(existingTravel);
 
         var savedTravelItinerary = travelItineraryRepository.save(travelItinerary);
 
-        // memory
-        existingTravel.getItineraries().add(savedTravelItinerary);
-
-        travelRepository.save(existingTravel);
 
         return travelMapper.ToItineraryResponse(savedTravelItinerary);
     }
@@ -262,8 +249,10 @@ public class TravelServiceImpl implements TravelService{
 
     @Override
     public void deleteMember(UUID memberId) {
+        TravelMember member = travelMemberRepo.findById(memberId)
+                .orElseThrow(() -> new RuntimeException("Travel member not found"));
 
-        travelMemberRepo.deleteById(memberId);
+        travelMemberRepo.delete(member);
     }
 
     @Override
@@ -297,21 +286,20 @@ public class TravelServiceImpl implements TravelService{
 
         if (role.equals("HR")) return travel;
 
-        if (role.equals("EMPLOYEE") &&
-                travel.getCreatedBy().getId().equals(currentUser.getId())) {
+        boolean isMember = travel.getMembers().stream()
+                .anyMatch(member -> member.getUser().getId().equals(currentUser.getId()));
+
+        if (isMember) {
             return travel;
         }
 
         if (role.equals("MANAGER")) {
-
-            List<User> team =
-                    userRepository.findByReportsTo(currentUser.getId());
-
-            boolean allowed = team.stream()
-                    .anyMatch(u -> u.getId()
-                            .equals(travel.getCreatedBy().getId()));
-
-            if (allowed) return travel;
+            boolean managesMember = travel.getMembers().stream()
+                    .anyMatch(member -> member.getUser().getReports_to() != null &&
+                            member.getUser().getReports_to().getId().equals(currentUser.getId()));
+            if (managesMember) {
+                return travel;
+            }
         }
 
         throw new RuntimeException("Access denied");

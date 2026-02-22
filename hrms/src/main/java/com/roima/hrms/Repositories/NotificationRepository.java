@@ -2,18 +2,30 @@ package com.roima.hrms.Repositories;
 
 import com.roima.hrms.Core.Entities.Notification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, UUID> {
 
+    @Modifying
+    @Transactional
     @Query("""
         UPDATE Notification n
         SET n.isRead = true
         WHERE n.id = :notificationId
     """)
-    void markAsRead(UUID notificationId);
+    void markAsRead(@Param("notificationId") UUID notificationId);
+
+    @Query("SELECT n FROM Notification n WHERE n.recipient.id = :userId AND n.isRead = false ORDER BY n.created_at DESC")
+    List<Notification> findUnreadByUserId(@Param("userId") UUID userId);
+
+    @Query("SELECT n FROM Notification n WHERE n.recipient.id = :userId ORDER BY n.created_at DESC")
+    List<Notification> findAllByUserId(@Param("userId") UUID userId);
 }

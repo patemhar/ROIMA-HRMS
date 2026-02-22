@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -24,6 +25,20 @@ public class CycleService {
     private final UserCycleStatsRepository statsRepo;
     private final UserRepository userRepository;
 
+    public LocalDateTime getNextCycleStart() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalTime time = now.toLocalTime();
+        int min = time.getMinute();
+        int nextMin = ((min / 30) + 1) * 30;
+        if (nextMin >= 60) {
+            nextMin -= 60;
+            time = time.plusHours(1);
+        }
+        time = time.withMinute(nextMin).withSecond(0).withNano(0);
+        LocalDateTime nextRounded = LocalDateTime.of(now.toLocalDate(), time);
+        return nextRounded.minusMinutes(30);
+    }
+
     @Transactional
     public void createCycle(Game game) {
 
@@ -34,51 +49,72 @@ public class CycleService {
         int slotCapacity = game.getMaxPlayers();
         int slotsRequired = (int) Math.ceil((double) interestedUsers / slotCapacity);
 
-        int slotDuration = game.getSlotDurationMinutes();
-
-        int cycleDurationMinutes = slotsRequired * slotDuration;
-
-        LocalDateTime start = LocalDateTime.now();
-        LocalDateTime end = start.plusMinutes(cycleDurationMinutes);
+        LocalDateTime startFrom = getNextCycleStart();
 
         GameBookingCycle cycle = new GameBookingCycle();
         cycle.setGame(game);
-        cycle.setCycle_start(start);
-        cycle.setCycle_end(end);
+        cycle.setCycle_start(startFrom);
 
         cycleRepo.save(cycle);
 
-        createSlotsForCycle(game, cycle, slotsRequired);
+        LocalDateTime cycleEnd = createSlotsForCycle(game, cycle, slotsRequired, startFrom);
+        cycle.setCycle_end(cycleEnd);
+
+        cycleRepo.save(cycle);
+
         initializeUserStats(game.getId(), cycle);
     }
 
 
-    private void createSlotsForCycle(Game game, GameBookingCycle cycle, int slotsRequired) {
+    private LocalDateTime createSlotsForCycle(Game game, GameBookingCycle cycle, int slotsRequired, LocalDateTime startFrom) {
 
         LocalTime operatingStart = game.getOperatingStartTime();
-
+        LocalTime operatingEnd = game.getOperatingEndTime();
         int duration = game.getSlotDurationMinutes();
 
-        LocalDate date = LocalDate.now();
+        LocalDate currentDate = startFrom.toLocalDate();
+        LocalTime currentTime = startFrom.toLocalTime();
+
+        if (currentTime.isBefore(operatingStart)) {
+            currentTime = operatingStart;
+        } else if (currentTime.isAfter(operatingEnd.minusMinutes(duration))) {
+            currentDate = currentDate.plusDays(1);
+            currentTime = operatingStart;
+        }
+
+        // buffer
+        currentTime = currentTime.plusMinutes(30);
 
         List<GameSlot> slots = new ArrayList<>();
+        LocalDateTime lastEnd = null;
+        int created = 0;
 
-        for (int i = 0; i < slotsRequired; i++) {
+        while (created < slotsRequired) {
+            LocalTime slotStart = currentTime;
+            LocalTime slotEnd = slotStart.plusMinutes(duration);
 
-            LocalTime startTime = operatingStart.plusMinutes(i * duration);
+            if (slotEnd.isAfter(operatingEnd)) {
+                // Move to next day
+                currentDate = currentDate.plusDays(1);
+                currentTime = operatingStart;
+                continue;
+            }
 
             GameSlot slot = new GameSlot();
             slot.setGame(game);
-            slot.setSlotDate(date);
-            slot.setStartTime(startTime);
-            slot.setEndTime(startTime.plusMinutes(duration));
-            slot.setGame_cycle(cycle);
-            slot.setMaxPlayers(game.getMaxPlayers());
+            slot.setSlotDate(currentDate);
+            slot.setStartTime(slotStart);
+            slot.setEndTime(slotEnd);
+            slot.setGameCycle(cycle);
 
             slots.add(slot);
+            lastEnd = LocalDateTime.of(currentDate, slotEnd);
+            currentTime = slotEnd;
+            created++;
         }
 
         slotRepo.saveAll(slots);
+        return lastEnd;
     }
 
     private void initializeUserStats(UUID gameId, GameBookingCycle cycle) {
@@ -87,6 +123,8 @@ public class CycleService {
 
         List<UserCycleStats> stats = new ArrayList<>();
 
+        var existingGame = gameRepo.findById(gameId).orElseThrow(() -> new RuntimeException("No game found for inserting user stats."));
+
         for (var user : users) {
 
             if (statsRepo.existsByUserIdAndGameCycleId(user.getId(), cycle.getId()))
@@ -94,6 +132,7 @@ public class CycleService {
 
             UserCycleStats s = new UserCycleStats();
             s.setUser(user);
+            s.setGame(existingGame);
             s.setGameCycle(cycle);
             s.setPlayCount(0);
 

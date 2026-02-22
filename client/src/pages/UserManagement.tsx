@@ -30,9 +30,8 @@ type RegisterForm = Schemas["RegisterRequestDto"];
 
 export const UserManagementPage = () => {
   const permissions = useAuth((state) => state.auth.user?.permission);
-  const canManageUsers = hasPermission(permissions, PermissionCode.USER_UPDATE);
-  const canViewUserProfiles = hasPermission(permissions, PermissionCode.PROFILE_READ) || 
-                              hasPermission(permissions, PermissionCode.USER_READ);
+  const canManageUsers = hasPermission(permissions, PermissionCode.USER_MANAGE);
+  const canViewUserProfiles = hasPermission(permissions, PermissionCode.PROFILE_MANAGE) || hasPermission(permissions, PermissionCode.USER_MANAGE);
 
   const [open, setOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -139,22 +138,31 @@ export const UserManagementPage = () => {
   };
 
   const handleSaveProfile = async () => {
+    if (!userProfileQuery.data?.id) {
+      toast.error("Profile ID not found");
+      return;
+    }
+
     try {
       await updateProfileMutation.mutateAsync({
-        userId: toOptional(editProfileForm.userId),
-        empNumber: toOptional(editProfileForm.empNumber),
-        departmentId: toOptional(editProfileForm.departmentId),
-        joinedDate: toOptional(editProfileForm.joinedDate),
-        phone: toOptional(editProfileForm.phone),
-        bio: toOptional(editProfileForm.bio),
-        location: toOptional(editProfileForm.location),
+        profileId: userProfileQuery.data.id,
+        data: {
+          userId: toOptional(editProfileForm.userId),
+          empNumber: toOptional(editProfileForm.empNumber),
+          departmentId: toOptional(editProfileForm.departmentId),
+          joinedDate: toOptional(editProfileForm.joinedDate),
+          phone: toOptional(editProfileForm.phone),
+          bio: toOptional(editProfileForm.bio),
+          location: toOptional(editProfileForm.location),
+        },
       });
 
       toast.success("Profile updated successfully");
       setEditProfileOpen(false);
       userProfileQuery.refetch();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update profile");
+      setErrorMessage(getErrorMessage(error));
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -173,6 +181,18 @@ export const UserManagementPage = () => {
 
   return (
     <div className="space-y-6">
+
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <div className="bg-green-50 text-green-800 p-3 rounded-md text-sm">
+          {successMessage}
+        </div>
+      )}
+      {errorMessage && (
+        <div className="bg-red-50 text-red-800 p-3 rounded-md text-sm">
+          {errorMessage}
+        </div>
+      )}
 
       {/* Access Denied Message */}
       {!canViewUserProfiles && !canManageUsers && (
@@ -435,7 +455,7 @@ export const UserManagementPage = () => {
       </Card>
       )}
 
-      {/* User Details Dialog - only if user can view profiles */}
+      {/* User Details Dialog */}
       {canViewUserProfiles && (
         <Dialog open={userDetailsOpen} onOpenChange={setUserDetailsOpen}>
         <DialogContent className="max-w-2xl">

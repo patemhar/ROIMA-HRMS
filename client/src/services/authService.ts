@@ -73,6 +73,11 @@ class AuthService {
 
     private clearAccessToken(): void {
         useAuth.getState().auth.logout();
+        try {
+            localStorage.removeItem("HRMS");
+        } catch (error) {
+            console.error("Failed to clear localStorage:", error);
+        }
     }
 
     isAuthenticated(): boolean {

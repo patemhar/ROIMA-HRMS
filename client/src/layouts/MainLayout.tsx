@@ -14,7 +14,11 @@ import { useLogout } from "@/hooks/auth/logout.hooks";
 import { useState } from "react";
 import { Bell, Menu } from "lucide-react";
 import logo from "../assets/Roima_logo.png";
-import { hasPermission, PermissionCode, type PermissionCodeValue } from "@/constants/permissions";
+import {
+  hasPermission,
+  PermissionCode,
+  type PermissionCodeValue,
+} from "@/constants/permissions";
 import { useNotificationsStore } from "@/store/notifications";
 import { DateTimeDisplay } from "@/utils/dateUtils";
 
@@ -23,11 +27,17 @@ const navItems: Array<{
   label: string;
   permission?: PermissionCodeValue;
 }> = [
+  { to: "achievements", label: "Achievements"},
   { to: "travels", label: "Travels" },
   { to: "account", label: "Account" },
-  { to: "hr/users", label: "Users", permission: PermissionCode.USER_READ },
+  { to: "hr/users", label: "Users", permission: PermissionCode.USER_MANAGE },
+  {
+    to: "hr/job-records",
+    label: "Job Records",
+    permission: PermissionCode.USER_MANAGE,
+  },
   { to: "jobs", label: "Jobs" },
-  { to: "games", label: "Games" }
+  { to: "games", label: "Games" },
 ];
 
 export const MainLayout = () => {
@@ -126,7 +136,7 @@ export const MainLayout = () => {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-            <div className="text-right">
+            <div className="hidden md:block text-right">
               <p className="text-sm font-medium">
                 {user?.first_name
                   ? `${user.first_name} ${user?.last_name ?? ""}`

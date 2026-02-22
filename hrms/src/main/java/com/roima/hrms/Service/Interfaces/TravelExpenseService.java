@@ -17,7 +17,7 @@ public interface TravelExpenseService {
 
     List<TravelExpenseResponse> getAllExpenses(UUID travelId);
 
+    void deleteExpense(UUID expenseId);
+
     void deleteTravel(UUID travelId);
 }
-
-

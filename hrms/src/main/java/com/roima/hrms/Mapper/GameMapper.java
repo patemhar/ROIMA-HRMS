@@ -30,7 +30,7 @@ public class GameMapper {
         this.modelMapper = modelMapper;
         this.gameInterestRepository = gameInterestRepository;
         this.slotBookingRequestRepository = slotBookingRequestRepository;
-        this.gameInterestRepository = gameInterestRepository;
+        this.gameSlotRepository = gameSlotRepository;
     }
 
     public GameSlotBookingRequestResponse toGameSlotBookingRequestResponse (SlotBookingRequest request) {

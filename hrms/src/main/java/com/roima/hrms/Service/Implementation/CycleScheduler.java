@@ -31,6 +31,10 @@ public class CycleScheduler {
             Optional<GameBookingCycle> currentCycle = cycleRepo.getCurrentCycle(game.getId());
 
             if(currentCycle.isEmpty()) {
+                if (cycleRepo.existsFutureCycle(game.getId(), LocalDateTime.now())) {
+                    // Already a future cycle exists, skip creating
+                    continue;
+                }
                 cycleService.createCycle(game);
                 continue;
             }
@@ -41,4 +45,3 @@ public class CycleScheduler {
         }
     }
 }
-

@@ -28,7 +28,8 @@ public class User extends BaseEntity{
 
     private LocalDateTime last_login;
 
-    private boolean is_active = true;
+    @Column(name = "is_active")
+    private boolean active = true;
 
     @ManyToOne
     @JoinColumn(name = "role_id")

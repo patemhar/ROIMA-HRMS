@@ -164,6 +164,8 @@ public class AuthServiceImpl implements AuthService {
         refreshTokenService.revoke(UUID.fromString(userId), "User logout", null);
 
         clearCookie(response, "refresh_token");
+
+        //return response
     }
 
     private void saveRefreshToken(User user, String token) {
@@ -185,7 +187,7 @@ public class AuthServiceImpl implements AuthService {
 
         cookie.setHttpOnly(true);
         cookie.setSecure(false);
-        cookie.setPath("/auth/refresh");
+        cookie.setPath("/");
         cookie.setMaxAge(7 * 24 * 60 * 60);
 
         response.addCookie(cookie);
