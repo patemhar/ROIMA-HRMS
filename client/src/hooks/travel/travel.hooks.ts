@@ -1,7 +1,7 @@
 import type { components } from "@/types/api";
 import type { ApiResponse } from "@/types/http";
 import { hrKeys, normalCacheConfig } from "./types";
-import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { travelService } from "@/services/travelService";
 import { useAuth } from "@/store";
 
@@ -120,6 +120,22 @@ export const useGetBookings = (travelId: string) => {
   });
 };
 
+export const useGetExpenses = (travelId: string) => {
+  return useQuery({
+    queryKey: hrKeys.expensesByTravelId(travelId),
+    queryFn: async () => {
+      const res = await travelService.getExpenses(travelId);
+
+      if (!res.success || !res.data)
+        throw new Error(res.errors || "Failed");
+
+      return res.data;
+    },
+    enabled: !!travelId,
+    ...normalCacheConfig,
+  });
+};
+
 
 export const useCreateTravel = () => {
     const queryClient = useQueryClient();
@@ -168,8 +184,9 @@ export const useUpdateTravel = () => {
 
             return response;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: hrKeys.allTravels(user?.role ?? "public") })
+        onSuccess: (_, { id }) => {
+            queryClient.invalidateQueries({ queryKey: hrKeys.allTravels(user?.role ?? "public") });
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(id) });
         }
     })
 }
@@ -204,26 +221,26 @@ export const useAddMember = () => {
 
     return useMutation({
         mutationFn: async ({
-            id,
-            data
+            travelId,
+            userId
         } : {
-            id: string,
-            data: Schemas["TravelMemberRequest"]
+            travelId: string,
+            userId: string
         }) => {
 
-            const response = await travelService.addMembers(
-                id,
-                data
+            const response = await travelService.addMember(
+                travelId,
+                userId
             );
 
             if(!response.success) {
-                throw new Error(response.errors || "Failed to create travel")
+                throw new Error(response.errors || "Failed to add member")
             }
 
             return response;
         },
-        onSuccess: (_, { id }) => {
-            queryClient.invalidateQueries({ queryKey: hrKeys.membersByTravelId(id) })
+        onSuccess: (_, { travelId }) => {
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(travelId) })
         }
     })
 }
@@ -250,14 +267,14 @@ export const useDeleteMember = () => {
             return response;
         },
         onSuccess: (_, {travelId}) => {
-            queryClient.invalidateQueries({ queryKey: hrKeys.membersByTravelId(travelId) })
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(travelId) })
         }
     })
 }
 
 export const useAddItinerary = () => {
 
-    const queryClient = new QueryClient();
+    const queryClient = useQueryClient();
 
     return useMutation({
         mutationFn: async ({
@@ -380,7 +397,7 @@ export const useAddBooking = () => {
             data
         } : {
             id: string,
-            data: Schemas["TravelItineraryRequest"]
+            data: Schemas["TravelBookingRequest"]
         }) => {
 
             const response = await travelService.addBooking(
@@ -395,7 +412,7 @@ export const useAddBooking = () => {
             return response;
         },
         onSuccess: (_, { id }) => {
-            queryClient.invalidateQueries({ queryKey: hrKeys.bookingByTravelId(id) })
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(id) })
         }
     })
 }
@@ -425,7 +442,7 @@ export const useAddExpense = () => {
             return response;
         },
         onSuccess: (_, { id }) => {
-            queryClient.invalidateQueries({ queryKey: hrKeys.expensesByTravelId(id) })
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(id) })
         }
     })
 }
@@ -433,7 +450,6 @@ export const useAddExpense = () => {
 export const useApproveExpense = () => {
 
     const queryClient = useQueryClient();
-    const role = useAuth((state) => state.auth.role);
 
     return useMutation({
         mutationFn: async ({
@@ -441,6 +457,7 @@ export const useApproveExpense = () => {
             data
         } : {
             expenseId: string,
+            travelId: string,
             data: string
         }
         ) => {
@@ -456,8 +473,8 @@ export const useApproveExpense = () => {
 
             return response;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: hrKeys.travels() })
+        onSuccess: (_, { travelId }) => {
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(travelId) })
         }
     })
 }
@@ -465,14 +482,15 @@ export const useApproveExpense = () => {
 export const useRejectExpense = () => {
 
     const queryClient = useQueryClient();
-    const role = useAuth((state) => state.auth.role);
 
     return useMutation({
         mutationFn: async ({
             expenseId,
+            travelId,
             data
         } : {
             expenseId: string,
+            travelId: string,
             data: string
         }
         ) => {
@@ -488,8 +506,170 @@ export const useRejectExpense = () => {
 
             return response;
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: hrKeys.travels() })
+        onSuccess: (_, { travelId }) => {
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(travelId) })
+        }
+    })
+}
+
+export const useUploadTravelDocs = (travelId: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (files: File[]) => {
+      const response = await travelService.uploadTravelDocs(travelId, files);
+
+      if (!response.success) {
+        throw new Error(response.errors || "Failed to upload documents");
+      }
+
+      return response;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: hrKeys.travelById(travelId) });
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelDocs(travelId) });
+    },
+  });
+};
+
+export const useDeleteTravelDocument = () => {
+
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            docId,
+            travelId
+        } : {
+            docId: string,
+            travelId: string
+        }) => {
+
+            const response = await travelService.deleteTravelDocument(
+                docId
+            );
+
+            if(!response.success) {
+                throw new Error(response.errors || "Failed to delete travel document")
+            }
+
+            return response;
+        },
+        onSuccess: (_, { travelId }) => {
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(travelId) })
+        }
+    })
+}
+
+export const useUploadExpenseDocs = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ expenseId, files }: { expenseId: string; files: File[] }) => {
+      const response = await travelService.uploadExpenseDoc(expenseId, files);
+
+      if (!response.success) {
+        throw new Error(response.errors || "Failed to upload documents");
+      }
+
+      return response;
+    },
+    onSuccess: (_, { expenseId }) => {
+      queryClient.invalidateQueries({ queryKey: hrKeys.expenseDocs(expenseId) });
+    },
+  });
+};
+
+export const useDeleteExpense = () => {
+
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            expenseId,
+            travelId
+        } : {
+            expenseId: string,
+            travelId: string
+        }) => {
+
+            const response = await travelService.deleteExpense(
+                expenseId
+            );
+
+            if(!response.success) {
+                throw new Error(response.errors || "Failed to delete expense")
+            }
+
+            return response;
+        },
+        onSuccess: (_, { travelId }) => {
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(travelId) })
+        }
+    })
+}
+
+export const useGetTravelDocs = (travelId: string) => {
+  const isAuthenticated = useAuth(s => s.auth.isAuthenticated);
+
+  return useQuery({
+        queryKey: hrKeys.travelDocs(travelId),
+    queryFn: async () => {
+      const res = await travelService.getTravelDocs(travelId);
+
+      if (!res.success || !res.data)
+        throw new Error(res.errors || "Failed to fetch documents");
+
+      return res.data;
+    },
+    enabled: !!travelId && isAuthenticated,
+    ...normalCacheConfig,
+  });
+};
+
+export const useGetExpenseDocs = (expenseId: string) => {
+  const isAuthenticated = useAuth(s => s.auth.isAuthenticated);
+
+  return useQuery({
+        queryKey: hrKeys.expenseDocs(expenseId),
+    queryFn: async () => {
+      const res = await travelService.getExpenseDocs(expenseId);
+
+      if (!res.success || !res.data)
+        throw new Error(res.errors || "Failed to fetch documents");
+
+      return res.data;
+    },
+    enabled: !!expenseId && isAuthenticated,
+    ...normalCacheConfig,
+  });
+};
+
+export const useDeleteExpenseDocument = () => {
+
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({
+            docId,
+            expenseId
+        } : {
+            docId: string,
+            expenseId: string
+        }) => {
+
+            const response = await travelService.deleteExpenseDocument(
+                docId
+            );
+
+            if(!response.success) {
+                throw new Error(response.errors || "Failed to delete expense document")
+            }
+
+            return response;
+        },
+        onSuccess: (_, { expenseId }) => {
+            queryClient.invalidateQueries({ queryKey: hrKeys.expenseDocs(expenseId) })
         }
     })
 }

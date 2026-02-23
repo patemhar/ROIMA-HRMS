@@ -1,10 +1,8 @@
 package com.roima.hrms.Repositories;
 
 import com.roima.hrms.Core.Entities.Travel;
-import com.roima.hrms.Core.Entities.User;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.NativeQuery;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -28,10 +26,11 @@ public interface TravelRepository extends JpaRepository<Travel, UUID> {
             SELECT DISTINCT t
             FROM Travel t
             JOIN t.members m
-            WHERE m.user.id = :userId
+            WHERE m.user.id = :userId AND t.active = true
             """)
     List<Travel> findByMemberUserId(UUID userId);
 
+    @Query("SELECT t FROM Travel t WHERE t.createdBy.id = :userId AND t.active = true")
     List<Travel> findByCreatedById(UUID userId);
 
 //    @NativeQuery("SELECT * FROM travels JOIN travel_members ON travels.id = travel_members.travel_id JOIN users ON users.id = travel_members.user_id where users.reports_to = ?1")
@@ -40,8 +39,11 @@ public interface TravelRepository extends JpaRepository<Travel, UUID> {
             SELECT DISTINCT t
             FROM Travel t
             JOIN t.members m
-            WHERE m.user.reports_to = :userId
+            WHERE m.user.reports_to.id = ?1 AND t.active = true
             """)
     List<Travel> findByReportsTo(UUID userId);
+
+    @Query("SELECT t FROM Travel t WHERE t.active = true")
+    List<Travel> findAllActive();
 
 }

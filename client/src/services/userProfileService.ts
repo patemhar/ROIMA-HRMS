@@ -17,10 +17,11 @@ class UserProfileService {
   }
 
   async updateProfile (
+    profileId: string,
     data: Schemas["ProfileAdminRequestDTO"]
   ) : ApiResult<Schemas["ProfileResponseDTO"]> {
     return apiClient.patch(
-      '/profiles',
+      `/profiles/${profileId}`,
       data
     )
   }
@@ -44,7 +45,7 @@ class UserProfileService {
     const formData = new FormData();
     formData.append("file", file);
 
-    return apiClient.postForm("/profiles/avatar", formData);
+    return apiClient.postForm("/profiles/me/avatar", formData);
   }
 
 
@@ -54,6 +55,20 @@ class UserProfileService {
     return apiClient.get(
       `profiles/${userId}`
     )
+  }
+
+  async getAllUsers() : ApiResult<Schemas["UserDetailResponse"][]> {
+    return apiClient.get(
+      'users/all'
+    )
+  }
+
+  async addInterest(gameId: string): ApiResult<void> {
+    return apiClient.post(`/profiles/interests/${gameId}`);
+  }
+
+  async removeInterest(gameId: string): ApiResult<void> {
+    return apiClient.delete(`/profiles/interests/${gameId}`);
   }
 }
 

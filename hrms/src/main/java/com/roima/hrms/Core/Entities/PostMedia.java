@@ -13,11 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Entity
 @Table(name = "post_medias")
-public class PostMedia {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+public class PostMedia extends BaseEntity{
 
     @ManyToOne
     @JoinColumn(name = "post_id")

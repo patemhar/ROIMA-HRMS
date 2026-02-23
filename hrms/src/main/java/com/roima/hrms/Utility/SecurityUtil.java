@@ -1,5 +1,6 @@
 package com.roima.hrms.Utility;
 
+import com.roima.hrms.Service.Implementation.CustomUserDetails;
 import com.roima.hrms.Core.Entities.User;
 import com.roima.hrms.Repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,10 @@ public class SecurityUtil {
         }
 
         Object principal = authentication.getPrincipal();
+
+        if (principal instanceof CustomUserDetails customUserDetails) {
+            return customUserDetails.getUser();
+        }
 
         String userId;
 

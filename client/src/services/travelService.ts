@@ -66,13 +66,12 @@ class TravelService {
         )
     }
 
-    addMembers (
-        id: string,
-        data: Schemas["TravelMemberRequest"]
+    addMember (
+        travelId: string,
+        userId: string
     ) : ApiResult<Schemas["TravelMemberResponse"]> {
         return apiClient.post<Schemas["TravelMemberResponse"]> (
-            `/travels/${id}/members`,
-            data
+            `/travels/${travelId}/members/${userId}`
         )
     }
 
@@ -114,10 +113,10 @@ class TravelService {
 
     addBooking (
         id: string,
-        data: Schemas["TravelItineraryRequest"]
-    ) : ApiResult<Schemas["TravelItineraryResponse"]> {
-        return apiClient.post<Schemas["TravelItineraryResponse"]> (
-            `/travels/${id}/itinerary`,
+        data: Schemas["TravelBookingRequest"]
+    ) : ApiResult<Schemas["TravelBookingResponse"]> {
+        return apiClient.post<Schemas["TravelBookingResponse"]> (
+            `/travels/${id}/booking`,
             data
         )
     }
@@ -160,17 +159,25 @@ class TravelService {
         }
         
         return apiClient.postForm<Schemas["DocUploadResponse"]>(
-            `travels/${id}/documents`,
+            `/travels/${id}/documents`,
             formData
         );
     }
 
     getTravelDocs(
         id: String
-    ) : ApiResult<Schemas["TravelDocument"][]> {
-        return apiClient.get<Schemas["TravelDocument"][]>(
-            `travels/${id}/documents`
+    ) : ApiResult<Schemas["TravelDocumentResponseDto"][]> {
+        return apiClient.get<Schemas["TravelDocumentResponseDto"][]>(
+            `/travels/${id}/documents`
         );
+    }
+
+    deleteTravelDocument(
+        id: String
+    ) : ApiResult<void> {
+        return apiClient.delete<void> (
+            `/travels/documents/${id}`
+        )
     }
 
     addExpense(
@@ -178,7 +185,7 @@ class TravelService {
         data: Schemas["TravelExpenseRequest"]
     ) : ApiResult<Schemas["TravelExpenseResponse"]> {
          return apiClient.post<Schemas["TravelExpenseResponse"]>(
-            `travels/${id}/expenses`,
+            `/travels/${id}/expenses`,
             data
         );
     }
@@ -187,7 +194,7 @@ class TravelService {
         id: String
     ) : ApiResult<Schemas["TravelExpenseResponse"][]> {
         return apiClient.get<Schemas["TravelExpenseResponse"][]> (
-            `travels/${id}/expenses`
+            `/travels/${id}/expenses`
         )
     }
 
@@ -196,7 +203,7 @@ class TravelService {
         remark: String
     ) : ApiResult<void> {
         return apiClient.put<void> (
-            `travels/expenses/${id}/approve`,
+            `/travels/expenses/${id}/approve`,
             remark
         )
     }
@@ -206,7 +213,7 @@ class TravelService {
         remark: String
     ) : ApiResult<void> {
         return apiClient.put<void> (
-            `travels/expenses/${id}/reject`,
+            `/travels/expenses/${id}/reject`,
             remark
         )
     }
@@ -223,17 +230,33 @@ class TravelService {
         }
         
         return apiClient.postForm<Schemas["DocUploadResponse"]>(
-            `travels/expenses/${id}/documents`,
+            `/travels/expenses/${id}/documents`,
             formData
         );
     }
 
     getExpenseDocs(
         id: String
-    ) : ApiResult<Schemas["ExpenseDocument"][]> {
-        return apiClient.get<Schemas["ExpenseDocument"][]>(
-            `travels/expenses/${id}/documents`
+    ) : ApiResult<Schemas["ExpenseDocumentResponseDto"][]> {
+        return apiClient.get<Schemas["ExpenseDocumentResponseDto"][]> (
+            `/travels/expenses/${id}/documents`
         );
+    }
+
+    deleteExpense(
+        id: String
+    ) : ApiResult<void> {
+        return apiClient.delete<void> (
+            `/travels/expenses/${id}`
+        )
+    }
+
+    deleteExpenseDocument(
+        id: String
+    ) : ApiResult<void> {
+        return apiClient.delete<void> (
+            `/travels/expenses/documents/${id}`
+        )
     }
 }
 

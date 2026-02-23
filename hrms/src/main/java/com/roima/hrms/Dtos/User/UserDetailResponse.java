@@ -20,13 +20,15 @@ public class UserDetailResponse {
 
     private UUID id;
 
-    private String name;
+    private String first_name;
+
+    private String last_name;
 
     private String email;
 
     private LocalDateTime last_login;
 
-    private boolean is_active;
+    private Boolean is_active;
 
     private String role;
 

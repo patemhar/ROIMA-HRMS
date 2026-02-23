@@ -12,7 +12,7 @@ import java.util.UUID;
 public interface JobRepository extends JpaRepository<Job, UUID> {
 
     @Query("""
-        SELECT j FROM Job j WHERE j.is_active = true
+        SELECT j FROM Job j WHERE j.IsActive = true
         """)
     List<Job> findByIsActiveTrue();
 }

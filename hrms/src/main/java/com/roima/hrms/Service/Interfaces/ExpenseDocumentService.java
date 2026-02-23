@@ -2,8 +2,7 @@ package com.roima.hrms.Service.Interfaces;
 
 import com.roima.hrms.Core.Entities.ExpenseDocument;
 import com.roima.hrms.Dtos.DocUploadResponse;
-//import com.roima.hrms.Shared.Dtos.Travel.ExpenseDocRequest;
-//import com.roima.hrms.Shared.Dtos.Travel.ExpenseDocResponse;
+import com.roima.hrms.Dtos.Travel.ExpenseDocumentResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -14,5 +13,7 @@ public interface ExpenseDocumentService {
 
     DocUploadResponse addExpenseDocs(UUID expenseId, MultipartFile[] files) throws IOException;
 
-    List<ExpenseDocument> getTravelExpenseDocs(UUID travelId);
+    List<ExpenseDocumentResponseDto> getTravelExpenseDocs(UUID travelId);
+
+    void deleteExpenseDoc(UUID docId);
 }

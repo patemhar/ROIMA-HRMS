@@ -1,13 +1,13 @@
 export type User = {
             id?: string;
-            first_name?: string | null;
-            last_name?: string | null;
-            email?: string | null;
-            phoneNumber?: string | null;
-            permission: string[];
+            first_name?: string | undefined;
+            last_name?: string | undefined;
+            email?: string | undefined;
+            phoneNumber?: string | undefined;
+            permission?: string[] | undefined;
             isActive?: boolean;
-            role?: string | null;
-        }; ;
+            role?: string | undefined;
+        };
 
 export interface AuthState {
   token: string | null;

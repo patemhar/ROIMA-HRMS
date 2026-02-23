@@ -1,7 +1,5 @@
 package com.roima.hrms.Service.Interfaces;
 
-import org.springframework.mail.SimpleMailMessage;
-
 // Interface
 public interface EmailService {
 

@@ -1,13 +1,15 @@
 import { RouterProvider } from 'react-router-dom'
 import './App.css'
 import { router } from './router'
-import { ToastContainer, toast } from 'react-toastify';
 import { useAuthInitialization } from './hooks/initialization.hooks';
 import { Spinner } from './components/ui/spinner';
+import { useNotifications } from './hooks/notification.hooks';
+import { Toaster } from 'sonner';
 
 function App() {
 
   const { isInitialized } = useAuthInitialization();
+  useNotifications();
 
   if (!isInitialized) {
     return (
@@ -20,11 +22,7 @@ function App() {
   return (
     <div>
       <RouterProvider router={router} />
-      <ToastContainer
-        stacked
-        hideProgressBar
-        position='bottom-right'
-      />
+      <Toaster />
     </div>
   )
 }

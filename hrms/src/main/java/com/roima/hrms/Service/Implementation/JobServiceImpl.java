@@ -3,9 +3,13 @@ package com.roima.hrms.Service.Implementation;
 import com.roima.hrms.Core.Entities.*;
 import com.roima.hrms.Dtos.job.JobRequestDto;
 import com.roima.hrms.Dtos.job.JobResponseDto;
+import com.roima.hrms.Dtos.job.JobSharingRecordResponseDto;
 import com.roima.hrms.Dtos.job.ReferralRequest;
+import com.roima.hrms.Dtos.job.ReferralResponseDto;
 import com.roima.hrms.Dtos.job.ShareJobRequest;
 import com.roima.hrms.Mapper.JobMapper;
+import com.roima.hrms.Mapper.JobSharingRecordMapper;
+import com.roima.hrms.Mapper.ReferralMapper;
 import com.roima.hrms.Repositories.JobRepository;
 import com.roima.hrms.Repositories.JobSharingRecordRepository;
 import com.roima.hrms.Repositories.ReferralRepository;
@@ -13,7 +17,6 @@ import com.roima.hrms.Repositories.SystemConfigRepository;
 import com.roima.hrms.Service.Interfaces.CloudinaryService;
 import com.roima.hrms.Service.Interfaces.EmailService;
 import com.roima.hrms.Service.Interfaces.JobService;
-import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,6 +36,8 @@ public class JobServiceImpl implements JobService {
     private final EmailService emailService;
     private final CloudinaryService cloudinaryService;
     private final JobMapper jobMapper;
+    private final JobSharingRecordMapper jobSharingRecordMapper;
+    private final ReferralMapper referralMapper;
 
     public List<Job> getActiveJobs() {
         return jobRepository.findByIsActiveTrue();
@@ -44,7 +49,7 @@ public class JobServiceImpl implements JobService {
 
         var existingJob = jobRepository.findById(jobId).orElseThrow(() -> new RuntimeException("No job found for the provided id."));
 
-        existingJob.set_active(false);
+        existingJob.setIsActive(false);
     }
 
     @Override
@@ -80,7 +85,7 @@ public class JobServiceImpl implements JobService {
 
     @Override
     @Transactional
-    public void referFriend(ReferralRequest request, User currentUser) throws IOException, MessagingException {
+    public void referFriend(ReferralRequest request, User currentUser) throws IOException {
 
         Job job = jobRepository.findById(request.getJobId())
                 .orElseThrow(() -> new RuntimeException("Job not found"));
@@ -110,5 +115,16 @@ public class JobServiceImpl implements JobService {
 
         emailService.sendSimpleMail(hrMail, emailSubject, emailBody);
     }
-}
 
+    @Override
+    public List<JobSharingRecordResponseDto> getAllJobSharingRecords() {
+        List<JobSharingRecord> records = sharingRepository.findAll();
+        return records.stream().map(jobSharingRecordMapper::toDto).toList();
+    }
+
+    @Override
+    public List<ReferralResponseDto> getAllReferrals() {
+        List<Referral> referrals = referralRepository.findAll();
+        return referrals.stream().map(referralMapper::toDto).toList();
+    }
+}

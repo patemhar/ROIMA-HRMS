@@ -1,11 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -19,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import {
   useCreateTravel,
+  useDeleteTravel,
   useGetAllTravels,
   useGetMyTravels,
 } from "@/hooks/travel/travel.hooks";
@@ -40,29 +35,38 @@ import {
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/store";
 import { toast } from "sonner";
+import { hasPermission, PermissionCode } from "@/constants/permissions";
 
 type Schemas = components["schemas"];
 
 export const Travel = () => {
-  
-  const permissions = useAuth((state) => state.auth.user?.permission);
+  const { user } = useAuth((state) => state.auth);
+  const permissions = user?.permission;
+  const userRole = user?.role;
 
-  const isAdmin = permissions?.includes("PER001")
-  const getAllTravelsquery = useGetAllTravels(
-    !!isAdmin
+  const canReadTravel = hasPermission(
+    permissions,
+    PermissionCode.READ_ALL_TRAVELS,
   );
+  const canCreateTravel = hasPermission(
+    permissions,
+    PermissionCode.TRAVEL_MANAGE,
+  );
+
+  const isAdmin = canReadTravel;
+  const isHR = userRole === "HR";
+  const getAllTravelsquery = useGetAllTravels(!!isAdmin);
 
   const allItems = getAllTravelsquery.data ?? [];
 
   const navigate = useNavigate();
-
-  const userRole = useAuth((state) => state.auth.user?.role);
 
   const getMyTravelsQuery = useGetMyTravels();
 
   const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
 
   const createTravel = useCreateTravel();
+  const deleteTravel = useDeleteTravel();
 
   const {
     register,
@@ -94,6 +98,27 @@ export const Travel = () => {
     }
   };
 
+  const handleDelete = (id?: string) => {
+    if (!id) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this travel plan?",
+    );
+
+    try {
+      if (confirmed) {
+        deleteTravel.mutate(id);
+
+        toast.success("Travel plan deleted successfully.");
+      } else {
+        toast.info("Deletion cancelled.");
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      console.error("Failed to delete travel plan", error);
+    }
+  };
+
   const items = getMyTravelsQuery.data ?? [];
 
   const handleRowClick = (id?: string) => {
@@ -108,194 +133,200 @@ export const Travel = () => {
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
-              onClick={() => getAllTravelsquery.refetch()}
+              onClick={() => {getAllTravelsquery.refetch(); getMyTravelsQuery.refetch()}}
             >
               Refresh
             </Button>
           </div>
         </div>
 
-        <Dialog
-          open={createDialogOpen}
-          onOpenChange={(open) => {
-            setCreateDialogOpen(open);
-            if (!open) reset(); 
-          }}
-        >
-          <DialogTrigger asChild>
-            <Button>Create Travel</Button>
-          </DialogTrigger>
+        {canCreateTravel && (
+          <Dialog
+            open={createDialogOpen}
+            onOpenChange={(open) => {
+              setCreateDialogOpen(open);
+              if (!open) reset();
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button>Create Travel</Button>
+            </DialogTrigger>
 
-          <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create Travel Plan</DialogTitle>
-              <DialogDescription>
-                Enter the details of your upcoming trip. All fields marked with
-                * are required.
-              </DialogDescription>
-            </DialogHeader>
+            <DialogContent className="sm:max-w-131.25 max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Create Travel Plan</DialogTitle>
+                <DialogDescription>
+                  Enter the details of your upcoming trip. All fields marked
+                  with * are required.
+                </DialogDescription>
+              </DialogHeader>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 pt-4">
-              <div className="grid gap-5">
-                {/* Title */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="title"
-                    className={errors.title ? "text-destructive" : ""}
-                  >
-                    Title *
-                  </Label>
-                  <Input
-                    id="title"
-                    placeholder="e.g. Q3 Client Visit"
-                    className={
-                      errors.title
-                        ? "border-destructive focus-visible:ring-destructive"
-                        : ""
-                    }
-                    {...register("title", {
-                      required: "A catchy title is required",
-                      minLength: {
-                        value: 3,
-                        message: "Title must be at least 3 characters",
-                      },
-                    })}
-                  />
-                  {errors.title && (
-                    <p className="text-[0.8rem] font-medium text-destructive">
-                      {errors.title.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Destination */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="destination"
-                    className={errors.destination ? "text-destructive" : ""}
-                  >
-                    Destination *
-                  </Label>
-                  <Input
-                    id="destination"
-                    placeholder="City, Country"
-                    className={
-                      errors.destination
-                        ? "border-destructive focus-visible:ring-destructive"
-                        : ""
-                    }
-                    {...register("destination", {
-                      required: "Where are you going?",
-                    })}
-                  />
-                  {errors.destination && (
-                    <p className="text-[0.8rem] font-medium text-destructive">
-                      {errors.destination.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Dates Section */}
-                <div className="grid grid-cols-2 gap-4">
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="space-y-6 pt-4"
+              >
+                <div className="grid gap-5">
+                  {/* Title */}
                   <div className="space-y-2">
-                    <Label htmlFor="start_date">Start Date *</Label>
+                    <Label
+                      htmlFor="title"
+                      className={errors.title ? "text-destructive" : ""}
+                    >
+                      Title *
+                    </Label>
                     <Input
-                      id="start_date"
-                      type="date"
+                      id="title"
+                      placeholder="e.g. Client Visit"
                       className={
-                        errors.start_date
+                        errors.title
                           ? "border-destructive focus-visible:ring-destructive"
                           : ""
                       }
-                      {...register("start_date", {
-                        required: "Start date is required",
-                        validate: (value) => {
-
-                          if(!value) return "Start date is required"
-
-                          const selected = new Date(value);
-                          const today = new Date();
-                          today.setHours(0, 0, 0, 0);
-                          return (
-                            selected >= today || "Date cannot be in the past"
-                          );
+                      {...register("title", {
+                        required: "A catchy title is required",
+                        minLength: {
+                          value: 5,
+                          message: "Title must be at least 5 characters",
                         },
                       })}
                     />
-                    {errors.start_date && (
+                    {errors.title && (
                       <p className="text-[0.8rem] font-medium text-destructive">
-                        {errors.start_date.message}
+                        {errors.title.message}
                       </p>
                     )}
                   </div>
 
+                  {/* Destination */}
                   <div className="space-y-2">
-                    <Label htmlFor="end_date">End Date *</Label>
+                    <Label
+                      htmlFor="destination"
+                      className={errors.destination ? "text-destructive" : ""}
+                    >
+                      Destination *
+                    </Label>
                     <Input
-                      id="end_date"
-                      type="date"
+                      id="destination"
+                      placeholder="City, Country"
                       className={
-                        errors.end_date
+                        errors.destination
                           ? "border-destructive focus-visible:ring-destructive"
                           : ""
                       }
-                      {...register("end_date", {
-                        required: "End date is required",
-                        validate: (value) => {
-                          if(!value) return "End date is required"
-                          if (!startDate) return true;
-                          return (
-                            new Date(value) >= new Date(startDate) ||
-                            "Cannot be before start date"
-                          );
+                      {...register("destination", {
+                        required: "Where are you going?",
+                      })}
+                    />
+                    {errors.destination && (
+                      <p className="text-[0.8rem] font-medium text-destructive">
+                        {errors.destination.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Dates Section */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="start_date">Start Date *</Label>
+                      <Input
+                        id="start_date"
+                        type="date"
+                        className={
+                          errors.start_date
+                            ? "border-destructive focus-visible:ring-destructive"
+                            : ""
+                        }
+                        {...register("start_date", {
+                          required: "Start date is required",
+                          validate: (value) => {
+                            if (!value) return "Start date is required";
+
+                            const selected = new Date(value);
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
+                            return (
+                              selected >= today || "Date cannot be in the past"
+                            );
+                          },
+                        })}
+                      />
+                      {errors.start_date && (
+                        <p className="text-[0.8rem] font-medium text-destructive">
+                          {errors.start_date.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="end_date">End Date *</Label>
+                      <Input
+                        id="end_date"
+                        type="date"
+                        className={
+                          errors.end_date
+                            ? "border-destructive focus-visible:ring-destructive"
+                            : ""
+                        }
+                        {...register("end_date", {
+                          required: "End date is required",
+                          validate: (value) => {
+                            if (!value) return "End date is required";
+                            if (!startDate) return true;
+                            return (
+                              new Date(value) >= new Date(startDate) ||
+                              "Cannot be before start date"
+                            );
+                          },
+                        })}
+                      />
+                      {errors.end_date && (
+                        <p className="text-[0.8rem] font-medium text-destructive">
+                          {errors.end_date.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-2">
+                    <Label htmlFor="description">Description</Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Briefly describe the purpoose of this trip..."
+                      className="resize-none"
+                      {...register("description", {
+                        maxLength: {
+                          value: 500,
+                          message: "Description too long (max 500 chars)",
                         },
                       })}
                     />
-                    {errors.end_date && (
+                    {errors.description && (
                       <p className="text-[0.8rem] font-medium text-destructive">
-                        {errors.end_date.message}
+                        {errors.description.message}
                       </p>
                     )}
                   </div>
                 </div>
 
-                {/* Description */}
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Briefly describe the purpose of this trip..."
-                    className="resize-none"
-                    {...register("description", {
-                      maxLength: {
-                        value: 500,
-                        message: "Description too long (max 500 chars)",
-                      },
-                    })}
-                  />
-                  {errors.description && (
-                    <p className="text-[0.8rem] font-medium text-destructive">
-                      {errors.description.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <DialogFooter className="gap-2 sm:gap-0">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setCreateDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createTravel.isPending}>
-                  {createTravel.isPending ? "Saving..." : "Create Travel Plan"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+                <DialogFooter className="gap-2 sm:gap-0">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setCreateDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={createTravel.isPending}>
+                    {createTravel.isPending
+                      ? "Saving..."
+                      : "Create Travel Plan"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <Card>
@@ -318,6 +349,8 @@ export const Travel = () => {
               {getErrorMessage(getMyTravelsQuery.error)}
             </p>
           )}
+
+          {!items.length && <p>No travels for you at the moment.</p>}
 
           {Boolean(items.length) && (
             <div className="rounded-lg border border-slate-100">
@@ -365,6 +398,16 @@ export const Travel = () => {
                           >
                             View
                           </Button>
+                          {isHR && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(travel?.id)}
+                              className="cursor-pointer"
+                            >
+                              Delete
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
@@ -376,7 +419,7 @@ export const Travel = () => {
         </CardContent>
       </Card>
 
-      {permissions?.some((permission) => permission === "PER001") && (
+      {canReadTravel && userRole !== "EMPLOYEE" && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -397,6 +440,8 @@ export const Travel = () => {
                 {getErrorMessage(getAllTravelsquery.error)}
               </p>
             )}
+
+            {!allItems.length && <p>No travels.</p>}
 
             {Boolean(allItems?.length) && (
               <div className="rounded-lg border border-slate-100">
@@ -444,6 +489,16 @@ export const Travel = () => {
                             >
                               View
                             </Button>
+                            {isHR && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(travel?.id)}
+                                className="cursor-pointer"
+                              >
+                                Delete
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       );

@@ -8,8 +8,8 @@ import com.roima.hrms.Repositories.UserRepository;
 import com.roima.hrms.Service.Interfaces.CloudinaryService;
 import com.roima.hrms.Service.Interfaces.TravelDocumentService;
 import com.roima.hrms.Dtos.DocUploadResponse;
-//import com.roima.hrms.Shared.Dtos.Travel.TravelDocRequest;
-//import com.roima.hrms.Shared.Dtos.Travel.TravelDocResponse;
+import com.roima.hrms.Dtos.Travel.TravelDocumentResponseDto;
+import com.roima.hrms.Mapper.TravelDocumentMapper;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +29,7 @@ public class TravelDocumentServiceImpl implements TravelDocumentService {
     private final TravelRepository travelRepository;
     private final CloudinaryService cloudinaryService;
     private final UserRepository userRepository;
+    private final TravelDocumentMapper travelDocumentMapper;
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
 
     @Override
@@ -36,13 +37,12 @@ public class TravelDocumentServiceImpl implements TravelDocumentService {
 
         var user = securityUtil.getCurrentUser();
 
-        boolean allowed =
-                user.getRole().getName().equals("HR") ||
-                        memberRepository.existsByTravelIdAndUserId(
-                                travelId, user.getId());
+        boolean allowed = user.getRole().getName().equals("HR") ||
+                memberRepository.existsByTravelIdAndUserId(travelId, user.getId());
 
-        if (!allowed)
-            throw new RuntimeException("Not allowed");
+        if (!allowed) {
+            throw new RuntimeException("Not allowed to upload travel documents");
+        }
 
         var existingTravel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
 
@@ -72,10 +72,8 @@ public class TravelDocumentServiceImpl implements TravelDocumentService {
 
             var savedTravelDoc = travelDocumentRepository.save(travelDocument);
 
-            user.getMy_travel_docs().add(savedTravelDoc);
             existingTravel.getTravel_documents().add(savedTravelDoc);
 
-            userRepository.save(user);
             travelRepository.save(existingTravel);
 
             docUploadResponse.getUploadedDocs().add(travelDoc.getName() + ": " + url);
@@ -85,7 +83,20 @@ public class TravelDocumentServiceImpl implements TravelDocumentService {
     }
 
     @Override
-    public List<TravelDocument> getTravelDocs(UUID travel_id) {
-        return travelDocumentRepository.findByTravelId(travel_id);
+    public List<TravelDocumentResponseDto> getTravelDocs(UUID travel_id) {
+        List<TravelDocument> docs = travelDocumentRepository.findByTravelId(travel_id);
+        return docs.stream().map(travelDocumentMapper::toDto).toList();
+    }
+
+    @Override
+    public void deleteTravelDoc(UUID docId) {
+        var user = securityUtil.getCurrentUser();
+        var doc = travelDocumentRepository.findById(docId).orElseThrow(() -> new RuntimeException("Document not found"));
+        boolean allowed = user.getRole().getName().equals("HR") ||
+                user.getId().equals(doc.getUploadedBy().getId());
+        if (!allowed) {
+            throw new RuntimeException("Not allowed to delete travel documents");
+        }
+        travelDocumentRepository.deleteById(docId);
     }
 }

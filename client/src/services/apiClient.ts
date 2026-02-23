@@ -46,7 +46,6 @@ class ApiClient {
       const token = useAuth.getState().auth.token;
       if (token) {
         config.headers = config.headers ?? {};
-        console.log(token);
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
@@ -86,12 +85,16 @@ class ApiClient {
               "/auth/refresh",
             );
 
-            const normalized = this.normalizeResponse<any>(refreshResponse.data);
+            const normalized = this.normalizeResponse<Schemas["AuthResponseDto"]>(refreshResponse.data);
 
-            if (normalized.success) {
-              
+            if (normalized.success && normalized.data?.accessToken && normalized.data.userDetailResponse) {
+              // Store the new token and user data in state
+              const { setToken, setUser } = useAuth.getState().auth;
+              setToken(normalized.data.accessToken);
+              setUser(normalized.data.userDetailResponse);
+
               this.processQueue(null);
-
+              // Retry the original request with new token
               return this.client(originalRequest);
             }
 
@@ -243,12 +246,31 @@ class ApiClient {
   }
 
   logout(): Promise<ApiResponse<void>> {
-    return this.post<void>("api/logout")
+    return this.post<void>("auth/logout")
   }
 
   getProfile(): Promise<ApiResponse<Schemas["UserDetailResponse"]>> {
     return this.get<Schemas["UserDetailResponse"]> (
       "/users/my"
+    )
+  }
+
+  updateMyUser(
+    data: Schemas["UserSelfUpdateDTO"]
+  ): Promise<ApiResponse<Schemas["UserDetailResponse"]>> {
+    return this.patch<Schemas["UserDetailResponse"]>(
+      "/users/me",
+      data
+    )
+  }
+
+  updateUserByHR(
+    userId: string,
+    data: Schemas["UserAdminUpdateDTO"]
+  ): Promise<ApiResponse<Schemas["UserDetailResponse"]>> {
+    return this.patch<Schemas["UserDetailResponse"]>(
+      `/users/${userId}`,
+      data
     )
   }
 

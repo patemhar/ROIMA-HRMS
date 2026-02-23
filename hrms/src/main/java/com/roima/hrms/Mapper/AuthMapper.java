@@ -51,10 +51,11 @@ public class AuthMapper {
         var userDetailResponse = new UserDetailResponse();
 
         userDetailResponse.setId(user.getId());
-        userDetailResponse.setName(user.getFirst_name() + " " + user.getLast_name());
+        userDetailResponse.setFirst_name(user.getFirst_name());
+        userDetailResponse.setLast_name(user.getLast_name());
         userDetailResponse.setEmail(user.getEmail());
         userDetailResponse.setRole(user.getRole().getName());
-        userDetailResponse.set_active(user.is_active());
+        userDetailResponse.setIs_active(user.isActive());
         userDetailResponse.setLast_login(user.getLast_login());
 
         user.getRole().getRolePermissions().forEach(rolePermission -> userDetailResponse.getPermission().add(rolePermission.getPermission().getCode()));

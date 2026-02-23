@@ -28,7 +28,8 @@ public class User extends BaseEntity{
 
     private LocalDateTime last_login;
 
-    private boolean is_active = true;
+    @Column(name = "is_active")
+    private boolean active = true;
 
     @ManyToOne
     @JoinColumn(name = "role_id")
@@ -101,5 +102,8 @@ public class User extends BaseEntity{
 
     @OneToMany(mappedBy = "default_reviewer", fetch = FetchType.LAZY)
     private Set<Job> jobs_under_my_review;
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<SlotBookingRequest> my_booking_requests;
 
 }

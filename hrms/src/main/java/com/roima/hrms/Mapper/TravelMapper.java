@@ -97,16 +97,6 @@ public class TravelMapper {
             );
         }
 
-        // EXPENSES
-        if (travel.getExpenses() != null) {
-            response.setExpenses(
-                    travel.getExpenses()
-                            .stream()
-                            .map(this::ToExpenseResponse)
-                            .toList()
-            );
-        }
-
         // DOCUMENTS
         if (travel.getTravel_documents() != null) {
             response.setTravelDocument(

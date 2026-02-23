@@ -40,7 +40,8 @@ public class Job extends BaseEntity{
 
     private String location;
 
-    private boolean is_active = true;
+    @JoinColumn(name = "is_active")
+    private boolean IsActive = true;
 
     @ManyToOne
     @JoinColumn(name = "default_reviewer")

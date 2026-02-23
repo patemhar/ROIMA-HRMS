@@ -13,8 +13,6 @@ import lombok.Setter;
 @Table(name = "job_sharing_record")
 public class JobSharingRecord extends BaseEntity {
 
-//    SharedBy, Email, DateTime, Job ID.
-
     @ManyToOne
     @JoinColumn(name = "shared_by")
     private User user;

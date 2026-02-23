@@ -1,5 +1,5 @@
 import { Navigate, useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { get, useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,13 @@ import { Label } from "@/components/ui/label";
 import { authService } from "@/services/authService";
 import { useAuth } from "@/store";
 import type { components } from "@/types/api";
-import { toast } from "react-toastify";
+import { toast } from "sonner";
+import { getErrorMessage } from "@/utils/error";
 
 const STAFF_ROLES = new Set(["HR", "EMPLOYEE", "MANAGER"]);
 
 const getDefaultRoute = (role?: string | null) => {
-  return "/employee";
+  return "/employee/achievements";
 };
 
 type Schemas = components["schemas"];
@@ -81,11 +82,10 @@ export const LoginPage = () => {
     },
 
     onError: (error) => {
-      const message = error.message;
-
+      toast.error(getErrorMessage(error));
       setLoginState({
         status: "error",
-        message
+        message: getErrorMessage(error)
       });
     },
   });

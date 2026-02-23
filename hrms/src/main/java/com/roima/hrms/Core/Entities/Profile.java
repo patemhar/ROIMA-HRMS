@@ -35,10 +35,11 @@ public class Profile extends BaseEntity{
 
     private LocalDate joined_date;
 
+    private LocalDate date_of_birth;
+
     // department relation
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
 
 }
-

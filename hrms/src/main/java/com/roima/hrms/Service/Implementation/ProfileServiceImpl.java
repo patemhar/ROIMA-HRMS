@@ -1,24 +1,25 @@
 package com.roima.hrms.Service.Implementation;
 
 
-import com.roima.hrms.Core.Entities.Department;
-import com.roima.hrms.Core.Entities.Profile;
-import com.roima.hrms.Core.Entities.User;
+import com.roima.hrms.Core.Entities.*;
+import com.roima.hrms.Dtos.game.UserCycleStatsDto;
 import com.roima.hrms.Dtos.profile.ProfileAdminRequestDTO;
 import com.roima.hrms.Dtos.profile.ProfileResponseDTO;
 import com.roima.hrms.Dtos.profile.ProfileSelfUpdateDTO;
 import com.roima.hrms.Exception.IOException;
 import com.roima.hrms.Exception.ResourceNotFoundException;
 import com.roima.hrms.Mapper.ProfileMapper;
-import com.roima.hrms.Repositories.DepartmentRepository;
-import com.roima.hrms.Repositories.ProfileRepository;
-import com.roima.hrms.Repositories.UserRepository;
+import com.roima.hrms.Mapper.UserCycleStatsMapper;
+import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Service.Interfaces.ProfileService;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -31,13 +32,24 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileMapper mapper;
     private final SecurityUtil securityUtil;
     private final CloudinaryServiceImpl cloudinaryService;
+    private final GameInterestRepository gameInterestRepository;
+    private final GameRepository gameRepository;
+    private final UserCycleStatsRepository userCycleStatsRepository;
+    private final UserCycleStatsMapper userCycleStatsMapper;
+    private final GameBookingCycleRepository gameBookingCycleRepository;
+
+    private static final String PROFILE_NOT_FOUND = "Profile not found";
+    private static final String ACCESS_DENIED = "Access denied";
+    private static final String ONLY_HR_ALLOWED = "Only HR allowed";
 
     // hr create
 
     @Override
     public ProfileResponseDTO createProfile(ProfileAdminRequestDTO request) {
 
-        User user = userRepository.findById(request.getUserId()).orElseThrow(() -> new RuntimeException("User not found"));
+        ensureHr(securityUtil.getCurrentUser());
+
+        User user = userRepository.findById(request.getUserId()).orElseThrow(() -> new RuntimeException(PROFILE_NOT_FOUND));
 
         Department dept = departmentRepository.findById(request.getDepartmentId()).orElseThrow(() -> new RuntimeException("Department not found"));
 
@@ -62,8 +74,9 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ProfileResponseDTO updateProfileByHR(UUID profileId,ProfileAdminRequestDTO request) {
 
-        Profile profile = profileRepository.findById(profileId).orElseThrow(() -> new RuntimeException("Profile not found"));
+        ensureHr(securityUtil.getCurrentUser());
 
+        Profile profile = profileRepository.findById(profileId).orElseThrow(() -> new RuntimeException(PROFILE_NOT_FOUND));
 
         var updatedProfile = mapper.updateProfile(profile, request);
 
@@ -72,7 +85,9 @@ public class ProfileServiceImpl implements ProfileService {
             updatedProfile.setDepartment(dept);
         }
 
-        return mapper.toDto(updatedProfile);
+        var savedProfile = profileRepository.save(updatedProfile);
+
+        return mapper.toDto(savedProfile);
     }
 
     // self update
@@ -82,7 +97,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         User currentUser = securityUtil.getCurrentUser();
 
-        Profile profile = profileRepository.findByUserId(currentUser.getId()).orElseThrow(() -> new RuntimeException("Profile not found"));
+        Profile profile = profileRepository.findByUserId(currentUser.getId()).orElseThrow(() -> new RuntimeException(PROFILE_NOT_FOUND));
 
         if(request.getPhone() != null) {
             profile.setPhone(request.getPhone());
@@ -104,7 +119,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         var currentUser = securityUtil.getCurrentUser();
 
-        Profile profile = profileRepository.findByUserId(currentUser.getId()).orElseThrow(() -> new RuntimeException("Profile not found"));
+        Profile profile = profileRepository.findByUserId(currentUser.getId()).orElseThrow(() -> new RuntimeException(PROFILE_NOT_FOUND));
 
         String imageUrl = cloudinaryService.uploadFile(file, null).describeConstable().orElseThrow(() -> new IOException("Error uploading avatar"));
 
@@ -120,7 +135,7 @@ public class ProfileServiceImpl implements ProfileService {
 
         User currentUser = securityUtil.getCurrentUser();
 
-        Profile profile = profileRepository.findByUserId(currentUser.getId()).orElseThrow(() -> new ResourceNotFoundException("Profile not found"));
+        Profile profile = profileRepository.findByUserId(currentUser.getId()).orElseThrow(() -> new ResourceNotFoundException(PROFILE_NOT_FOUND));
 
         return mapper.toDto(profile);
     }
@@ -128,9 +143,65 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ProfileResponseDTO getProfile(UUID userId) {
 
+        User currentUser = securityUtil.getCurrentUser();
+        String role = currentUser.getRole().getName();
+
+        if (!role.equals("HR") && !role.equals("MANAGER") && !currentUser.getId().equals(userId)) {
+            throw new ResourceNotFoundException(ACCESS_DENIED);
+        }
+
         Profile profile = profileRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Profile not found"));
+                .orElseThrow(() -> new RuntimeException(PROFILE_NOT_FOUND));
 
         return mapper.toDto(profile);
+    }
+
+    @Override
+    public void addInterest(UUID gameId) {
+        var currentUser = securityUtil.getCurrentUser();
+        var existingGame = gameRepository.findById(gameId)
+                .orElseThrow(() -> new ResourceNotFoundException("Game not found"));
+
+        // Check if interest already exists
+        if (gameInterestRepository.existsByUserAndGame(currentUser.getId(), gameId)) {
+            // Interest already exists, do nothing
+            return;
+        }
+
+        var gameInterest = new GameInterest();
+        gameInterest.setUser(currentUser);
+        gameInterest.setGame(existingGame);
+
+        gameInterestRepository.save(gameInterest);
+    }
+
+    @Override
+    public void removeInterest(UUID gameId) {
+        gameInterestRepository.deleteInterest(securityUtil.getCurrentUser().getId(), gameId);
+    }
+
+    @Override
+    public List<UserCycleStatsDto> getUserGameStats(boolean latest) {
+        User currentUser = securityUtil.getCurrentUser();
+
+        List<UserCycleStats> stats = userCycleStatsRepository.findByUserId(currentUser.getId());
+
+        if (latest) {
+            List<UserCycleStats> currentStats = new ArrayList<>();
+            for (UserCycleStats stat : stats) {
+                Optional<GameBookingCycle> currentCycle = gameBookingCycleRepository.getCurrentCycle(stat.getGame().getId());
+                if (currentCycle.isPresent() && currentCycle.get().getId().equals(stat.getGameCycle().getId())) {
+                    currentStats.add(stat);
+                }
+            }
+            return currentStats.stream().map(userCycleStatsMapper::toDto).toList();
+        } else {
+            return stats.stream().map(userCycleStatsMapper::toDto).toList();
+        }
+    }
+
+    private void ensureHr(User user) {
+        if (!"HR".equals(user.getRole().getName()))
+            throw new ResourceNotFoundException(ONLY_HR_ALLOWED);
     }
 }

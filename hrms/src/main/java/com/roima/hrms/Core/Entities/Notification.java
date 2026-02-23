@@ -17,11 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Entity
 @Table(name = "notifications")
-public class Notification {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long notificationId;
+public class Notification extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_user_id", nullable = false)
@@ -32,19 +28,12 @@ public class Notification {
     private User actor;
 
     @Enumerated(EnumType.STRING)
-    private NotificationType type;
-
-    @Enumerated(EnumType.STRING)
-    private EntityType entityType;
-
-    private Long entityId;
+    private NotificationType notification_type;
 
     private String title;
 
     private String message;
 
     private boolean isRead = false;
-
-    private LocalDateTime createdAt;
 }
 

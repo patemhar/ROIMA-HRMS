@@ -114,3 +114,41 @@ export const useRefferFriend = () => {
         }
     })
 }
+
+// get job sharing records
+export const useGetJobSharingRecords = () => {
+  const isAuthenticated = useAuth().auth.isAuthenticated;
+
+  return useQuery({
+    queryKey: [...jobKeys.all, "sharing-records"],
+    queryFn: async () => {
+      const res = await JobService.getJobSharingRecords();
+
+      if (!res.success || !res.data)
+        throw new Error(res.errors || "Failed");
+
+      return res.data;
+    },
+    enabled: isAuthenticated,
+    ...normalCacheConfig,
+  });
+};
+
+// get referrals
+export const useGetReferrals = () => {
+  const isAuthenticated = useAuth().auth.isAuthenticated;
+
+  return useQuery({
+    queryKey: [...jobKeys.all, "referrals"],
+    queryFn: async () => {
+      const res = await JobService.getReferrals();
+
+      if (!res.success || !res.data)
+        throw new Error(res.errors || "Failed");
+
+      return res.data;
+    },
+    enabled: isAuthenticated,
+    ...normalCacheConfig,
+  });
+};

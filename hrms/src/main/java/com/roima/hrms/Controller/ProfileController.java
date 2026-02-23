@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
+
+import com.roima.hrms.Dtos.game.UserCycleStatsDto;
 
 @RestController
 @RequestMapping("/profiles")
@@ -23,66 +26,68 @@ public class ProfileController {
 
     // hr create
     @PostMapping
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER004')")
     public ApiResponse<ProfileResponseDTO> createProfile(
             @RequestBody ProfileAdminRequestDTO request) {
-
-        return ApiResponse.success(
-                profileService.createProfile(request),
-                "Profile created successfully"
-        );
+        return ApiResponse.success(profileService.createProfile(request), "Profile created successfully");
     }
 
     // hr update
     @PatchMapping("/{profileId}")
-    @PreAuthorize("hasRole('HR')")
+    @PreAuthorize("hasAuthority('PER004')")
     public ApiResponse<ProfileResponseDTO> updateProfile(
             @PathVariable UUID profileId,
             @RequestBody ProfileAdminRequestDTO request) {
-
-        return ApiResponse.success(
-                profileService.updateProfileByHR(profileId, request),
-                "Profile updated successfully"
-        );
+        return ApiResponse.success(profileService.updateProfileByHR(profileId, request), "Profile updated successfully");
     }
 
     // employee update own profile
     @PatchMapping("/me")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
+    @PreAuthorize("hasAuthority('PER003')")
     public ApiResponse<ProfileResponseDTO> updateMyProfile(
             @RequestBody ProfileSelfUpdateDTO request) {
-
-        return ApiResponse.success(
-                profileService.updateMyProfile(request),
-                "Profile updated successfully"
-        );
+        return ApiResponse.success(profileService.updateMyProfile(request), "Profile updated successfully");
     }
 
     @PostMapping("/me/avatar")
-    @PreAuthorize("hasAnyRole('EMPLOYEE','MANAGER','HR')")
-    public ApiResponse<Void> uploadAvatar (
-            @RequestParam MultipartFile file
-    ) throws IOException {
+    @PreAuthorize("hasAuthority('PER003')")
+    public ApiResponse<Void> uploadAvatar(@RequestParam MultipartFile file) throws IOException {
         profileService.updateAvatar(file);
-
         return ApiResponse.success(null, "Avatar uploaded successfully");
     }
 
     @GetMapping("/me")
+    @PreAuthorize("hasAuthority('PER003')")
     public ApiResponse<ProfileResponseDTO> getMyProfile() {
-        return ApiResponse.success(
-                profileService.getMyProfile(),
-                "Profile fetched successfully"
-        );
+        return ApiResponse.success(profileService.getMyProfile(), "Profile fetched successfully");
     }
 
     @GetMapping("/{userId}")
-    @PreAuthorize("hasAnyRole('HR','MANAGER')")
+    @PreAuthorize("hasAuthority('PER004')")
     public ApiResponse<ProfileResponseDTO> getProfile(@PathVariable UUID userId) {
+        return ApiResponse.success(profileService.getProfile(userId), "Profile fetched successfully");
+    }
+
+    @PostMapping("/interests/{gameId}")
+    @PreAuthorize("hasAuthority('PER003')")
+    public ApiResponse<Void> addInterest(@PathVariable UUID gameId) {
+        profileService.addInterest(gameId);
+        return ApiResponse.success(null, "Interest added successfully");
+    }
+
+    @DeleteMapping("/interests/{gameId}")
+    @PreAuthorize("hasAuthority('PER003')")
+    public ApiResponse<Void> deleteInterest(@PathVariable UUID gameId) {
+        profileService.removeInterest(gameId);
+        return ApiResponse.success(null, "Interest removed successfully");
+    }
+
+    @GetMapping("/game-stats")
+    @PreAuthorize("hasAuthority('PER003')")
+    public ApiResponse<List<UserCycleStatsDto>> getUserGameStats(@RequestParam(value = "latest", defaultValue = "false") boolean latest) {
         return ApiResponse.success(
-                profileService.getProfile(userId),
-                "Profile fetched successfully"
+                profileService.getUserGameStats(latest),
+                latest ? "Current cycle game stats retrieved successfully" : "All game stats retrieved successfully"
         );
     }
 }
-

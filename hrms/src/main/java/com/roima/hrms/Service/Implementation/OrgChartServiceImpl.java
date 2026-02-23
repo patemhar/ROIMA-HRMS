@@ -26,4 +26,19 @@ public class OrgChartServiceImpl implements OrgChartService {
 
         return userSummary;
     }
+
+    @Override
+    public UserDetailResponse getAscendingNode(UUID userId) {
+        var user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (user.getReports_to() == null) {
+            throw new RuntimeException("User has no manager/superior");
+        }
+
+        var manager = userRepository.findById(user.getReports_to().getId())
+                .orElseThrow(() -> new RuntimeException("Manager not found"));
+
+        return userMapper.ToUserDetailResponse(manager);
+    }
 }
