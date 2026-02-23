@@ -8,4 +8,6 @@ import java.util.UUID;
 public interface OrgChartService {
 
     List<UserDetailResponse> getNextLayer(UUID userId);
+
+    UserDetailResponse getAscendingNode(UUID userId);
 }

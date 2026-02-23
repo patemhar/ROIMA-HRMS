@@ -1,14 +1,10 @@
 package com.roima.hrms.Dtos.Travel;
 
-import com.roima.hrms.Core.Entities.User;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 
@@ -18,13 +14,28 @@ import java.time.LocalDate;
 @NoArgsConstructor
 public class TravelUpdateRequest {
 
+    @NotBlank(message = "Title is required")
+    @Size(min = 1, max = 50, message = "Title must be between 1 and 50 characters")
     private String title;
 
+    @NotBlank(message = "Description is required")
+    @Size(min = 1, max = 500, message = "Description must be between 1 and 500 characters")
     private String description;
 
+    @NotNull(message = "Start date is required")
+    @Future(message = "Start date must be in the future")
     private LocalDate start_date;
 
+    @NotNull(message = "End date is required")
+    @Future(message = "End date must be in the future")
     private LocalDate end_date;
 
+    @NotBlank(message = "Destination is required")
+    @Size(min = 1, max = 100, message = "Destination must be between 1 and 100 characters")
     private String destination;
+
+    @AssertTrue(message = "End date must be after start date")
+    private boolean isEndDateAfterStartDate() {
+        return end_date.isAfter(start_date);
+    }
 }

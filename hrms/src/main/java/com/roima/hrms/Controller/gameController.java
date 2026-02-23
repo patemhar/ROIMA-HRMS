@@ -88,6 +88,9 @@ public class gameController {
             return ApiResponse.success(cycleOpt.get(), "Game cycle fetched successfully.");
         } else {
             var nextStart = cycleService.getNextCycleStart();
+            if(nextStart == null) {
+                return ApiResponse.success(null, "New cycle will be created soon.");
+            }
             long minutes = Duration.between(nextStart, LocalDateTime.now()).toMinutes();
             return ApiResponse.success(null, "New cycle will begin in " + minutes + " minutes.");
         }

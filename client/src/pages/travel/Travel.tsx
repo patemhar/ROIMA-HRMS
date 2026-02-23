@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import {
   useCreateTravel,
+  useDeleteTravel,
   useGetAllTravels,
   useGetMyTravels,
 } from "@/hooks/travel/travel.hooks";
@@ -43,13 +44,17 @@ export const Travel = () => {
   const permissions = user?.permission;
   const userRole = user?.role;
 
-  const canReadTravel = hasPermission(permissions, PermissionCode.TRAVEL_MANAGE);
+  const canReadTravel = hasPermission(
+    permissions,
+    PermissionCode.READ_ALL_TRAVELS,
+  );
   const canCreateTravel = hasPermission(
     permissions,
     PermissionCode.TRAVEL_MANAGE,
   );
 
   const isAdmin = canReadTravel;
+  const isHR = userRole === "HR";
   const getAllTravelsquery = useGetAllTravels(!!isAdmin);
 
   const allItems = getAllTravelsquery.data ?? [];
@@ -61,6 +66,7 @@ export const Travel = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState<boolean>(false);
 
   const createTravel = useCreateTravel();
+  const deleteTravel = useDeleteTravel();
 
   const {
     register,
@@ -92,6 +98,27 @@ export const Travel = () => {
     }
   };
 
+  const handleDelete = (id?: string) => {
+    if (!id) return;
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this travel plan?",
+    );
+
+    try {
+      if (confirmed) {
+        deleteTravel.mutate(id);
+
+        toast.success("Travel plan deleted successfully.");
+      } else {
+        toast.info("Deletion cancelled.");
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+      console.error("Failed to delete travel plan", error);
+    }
+  };
+
   const items = getMyTravelsQuery.data ?? [];
 
   const handleRowClick = (id?: string) => {
@@ -106,7 +133,7 @@ export const Travel = () => {
           <div className="flex items-center gap-3">
             <Button
               variant="outline"
-              onClick={() => getAllTravelsquery.refetch()}
+              onClick={() => {getAllTravelsquery.refetch(); getMyTravelsQuery.refetch()}}
             >
               Refresh
             </Button>
@@ -323,11 +350,7 @@ export const Travel = () => {
             </p>
           )}
 
-          {!items.length && (
-            <p>
-              No travels for you at the moment.
-            </p>
-          )}
+          {!items.length && <p>No travels for you at the moment.</p>}
 
           {Boolean(items.length) && (
             <div className="rounded-lg border border-slate-100">
@@ -375,6 +398,16 @@ export const Travel = () => {
                           >
                             View
                           </Button>
+                          {isHR && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDelete(travel?.id)}
+                              className="cursor-pointer"
+                            >
+                              Delete
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     );
@@ -408,11 +441,7 @@ export const Travel = () => {
               </p>
             )}
 
-            {!allItems.length && (
-              <p>
-                No travels.
-              </p>
-            )}
+            {!allItems.length && <p>No travels.</p>}
 
             {Boolean(allItems?.length) && (
               <div className="rounded-lg border border-slate-100">
@@ -460,6 +489,16 @@ export const Travel = () => {
                             >
                               View
                             </Button>
+                            {isHR && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDelete(travel?.id)}
+                                className="cursor-pointer"
+                              >
+                                Delete
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       );

@@ -129,6 +129,10 @@ public class PostServiceImpl implements PostService {
         post.setContent(request.getDescription());
         post.setTags(request.getTags());
 
+        var existingRole = roleRepository.findById(UUID.fromString(request.getVisibility())).orElseThrow(() -> new RuntimeException("No role found for visibility"));
+
+        post.setVisibility_role(existingRole);
+
         Post updatedPost = postRepository.save(post);
         return postMapper.toDto(updatedPost, currentUser);
     }

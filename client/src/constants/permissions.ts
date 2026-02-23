@@ -14,6 +14,7 @@ export const PermissionCode = {
   NOTIFICATION_SUBSCRIBE: "PER020",  // Subscribe to notifications
   TRAVEL_DOC: "PER021",              // Manage travel documents & expenses
   ACHIEVEMENT: "PER022",             // Access achievements page
+  READ_ALL_TRAVELS: "PER023",              // Read all travels (HR/Manager)
 } as const;
 
 export type PermissionCodeValue =

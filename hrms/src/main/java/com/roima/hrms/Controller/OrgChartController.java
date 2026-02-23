@@ -3,6 +3,7 @@ package com.roima.hrms.Controller;
 import com.roima.hrms.Dtos.ApiResponse;
 import com.roima.hrms.Dtos.User.UserDetailResponse;
 import com.roima.hrms.Service.Interfaces.OrgChartService;
+import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class OrgChartController {
 
     private final OrgChartService orgChartService;
+    private final SecurityUtil securityUtil;
 
     @GetMapping("/{userId}")
     @PreAuthorize("hasAuthority('PER018')")
@@ -29,5 +31,12 @@ public class OrgChartController {
         var users = orgChartService.getNextLayer(userId);
 
         return ApiResponse.success(users, "users fetched successfully");
+    }
+
+    @GetMapping("/my-manager")
+    public ApiResponse<UserDetailResponse> getMyAscendingNode() {
+        var currentUser = securityUtil.getCurrentUser();
+        var manager = orgChartService.getAscendingNode(currentUser.getId());
+        return ApiResponse.success(manager, "Manager fetched successfully");
     }
 }

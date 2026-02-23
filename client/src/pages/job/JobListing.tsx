@@ -145,7 +145,7 @@ export const JobListPage = () => {
         min_experience: createForm.experienceLevel,
         salary_range:
           createForm.salaryMin && createForm.salaryMax
-            ? `${createForm.salaryMin}-${createForm.salaryMax}`
+            ? `${createForm.salaryMin}-${createForm.salaryMax} INR`
             : undefined,
         status: "OPEN",
         application_deadline: createForm.applicationDeadline
@@ -612,7 +612,7 @@ export const JobListPage = () => {
         </Card>
       ) : (
         <div className="space-y-4">
-          <div className="grid gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
             {jobs.map((job) => (
               <Card
                 key={job.id ?? job.title}
@@ -622,7 +622,7 @@ export const JobListPage = () => {
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-lg leading-tight truncate">
-                        {job.title ?? "Untitled role"} - {job.id}
+                        {job.title ?? "Untitled role"}
                       </CardTitle>
                       <CardDescription className="text-sm">
                         {job.departmentName || "General"}

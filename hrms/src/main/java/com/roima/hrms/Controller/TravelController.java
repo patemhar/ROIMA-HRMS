@@ -15,6 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -37,38 +38,35 @@ public class TravelController {
 
     @PostMapping
     @PreAuthorize("hasAuthority('PER010')")
-    public ApiResponse<TravelResponseSummary> createTravel(@RequestBody TravelRequest request) {
+    public ApiResponse<TravelResponseSummary> createTravel(@RequestBody @Valid TravelRequest request) {
         return ApiResponse.success(travelService.createTravel(request), "Travel created successfully");
     }
 
     @GetMapping("/{travelId}")
-    @PreAuthorize("hasAuthority('PER010')")
     public ApiResponse<TravelResponse> getTravel(@PathVariable UUID travelId) {
         return ApiResponse.success(travelService.getTravel(travelId), "Travel fetched successfully");
     }
 
     @GetMapping("/my")
-    @PreAuthorize("hasAuthority('PER010')")
     public ApiResponse<List<TravelResponseSummary>> getMyTravels() {
         return ApiResponse.success(travelService.getMyTravel(), "Travels fetched successfully");
     }
 
     // travels that are created by user
     @GetMapping("/user/{userId}")
-    @PreAuthorize("hasAuthority('PER010')")
     public ApiResponse<List<TravelResponseSummary>> getUserTravels(@PathVariable UUID userId) {
         return ApiResponse.success(travelService.getTravelsForUser(userId), "Travels fetched successfully");
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('PER010')")
+    @PreAuthorize("hasAuthority('PER023')")
     public ApiResponse<List<TravelResponseSummary>> getAllTravels() {
         return ApiResponse.success(travelService.getTravels(), "Travels fetched successfully");
     }
 
     @PatchMapping("/{travelId}")
     @PreAuthorize("hasAuthority('PER010')")
-    public ApiResponse<Void> updateTravel(@PathVariable UUID travelId, @RequestBody TravelUpdateRequest request) {
+    public ApiResponse<Void> updateTravel(@PathVariable UUID travelId, @RequestBody @Valid TravelUpdateRequest request) {
         travelService.updateTravel(travelId, request);
         return ApiResponse.success(null, "Travel updated successfully.");
     }
@@ -101,7 +99,7 @@ public class TravelController {
 
     @PostMapping("/{travelId}/itinerary")
     @PreAuthorize("hasAuthority('PER010')")
-    public ApiResponse<TravelItineraryResponse> addItinerary(@PathVariable UUID travelId, @RequestBody TravelItineraryRequest request) {
+    public ApiResponse<TravelItineraryResponse> addItinerary(@PathVariable UUID travelId, @RequestBody @Valid TravelItineraryRequest request) {
         return ApiResponse.success(travelService.addTravelItinerary(travelId, request), "Itinerary added successfully");
     }
 
@@ -113,7 +111,7 @@ public class TravelController {
 
     @PatchMapping("/itinerary/{itineraryId}")
     @PreAuthorize("hasAuthority('PER010')")
-    public ApiResponse<Void> updateItinerary(@PathVariable UUID itineraryId, @RequestBody TravelItineraryRequest request) {
+    public ApiResponse<Void> updateItinerary(@PathVariable UUID itineraryId, @RequestBody @Valid TravelItineraryRequest request) {
         travelService.updateItinerary(itineraryId, request);
         return ApiResponse.success(null, "Itinerary updated successfully");
     }
@@ -122,7 +120,7 @@ public class TravelController {
 
     @PostMapping("/{travelId}/booking")
     @PreAuthorize("hasAuthority('PER010')")
-    public ApiResponse<TravelBookingResponse> addBooking(@PathVariable UUID travelId, @RequestBody TravelBookingRequest request) {
+    public ApiResponse<TravelBookingResponse> addBooking(@PathVariable UUID travelId, @RequestBody @Valid TravelBookingRequest request) {
         return ApiResponse.success(travelService.addTravelBooking(travelId, request), "Booking added successfully");
     }
 
@@ -134,7 +132,7 @@ public class TravelController {
 
     @PatchMapping("booking/{bookingId}")
     @PreAuthorize("hasAuthority('PER010')")
-    public ApiResponse<Void> updateBooking(@PathVariable UUID bookingId, @RequestBody TravelBookingRequest request) {
+    public ApiResponse<Void> updateBooking(@PathVariable UUID bookingId, @RequestBody @Valid TravelBookingRequest request) {
         travelService.updateBooking(bookingId, request);
         return ApiResponse.success(null, "Booking updated successfully.");
     }
@@ -173,7 +171,7 @@ public class TravelController {
 
     @PostMapping("/{travelId}/expenses")
     @PreAuthorize("hasAuthority('PER021')")
-    public ApiResponse<TravelExpenseResponse> addExpense(@PathVariable UUID travelId, @RequestBody TravelExpenseRequest request) {
+    public ApiResponse<TravelExpenseResponse> addExpense(@PathVariable UUID travelId, @RequestBody @Valid TravelExpenseRequest request) {
         return ApiResponse.success(travelExpenseService.addTravelExpense(travelId, request), "Expense added successfully");
     }
 

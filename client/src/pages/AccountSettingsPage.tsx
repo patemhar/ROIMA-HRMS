@@ -548,7 +548,7 @@ export const AccountSettingsPage = () => {
 
       {/* Game Interests */}
       <GameInterestsCard />
-
+              
       {/* Org Chart */}
       {canReadOrgChart && <OrgChartComponent />}
     </div>

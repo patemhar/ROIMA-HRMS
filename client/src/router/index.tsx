@@ -5,7 +5,7 @@ import NotFound from "@/pages/NotFound";
 import { Travel } from "@/pages/travel/Travel";
 import { MainLayout } from "@/layouts/MainLayout";
 import { TravelDetail } from "@/pages/travel/TravelDetail";
-import { ExpenseManagementPage } from "@/pages/travel/ExpenseManagementPage";
+import { ExpenseManagementPage } from "@/pages/travel/ExpenseManagement";
 import { AccountSettingsPage } from "@/pages/AccountSettingsPage";
 import { UserManagementPage } from "@/pages/UserManagement";
 import { JobListPage } from "@/pages/job/JobListing";
@@ -20,6 +20,7 @@ import {
 } from "@/constants/permissions";
 import GameDetail from "@/pages/game/GameDetail";
 import { AchievementsPage } from "@/pages/achievements/AchievementsPage";
+import OrgChart from "@/pages/OrgChart";
 
 const RequireAuth = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = useAuth((state) => state.auth.isAuthenticated);
@@ -77,27 +78,15 @@ export const router = createBrowserRouter([
       },
       {
         path: "travels",
-        element: (
-          <RequirePermission permission={PermissionCode.TRAVEL_MANAGE}>
-            <Travel />
-          </RequirePermission>
-        ),
+        element: <Travel />,
       },
       {
         path: "travels/:id",
-        element: (
-          <RequirePermission permission={PermissionCode.TRAVEL_MANAGE}>
-            <TravelDetail />
-          </RequirePermission>
-        ),
+        element: <TravelDetail />,
       },
       {
         path: "travels/:id/expenses",
-        element: (
-          <RequirePermission permission={PermissionCode.TRAVEL_MANAGE}>
-            <ExpenseManagementPage />
-          </RequirePermission>
-        ),
+        element: <ExpenseManagementPage />,
       },
       {
         path: "account",
@@ -139,6 +128,10 @@ export const router = createBrowserRouter([
         path: "games/:id",
         element: <GameDetail />,
       },
+      {
+        path: "org-chart",
+        element: <OrgChart/>
+      }
     ],
   },
   {

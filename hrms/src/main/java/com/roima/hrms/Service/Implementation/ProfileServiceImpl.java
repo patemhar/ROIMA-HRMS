@@ -85,7 +85,9 @@ public class ProfileServiceImpl implements ProfileService {
             updatedProfile.setDepartment(dept);
         }
 
-        return mapper.toDto(updatedProfile);
+        var savedProfile = profileRepository.save(updatedProfile);
+
+        return mapper.toDto(savedProfile);
     }
 
     // self update

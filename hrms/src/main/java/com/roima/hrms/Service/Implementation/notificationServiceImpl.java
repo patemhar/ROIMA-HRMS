@@ -2,7 +2,6 @@ package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Core.Entities.Notification;
 import com.roima.hrms.Core.Entities.User;
-import com.roima.hrms.Core.Enums.EntityType;
 import com.roima.hrms.Core.Enums.NotificationType;
 import com.roima.hrms.Dtos.notificationResponseDto;
 import com.roima.hrms.Mapper.NotificationMapper;
@@ -10,6 +9,7 @@ import com.roima.hrms.Repositories.NotificationRepository;
 import com.roima.hrms.Service.Interfaces.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
@@ -26,6 +26,7 @@ public class notificationServiceImpl implements NotificationService {
     private final NotificationMapper notificationMapper;
 
     @Override
+    @Transactional
     public void createNew(User recipient, User actor, NotificationType notificationType, String title, String message) {
 
         var newNotification = new Notification();
@@ -37,9 +38,6 @@ public class notificationServiceImpl implements NotificationService {
         newNotification.setMessage(message);
 
         var savedNotification = notificationRepository.save(newNotification);
-
-        recipient.getMy_notifications().add(savedNotification);
-        actor.getSent_notifications().add(savedNotification);
 
         var notificationResponse = notificationMapper.ToNotificationRespones(savedNotification);
 

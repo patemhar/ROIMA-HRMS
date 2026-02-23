@@ -1,7 +1,6 @@
 package com.roima.hrms.Service.Implementation;
 
 import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import com.roima.hrms.Service.Interfaces.CloudinaryService;
 import com.roima.hrms.Utility.SecurityUtil;
 import jakarta.annotation.Resource;
@@ -12,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,12 +33,12 @@ public class CloudinaryServiceImpl implements CloudinaryService {
 
             try {
 
-//                HashMap<Object, Object> options = new HashMap<>();
-//                options.put("folder", folderName);
-//                options.put("public_id", currentUserId.toString() + LocalDateTime.now());
-//                options.put("resource_type", "auto");
+                HashMap<Object, Object> options = new HashMap<>();
+                options.put("folder", folderName);
+                options.put("public_id", currentUserId.toString() + "_" + System.currentTimeMillis());
+                options.put("resource_type", "auto");
 
-                Map uploadResult = cloudinary.uploader().upload(tempFile, ObjectUtils.emptyMap());
+                Map uploadResult = cloudinary.uploader().upload(tempFile, options);
 
                 System.out.println(uploadResult);
 

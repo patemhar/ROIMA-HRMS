@@ -34,13 +34,13 @@ public class AchievementServiceImpl implements AchievementService {
         List<String> allowedRoles;
         switch (roleName) {
             case "HR":
-                allowedRoles = List.of("Employee", "Manager", "HR");
+                allowedRoles = List.of("EMPLOYEE", "MANAGER", "HR");
                 break;
-            case "Manager":
-                allowedRoles = List.of("Employee", "Manager", "HR");
+            case "MANAGER":
+                allowedRoles = List.of("EMPLOYEE", "MANAGER");
                 break;
-            case "Employee":
-                allowedRoles = List.of("Employee");
+            case "EMPLOYEE":
+                allowedRoles = List.of("EMPLOYEE");
                 break;
             default:
                 allowedRoles = List.of();

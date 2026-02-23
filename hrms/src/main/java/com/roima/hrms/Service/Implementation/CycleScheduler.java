@@ -32,7 +32,6 @@ public class CycleScheduler {
 
             if(currentCycle.isEmpty()) {
                 if (cycleRepo.existsFutureCycle(game.getId(), LocalDateTime.now())) {
-                    // Already a future cycle exists, skip creating
                     continue;
                 }
                 cycleService.createCycle(game);

@@ -3,7 +3,8 @@ export const orgKeys = {
 
     all: ["org"] as const,
 
-    cildrenByUserID: (id: string) => [orgKeys.all, "chilren", id] as const
+    cildrenByUserID: (id: string) => [orgKeys.all, "chilren", id] as const,
+    myManager: () => [orgKeys.all, "my-manager"] as const
 }
 
 export const normalCacheConfig = {

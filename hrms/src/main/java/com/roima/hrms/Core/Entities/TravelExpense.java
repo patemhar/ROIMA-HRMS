@@ -51,6 +51,9 @@ public class TravelExpense extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private ExpenseStatus status;
 
+    @Column(name = "is_active")
+    private boolean active = true;
+
     @ManyToOne
     @JoinColumn(name = "created_by")
     private User createdBy;

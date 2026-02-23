@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
@@ -39,7 +40,7 @@ public class AchievementController {
     // Create post
     @PostMapping
     @PreAuthorize("hasAuthority('PER022')")
-    public ApiResponse<PostDto> createPost(@RequestPart("request") CreatePostRequest request, @RequestParam(value = "files", required = false) MultipartFile[] files) throws IOException {
+    public ApiResponse<PostDto> createPost(@RequestPart("request") @Valid CreatePostRequest request, @RequestParam(value = "files", required = false) MultipartFile[] files) throws IOException {
         return ApiResponse.success(postService.createPost(request, files), "Post created successfully");
     }
 
@@ -53,7 +54,7 @@ public class AchievementController {
     // Update post
     @PutMapping("/{postId}")
     @PreAuthorize("hasAuthority('PER022')")
-    public ApiResponse<PostDto> updatePost(@PathVariable UUID postId, @RequestBody CreatePostRequest request) {
+    public ApiResponse<PostDto> updatePost(@PathVariable UUID postId, @RequestBody @Valid CreatePostRequest request) {
         return ApiResponse.success(postService.updatePost(postId, request), "Post updated successfully");
     }
 
@@ -93,7 +94,7 @@ public class AchievementController {
     // Add comment
     @PostMapping("/{postId}/comments")
     @PreAuthorize("hasAuthority('PER022')")
-    public ApiResponse<CommentDto> addComment(@PathVariable UUID postId, @RequestBody CommentRequest request) {
+    public ApiResponse<CommentDto> addComment(@PathVariable UUID postId, @RequestBody @Valid CommentRequest request) {
         return ApiResponse.success(commentService.addComment(postId, request), "Comment added successfully");
     }
 
@@ -107,7 +108,7 @@ public class AchievementController {
     // Update comment
     @PutMapping("/comments/{commentId}")
     @PreAuthorize("hasAuthority('PER022')")
-    public ApiResponse<CommentDto> updateComment(@PathVariable UUID commentId, @RequestBody CommentRequest request) {
+    public ApiResponse<CommentDto> updateComment(@PathVariable UUID commentId, @RequestBody @Valid CommentRequest request) {
         return ApiResponse.success(commentService.updateComment(commentId, request), "Comment updated successfully");
     }
 

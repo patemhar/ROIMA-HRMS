@@ -29,15 +29,15 @@ const navItems: Array<{
 }> = [
   { to: "achievements", label: "Achievements"},
   { to: "travels", label: "Travels" },
-  { to: "account", label: "Account" },
-  { to: "hr/users", label: "Users", permission: PermissionCode.USER_MANAGE },
+  { to: "jobs", label: "Jobs" },
   {
     to: "hr/job-records",
     label: "Job Records",
     permission: PermissionCode.USER_MANAGE,
   },
-  { to: "jobs", label: "Jobs" },
+  { to: "hr/users", label: "Users", permission: PermissionCode.USER_MANAGE },
   { to: "games", label: "Games" },
+  { to: "account", label: "Account" },
 ];
 
 export const MainLayout = () => {

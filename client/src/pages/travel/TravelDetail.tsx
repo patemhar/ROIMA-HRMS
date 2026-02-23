@@ -9,12 +9,7 @@ import {
   Upload,
   Trash2,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,16 +62,15 @@ import { hasPermission, PermissionCode } from "@/constants/permissions";
 import { useGetAllUsers } from "@/hooks/util/util.hooks";
 
 export const TravelDetail = () => {
-
   const permissions = useAuth((state) => state.auth.user?.permission);
   const user = useAuth((state) => state.auth.user);
   const isHR = user?.role === "HR";
-  
+
   const canUpdateTravel = hasPermission(
     permissions,
     PermissionCode.TRAVEL_MANAGE,
   );
- 
+
   const { id: travelId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -86,9 +80,12 @@ export const TravelDetail = () => {
     useState<boolean>(false);
   const [bookingDialogOpen, setBookingDialogOpen] = useState<boolean>(false);
   const [documentUploadOpen, setDocumentUploadOpen] = useState<boolean>(false);
-  const [updateTravelDialogOpen, setUpdateTravelDialogOpen] = useState<boolean>(false);
-  const [addMemberDialogOpen, setAddMemberDialogOpen] = useState<boolean>(false);
-  const [updateItineraryDialogOpen, setUpdateItineraryDialogOpen] = useState<boolean>(false);
+  const [updateTravelDialogOpen, setUpdateTravelDialogOpen] =
+    useState<boolean>(false);
+  const [addMemberDialogOpen, setAddMemberDialogOpen] =
+    useState<boolean>(false);
+  const [updateItineraryDialogOpen, setUpdateItineraryDialogOpen] =
+    useState<boolean>(false);
   const [uploadFiles, setUploadFiles] = useState<File[]>([]);
 
   const [selectedItinerary, setSelectedItinerary] = useState<any>(null);
@@ -100,7 +97,7 @@ export const TravelDetail = () => {
   const deleteMember = useDeleteMember();
   const updateTravel = useUpdateTravel();
   const updateItinerary = useUpdateItinerary();
-  
+
   const travelDetailQuery = useTravelById(travelId!);
   const uploadTravelDocs = useUploadTravelDocs(travelId!);
   const deleteTravelDocument = useDeleteTravelDocument();
@@ -264,7 +261,6 @@ export const TravelDetail = () => {
     if (files) {
       const fileArray = Array.from(files);
       const validFiles = fileArray.filter((file) => {
-        // 10MB
         if (file.size > 10 * 1024 * 1024) {
           toast.error(`${file.name} is too large (max 10MB)`);
           return false;
@@ -325,7 +321,10 @@ export const TravelDetail = () => {
         return;
       }
 
-      await updateItinerary.mutateAsync({ id: selectedItinerary.itineraryId, data });
+      await updateItinerary.mutateAsync({
+        id: selectedItinerary.itineraryId,
+        data,
+      });
       toast.success("Itinerary updated successfully");
       setUpdateItineraryDialogOpen(false);
       resetUpdateItinerary();
@@ -399,6 +398,10 @@ export const TravelDetail = () => {
 
   const travel = travelDetailQuery.data!;
 
+  const isTravelMember = travel.travelMembers?.some(
+    (member) => member.member_id === user?.id,
+  );
+
   return (
     <div className="space-y-6">
       {/* Success/Error Messages */}
@@ -445,10 +448,22 @@ export const TravelDetail = () => {
                       if (!open) resetUpdateTravel();
                       if (open) {
                         setUpdateTravelValue("title", travel?.title || "");
-                        setUpdateTravelValue("description", travel?.description || "");
-                        setUpdateTravelValue("destination", travel?.destination || "");
-                        setUpdateTravelValue("start_date", travel?.start_date || "");
-                        setUpdateTravelValue("end_date", travel?.end_date || "");
+                        setUpdateTravelValue(
+                          "description",
+                          travel?.description || "",
+                        );
+                        setUpdateTravelValue(
+                          "destination",
+                          travel?.destination || "",
+                        );
+                        setUpdateTravelValue(
+                          "start_date",
+                          travel?.start_date || "",
+                        );
+                        setUpdateTravelValue(
+                          "end_date",
+                          travel?.end_date || "",
+                        );
                       }
                     }}
                   >
@@ -488,7 +503,9 @@ export const TravelDetail = () => {
                             </div>
 
                             <div className="space-y-2">
-                              <Label htmlFor="travel-destination">Destination *</Label>
+                              <Label htmlFor="travel-destination">
+                                Destination *
+                              </Label>
                               <Input
                                 id="travel-destination"
                                 placeholder="Destination"
@@ -498,14 +515,19 @@ export const TravelDetail = () => {
                               />
                               {updateTravelErrors.destination && (
                                 <p className="text-sm text-destructive">
-                                  {updateTravelErrors.destination.message as string}
+                                  {
+                                    updateTravelErrors.destination
+                                      .message as string
+                                  }
                                 </p>
                               )}
                             </div>
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="travel-description">Description</Label>
+                            <Label htmlFor="travel-description">
+                              Description
+                            </Label>
                             <Input
                               id="travel-description"
                               placeholder="Travel description"
@@ -524,7 +546,10 @@ export const TravelDetail = () => {
                               />
                               {updateTravelErrors.start_date && (
                                 <p className="text-sm text-destructive">
-                                  {updateTravelErrors.start_date.message as string}
+                                  {
+                                    updateTravelErrors.start_date
+                                      .message as string
+                                  }
                                 </p>
                               )}
                             </div>
@@ -539,7 +564,10 @@ export const TravelDetail = () => {
                               />
                               {updateTravelErrors.end_date && (
                                 <p className="text-sm text-destructive">
-                                  {updateTravelErrors.end_date.message as string}
+                                  {
+                                    updateTravelErrors.end_date
+                                      .message as string
+                                  }
                                 </p>
                               )}
                             </div>
@@ -554,8 +582,13 @@ export const TravelDetail = () => {
                           >
                             Cancel
                           </Button>
-                          <Button type="submit" disabled={updateTravel.isPending}>
-                            {updateTravel.isPending ? "Updating..." : "Update Travel"}
+                          <Button
+                            type="submit"
+                            disabled={updateTravel.isPending}
+                          >
+                            {updateTravel.isPending
+                              ? "Updating..."
+                              : "Update Travel"}
                           </Button>
                         </DialogFooter>
                       </form>
@@ -609,267 +642,287 @@ export const TravelDetail = () => {
             <div className="flex justify-between">
               <p className="text-sm font-medium">Travel Itinerary</p>
               {isHR && (
-              <Dialog
-                open={itineraryDialogOpen}
-                onOpenChange={(open) => {
-                  setItineraryDialogOpen(open);
-                  if (!open) resetItinerary();
-                }}
-              >
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Itinerary
-                  </Button>
-                </DialogTrigger>
+                <Dialog
+                  open={itineraryDialogOpen}
+                  onOpenChange={(open) => {
+                    setItineraryDialogOpen(open);
+                    if (!open) resetItinerary();
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="mr-2 h-4 w-4" />
+                      Create Itinerary
+                    </Button>
+                  </DialogTrigger>
 
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Create Itinerary</DialogTitle>
-                    <DialogDescription>
-                      Fill in the details to create a new job Itinerary.
-                    </DialogDescription>
-                  </DialogHeader>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Create Itinerary</DialogTitle>
+                      <DialogDescription>
+                        Fill in the details to create a new job Itinerary.
+                      </DialogDescription>
+                    </DialogHeader>
 
-                  <form
-                    onSubmit={itinerarySubmit(onItinerarySubmit)}
-                    className="space-y-4 py-4"
-                  >
-                    <div className="grid gap-4">
-                      <div className="grid grid-cols-2 gap-4">
+                    <form
+                      onSubmit={itinerarySubmit(onItinerarySubmit)}
+                      className="space-y-4 py-4"
+                    >
+                      <div className="grid gap-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="title">Title *</Label>
+                            <Input
+                              id="title"
+                              placeholder="Itinerary Title"
+                              {...itineraryRegister("title", {
+                                required: "Title is required",
+                              })}
+                            />
+                            {itineraryErrors.title && (
+                              <p className="text-sm text-destructive">
+                                {itineraryErrors.title.message as string}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="description">Description *</Label>
+                            <Input
+                              id="description"
+                              placeholder="Short description"
+                              {...itineraryRegister("description", {
+                                required: "Description is required",
+                              })}
+                            />
+                            {itineraryErrors.description && (
+                              <p className="text-sm text-destructive">
+                                {itineraryErrors.description.message as string}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
                         <div className="space-y-2">
-                          <Label htmlFor="title">Title *</Label>
+                          <Label htmlFor="startDateTime">
+                            Start Date Time *
+                          </Label>
                           <Input
-                            id="title"
-                            placeholder="Itinerary Title"
-                            {...itineraryRegister("title", {
-                              required: "Title is required",
+                            id="startDateTime"
+                            type="datetime-local"
+                            {...itineraryRegister("startDateTime", {
+                              required: "Start time is required",
                             })}
                           />
-                          {itineraryErrors.title && (
+                          {itineraryErrors.startDateTime && (
                             <p className="text-sm text-destructive">
-                              {itineraryErrors.title.message as string}
+                              {itineraryErrors.startDateTime.message as string}
                             </p>
                           )}
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="description">Description *</Label>
+                          <Label htmlFor="endDateTime">End Date Time *</Label>
                           <Input
-                            id="description"
-                            placeholder="Short description"
-                            {...itineraryRegister("description", {
-                              required: "Description is required",
+                            id="endDateTime"
+                            type="datetime-local"
+                            {...itineraryRegister("endDateTime", {
+                              required: "End time is required",
+                              validate: (value) => {
+                                if (!startDateTime) return true;
+                                return (
+                                  new Date(value) > new Date(startDateTime) ||
+                                  "End time must be after start time"
+                                );
+                              },
                             })}
                           />
-                          {itineraryErrors.description && (
+                          {itineraryErrors.endDateTime && (
                             <p className="text-sm text-destructive">
-                              {itineraryErrors.description.message as string}
+                              {itineraryErrors.endDateTime.message as string}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="location">Location *</Label>
+                          <Input
+                            id="location"
+                            placeholder="Meeting point or address"
+                            {...itineraryRegister("location", {
+                              required: "Location is required",
+                            })}
+                          />
+                          {itineraryErrors.location && (
+                            <p className="text-sm text-destructive">
+                              {itineraryErrors.location.message as string}
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="startDateTime">Start Date Time *</Label>
-                        <Input
-                          id="startDateTime"
-                          type="datetime-local"
-                          {...itineraryRegister("startDateTime", {
-                            required: "Start time is required",
-                          })}
-                        />
-                        {itineraryErrors.startDateTime && (
-                          <p className="text-sm text-destructive">
-                            {itineraryErrors.startDateTime.message as string}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="endDateTime">End Date Time *</Label>
-                        <Input
-                          id="endDateTime"
-                          type="datetime-local"
-                          {...itineraryRegister("endDateTime", {
-                            required: "End time is required",
-                            validate: (value) => {
-                              if (!startDateTime) return true;
-                              return (
-                                new Date(value) > new Date(startDateTime) ||
-                                "End time must be after start time"
-                              );
-                            },
-                          })}
-                        />
-                        {itineraryErrors.endDateTime && (
-                          <p className="text-sm text-destructive">
-                            {itineraryErrors.endDateTime.message as string}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="location">Location *</Label>
-                        <Input
-                          id="location"
-                          placeholder="Meeting point or address"
-                          {...itineraryRegister("location", {
-                            required: "Location is required",
-                          })}
-                        />
-                        {itineraryErrors.location && (
-                          <p className="text-sm text-destructive">
-                            {itineraryErrors.location.message as string}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <DialogFooter className="mt-6">
-                      <Button
-                        variant="outline"
-                        type="button"
-                        onClick={() => setItineraryDialogOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={addItinerary.isPending}>
-                        {addItinerary.isPending
-                          ? "Creating..."
-                          : "Create Itinerary"}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
+                      <DialogFooter className="mt-6">
+                        <Button
+                          variant="outline"
+                          type="button"
+                          onClick={() => setItineraryDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={addItinerary.isPending}>
+                          {addItinerary.isPending
+                            ? "Creating..."
+                            : "Create Itinerary"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               )}
 
               {/* Update Itinerary Dialog */}
               {isHR && (
-              <Dialog
-                open={updateItineraryDialogOpen}
-                onOpenChange={(open) => {
-                  setUpdateItineraryDialogOpen(open);
-                  if (!open) {
-                    resetUpdateItinerary();
-                    setSelectedItinerary(null);
-                  }
-                }}
-              >
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Update Itinerary</DialogTitle>
-                    <DialogDescription>
-                      Update itinerary details.
-                    </DialogDescription>
-                  </DialogHeader>
+                <Dialog
+                  open={updateItineraryDialogOpen}
+                  onOpenChange={(open) => {
+                    setUpdateItineraryDialogOpen(open);
+                    if (!open) {
+                      resetUpdateItinerary();
+                      setSelectedItinerary(null);
+                    }
+                  }}
+                >
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Update Itinerary</DialogTitle>
+                      <DialogDescription>
+                        Update itinerary details.
+                      </DialogDescription>
+                    </DialogHeader>
 
-                  <form
-                    onSubmit={updateItinerarySubmit(onUpdateItinerarySubmit)}
-                    className="space-y-4 py-4"
-                  >
-                    <div className="grid gap-4">
-                      <div className="grid grid-cols-2 gap-4">
+                    <form
+                      onSubmit={updateItinerarySubmit(onUpdateItinerarySubmit)}
+                      className="space-y-4 py-4"
+                    >
+                      <div className="grid gap-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="update-title">Title *</Label>
+                            <Input
+                              id="update-title"
+                              placeholder="Itinerary Title"
+                              {...updateItineraryRegister("title", {
+                                required: "Title is required",
+                              })}
+                            />
+                            {updateItineraryErrors.title && (
+                              <p className="text-sm text-destructive">
+                                {updateItineraryErrors.title.message as string}
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="update-description">
+                              Description *
+                            </Label>
+                            <Input
+                              id="update-description"
+                              placeholder="Short description"
+                              {...updateItineraryRegister("description", {
+                                required: "Description is required",
+                              })}
+                            />
+                            {updateItineraryErrors.description && (
+                              <p className="text-sm text-destructive">
+                                {
+                                  updateItineraryErrors.description
+                                    .message as string
+                                }
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
                         <div className="space-y-2">
-                          <Label htmlFor="update-title">Title *</Label>
+                          <Label htmlFor="update-startDateTime">
+                            Start Date Time *
+                          </Label>
                           <Input
-                            id="update-title"
-                            placeholder="Itinerary Title"
-                            {...updateItineraryRegister("title", {
-                              required: "Title is required",
+                            id="update-startDateTime"
+                            type="datetime-local"
+                            {...updateItineraryRegister("startDateTime", {
+                              required: "Start time is required",
                             })}
                           />
-                          {updateItineraryErrors.title && (
+                          {updateItineraryErrors.startDateTime && (
                             <p className="text-sm text-destructive">
-                              {updateItineraryErrors.title.message as string}
+                              {
+                                updateItineraryErrors.startDateTime
+                                  .message as string
+                              }
                             </p>
                           )}
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="update-description">Description *</Label>
+                          <Label htmlFor="update-endDateTime">
+                            End Date Time *
+                          </Label>
                           <Input
-                            id="update-description"
-                            placeholder="Short description"
-                            {...updateItineraryRegister("description", {
-                              required: "Description is required",
+                            id="update-endDateTime"
+                            type="datetime-local"
+                            {...updateItineraryRegister("endDateTime", {
+                              required: "End time is required",
                             })}
                           />
-                          {updateItineraryErrors.description && (
+                          {updateItineraryErrors.endDateTime && (
                             <p className="text-sm text-destructive">
-                              {updateItineraryErrors.description.message as string}
+                              {
+                                updateItineraryErrors.endDateTime
+                                  .message as string
+                              }
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="update-location">Location *</Label>
+                          <Input
+                            id="update-location"
+                            placeholder="Meeting point or address"
+                            {...updateItineraryRegister("location", {
+                              required: "Location is required",
+                            })}
+                          />
+                          {updateItineraryErrors.location && (
+                            <p className="text-sm text-destructive">
+                              {updateItineraryErrors.location.message as string}
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="update-startDateTime">Start Date Time *</Label>
-                        <Input
-                          id="update-startDateTime"
-                          type="datetime-local"
-                          {...updateItineraryRegister("startDateTime", {
-                            required: "Start time is required",
-                          })}
-                        />
-                        {updateItineraryErrors.startDateTime && (
-                          <p className="text-sm text-destructive">
-                            {updateItineraryErrors.startDateTime.message as string}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="update-endDateTime">End Date Time *</Label>
-                        <Input
-                          id="update-endDateTime"
-                          type="datetime-local"
-                          {...updateItineraryRegister("endDateTime", {
-                            required: "End time is required",
-                          })}
-                        />
-                        {updateItineraryErrors.endDateTime && (
-                          <p className="text-sm text-destructive">
-                            {updateItineraryErrors.endDateTime.message as string}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="update-location">Location *</Label>
-                        <Input
-                          id="update-location"
-                          placeholder="Meeting point or address"
-                          {...updateItineraryRegister("location", {
-                            required: "Location is required",
-                          })}
-                        />
-                        {updateItineraryErrors.location && (
-                          <p className="text-sm text-destructive">
-                            {updateItineraryErrors.location.message as string}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <DialogFooter className="mt-6">
-                      <Button
-                        variant="outline"
-                        type="button"
-                        onClick={() => setUpdateItineraryDialogOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit" disabled={updateItinerary.isPending}>
-                        {updateItinerary.isPending
-                          ? "Updating..."
-                          : "Update Itinerary"}
-                      </Button>
-                    </DialogFooter>
-                  </form>
-                </DialogContent>
-              </Dialog>
+                      <DialogFooter className="mt-6">
+                        <Button
+                          variant="outline"
+                          type="button"
+                          onClick={() => setUpdateItineraryDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={updateItinerary.isPending}
+                        >
+                          {updateItinerary.isPending
+                            ? "Updating..."
+                            : "Update Itinerary"}
+                        </Button>
+                      </DialogFooter>
+                    </form>
+                  </DialogContent>
+                </Dialog>
               )}
             </div>
             {travel.itineraries?.length === 0 && (
@@ -972,7 +1025,9 @@ export const TravelDetail = () => {
                             </div>
 
                             <div className="space-y-2">
-                              <Label htmlFor="provider-name">Provider Name *</Label>
+                              <Label htmlFor="provider-name">
+                                Provider Name *
+                              </Label>
                               <Input
                                 id="provider-name"
                                 placeholder="e.g., Air India, Marriott"
@@ -982,14 +1037,19 @@ export const TravelDetail = () => {
                               />
                               {bookingErrors.provider_name && (
                                 <p className="text-sm text-destructive">
-                                  {bookingErrors.provider_name.message as string}
+                                  {
+                                    bookingErrors.provider_name
+                                      .message as string
+                                  }
                                 </p>
                               )}
                             </div>
                           </div>
 
                           <div className="space-y-2">
-                            <Label htmlFor="booking-reference">Booking Reference</Label>
+                            <Label htmlFor="booking-reference">
+                              Booking Reference
+                            </Label>
                             <Input
                               id="booking-reference"
                               placeholder="Booking confirmation number"
@@ -1042,7 +1102,10 @@ export const TravelDetail = () => {
                               />
                               {bookingErrors.start_dateTime && (
                                 <p className="text-sm text-destructive">
-                                  {bookingErrors.start_dateTime.message as string}
+                                  {
+                                    bookingErrors.start_dateTime
+                                      .message as string
+                                  }
                                 </p>
                               )}
                             </div>
@@ -1084,37 +1147,35 @@ export const TravelDetail = () => {
             </CardHeader>
             <CardContent>
               {travel.travel_bookings && travel.travel_bookings.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {travel.travel_bookings.map((booking) => (
-                    <div
-                      key={booking.booking_id}
-                      className="flex items-center justify-between p-3 border rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        <User className="h-8 w-8 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">
-                            ID: {booking.booking_id}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Type: {booking.bookingType}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Amount: {booking.amount} - {booking.currency}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Time: {booking.start_dateTime} -{" "}
-                            {booking.end_dateTime}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Provider: {booking.provider_name}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            Booking Refrence: {booking.booking_reference}
-                          </p>
+                    <Card key={booking.booking_id} className="border">
+                      <CardHeader className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <Users className="h-5 w-5 text-muted-foreground" />
+                          <span className="font-semibold">
+                            {booking.bookingType || "Unknown"}
+                          </span>
                         </div>
-                      </div>
-                    </div>
+                        <span className="text-lg font-medium">
+                          {booking.amount} {booking.currency}
+                        </span>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <p className="text-sm text-muted-foreground">
+                          Provider: {booking.provider_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Ref: {booking.booking_reference}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {DateTimeDisplay(booking.start_dateTime || "")} → {DateTimeDisplay(booking.end_dateTime || "")}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          ID: {booking.booking_id}
+                        </p>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
               ) : (
@@ -1133,85 +1194,105 @@ export const TravelDetail = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
-                    {isHR && (
-                    <Dialog open={documentUploadOpen} onOpenChange={setDocumentUploadOpen}>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline">
-                          <Upload className="h-4 w-4 mr-2" />
-                          Upload Documents
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-lg">
-                        <DialogHeader>
-                          <DialogTitle>Upload Travel Documents</DialogTitle>
-                          <DialogDescription>
-                            Upload visual documentation for this travel (receipts, tickets, etc.)
-                          </DialogDescription>
-                        </DialogHeader>
+                    {(isTravelMember || isHR) && (
+                      <Dialog
+                        open={documentUploadOpen}
+                        onOpenChange={setDocumentUploadOpen}
+                      >
+                        <DialogTrigger asChild>
+                          <Button size="sm" variant="outline">
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload Documents
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-lg">
+                          <DialogHeader>
+                            <DialogTitle>Upload Travel Documents</DialogTitle>
+                            <DialogDescription>
+                              Upload visual documentation for this travel
+                              (receipts, tickets, etc.)
+                            </DialogDescription>
+                          </DialogHeader>
 
-                        <div className="space-y-4 py-4">
-                          <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                            <Input
-                              id="doc-upload"
-                              type="file"
-                              multiple
-                              accept="image/*,application/pdf"
-                              onChange={handleFileSelect}
-                              className="hidden"
-                            />
-                            <label htmlFor="doc-upload" className="cursor-pointer">
-                              <div className="text-sm text-muted-foreground">
-                                <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                                <p className="font-medium">Click to upload documents</p>
-                                <p className="text-xs">PNG, JPG, PDF (max. 10MB each)</p>
+                          <div className="space-y-4 py-4">
+                            <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                              <Input
+                                id="doc-upload"
+                                type="file"
+                                multiple
+                                accept="image/*,application/pdf"
+                                onChange={handleFileSelect}
+                                className="hidden"
+                              />
+                              <label
+                                htmlFor="doc-upload"
+                                className="cursor-pointer"
+                              >
+                                <div className="text-sm text-muted-foreground">
+                                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                                  <p className="font-medium">
+                                    Click to upload documents
+                                  </p>
+                                  <p className="text-xs">
+                                    PNG, JPG, PDF (max. 10MB each)
+                                  </p>
+                                </div>
+                              </label>
+                            </div>
+
+                            {uploadFiles.length > 0 && (
+                              <div className="space-y-2">
+                                <p className="text-sm font-medium">
+                                  Selected files ({uploadFiles.length}):
+                                </p>
+                                <div className="space-y-2 max-h-48 overflow-y-auto">
+                                  {uploadFiles.map((file, index) => (
+                                    <div
+                                      key={index}
+                                      className="flex items-center justify-between p-2 bg-muted rounded text-sm"
+                                    >
+                                      <span className="truncate">
+                                        {file.name}
+                                      </span>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => removeFile(index)}
+                                      >
+                                        ✕
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
-                            </label>
+                            )}
                           </div>
 
-                          {uploadFiles.length > 0 && (
-                            <div className="space-y-2">
-                              <p className="text-sm font-medium">Selected files ({uploadFiles.length}):</p>
-                              <div className="space-y-2 max-h-48 overflow-y-auto">
-                                {uploadFiles.map((file, index) => (
-                                  <div
-                                    key={index}
-                                    className="flex items-center justify-between p-2 bg-muted rounded text-sm"
-                                  >
-                                    <span className="truncate">{file.name}</span>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => removeFile(index)}
-                                    >
-                                      ✕
-                                    </Button>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <DialogFooter>
-                          <Button
-                            variant="outline"
-                            onClick={() => {
-                              setDocumentUploadOpen(false);
-                              setUploadFiles([]);
-                            }}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            onClick={handleDocumentUpload}
-                            disabled={uploadTravelDocs.isPending || uploadFiles.length === 0}
-                          >
-                            {uploadTravelDocs.isPending ? "Uploading..." : "Upload Documents"}
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                          <DialogFooter>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setDocumentUploadOpen(false);
+                                setUploadFiles([]);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              onClick={handleDocumentUpload}
+                              disabled={
+                                uploadTravelDocs.isPending ||
+                                uploadFiles.length === 0
+                              }
+                            >
+                              {uploadTravelDocs.isPending
+                                ? "Uploading..."
+                                : "Upload Documents"}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
                     )}
 
                     <CollapsibleTrigger>Show documents</CollapsibleTrigger>
@@ -1276,7 +1357,9 @@ export const TravelDetail = () => {
                                       variant="destructive"
                                       size="sm"
                                       className="h-8 px-2"
-                                      onClick={() => handleDeleteDocument(travelDoc.id!)}
+                                      onClick={() =>
+                                        handleDeleteDocument(travelDoc.id!)
+                                      }
                                       disabled={deleteTravelDocument.isPending}
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -1296,7 +1379,6 @@ export const TravelDetail = () => {
               </CollapsibleContent>
             </Collapsible>
           </Card>
-
         </div>
 
         {/* Sidebar */}
@@ -1320,7 +1402,9 @@ export const TravelDetail = () => {
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={() => navigate(`/employee/travels/${travelId}/expenses`)}
+                onClick={() =>
+                  navigate(`/employee/travels/${travelId}/expenses`)
+                }
               >
                 Manage Expenses
               </Button>
@@ -1372,9 +1456,18 @@ export const TravelDetail = () => {
                             >
                               <option value="">Select user</option>
                               {users
-                                .filter(user => !travel.travelMembers?.some(member => member.member_id === user.userId))
+                                .filter(
+                                  (user) =>
+                                    !travel.travelMembers?.some(
+                                      (member) =>
+                                        member.member_id === user.userId,
+                                    ),
+                                )
                                 .map((user) => (
-                                  <option key={user.userId} value={user.userId!}>
+                                  <option
+                                    key={user.userId}
+                                    value={user.userId!}
+                                  >
                                     {user.name}
                                   </option>
                                 ))}
@@ -1442,13 +1535,16 @@ export const TravelDetail = () => {
                                 Remove Member?
                               </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to remove {member.name} from this travel?
+                                Are you sure you want to remove {member.name}{" "}
+                                from this travel?
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
-                                onClick={() => handleDeleteMember(member.id || "")}
+                                onClick={() =>
+                                  handleDeleteMember(member.id || "")
+                                }
                                 className="bg-destructive hover:bg-destructive/90"
                               >
                                 Remove

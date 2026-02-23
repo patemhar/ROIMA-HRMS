@@ -34,6 +34,8 @@ public enum PermissionEnum {
 
     ADMIN("PER053", "Admin permissions"),
 
+    READ_ALL_TRAVELS("PER023", "Read all travels"),
+
     // Notification permissions
     NOTIFICATION_SUBSCRIBE("PER020", "Subscribe to notifications");
 

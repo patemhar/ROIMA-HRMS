@@ -15,6 +15,7 @@ public interface GameSlotRepository extends JpaRepository<GameSlot, UUID> {
     @Query("""
         SELECT gs FROM GameSlot gs
         WHERE gs.game.id = :gameId AND gs.gameCycle.id = :cycleId AND gs.slotDate = :date
+        ORDER BY gs.startTime
     """)
     List<GameSlot> findSlotByDate(UUID gameId, UUID cycleId, LocalDate date);
 

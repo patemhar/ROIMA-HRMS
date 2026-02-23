@@ -144,16 +144,30 @@ export const UserManagementPage = () => {
     }
 
     try {
+
+      console.log("Saving profile with data:", {
+         profileId: userProfileQuery.data.id,
+        data: {
+          userId: editProfileForm.userId,
+          empNumber: editProfileForm.empNumber,
+          departmentId: editProfileForm.departmentId,
+          joinedDate: editProfileForm.joinedDate,
+          phone: editProfileForm.phone,
+          bio: editProfileForm.bio,
+          location: editProfileForm.location,
+        },
+      });
+
       await updateProfileMutation.mutateAsync({
         profileId: userProfileQuery.data.id,
         data: {
-          userId: toOptional(editProfileForm.userId),
-          empNumber: toOptional(editProfileForm.empNumber),
-          departmentId: toOptional(editProfileForm.departmentId),
-          joinedDate: toOptional(editProfileForm.joinedDate),
-          phone: toOptional(editProfileForm.phone),
-          bio: toOptional(editProfileForm.bio),
-          location: toOptional(editProfileForm.location),
+          userId: editProfileForm.userId,
+          empNumber: editProfileForm.empNumber,
+          departmentId: editProfileForm.departmentId,
+          joinedDate: editProfileForm.joinedDate,
+          phone: editProfileForm.phone,
+          bio: editProfileForm.bio,
+          location: editProfileForm.location,
         },
       });
 
@@ -408,7 +422,7 @@ export const UserManagementPage = () => {
                 <TableBody>
                   {users.map((user) => (
                     <TableRow key={user.id}>
-                      <TableCell>{user.id}</TableCell>
+                      <TableCell><span className="wrap-break-word text-wrap">{user.id}</span></TableCell>
                       <TableCell className="font-medium">
                         {user.first_name} {user.last_name}
                       </TableCell>
@@ -420,7 +434,7 @@ export const UserManagementPage = () => {
                           {user.role}
                         </Badge>
                       </TableCell>
-                      <TableCell>{user.reports_to || "Null"}</TableCell>
+                      <TableCell>{user.reports_to?.substring(39) || "Null"}</TableCell>
                       <TableCell>
                         <Badge
                           variant={user.is_active ? "default" : "secondary"}

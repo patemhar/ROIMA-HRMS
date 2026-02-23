@@ -4,9 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.constraints.*;
 import java.util.List;
 
 @Getter
@@ -15,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class ExpenseDocRequest {
 
+    @NotEmpty(message = "Expense documents are required")
     private List<MultipartFile> expense_docs;
 
 }

@@ -9,9 +9,15 @@ class organizationService {
 
     getNextLayer(
         id: string
-    ) : ApiResult<Schemas["nodeResponse"][]> {
-        return apiClient.get<Schemas["nodeResponse"][]>(
+    ) : ApiResult<Schemas["UserDetailResponse"][]> {
+        return apiClient.get<Schemas["UserDetailResponse"][]>(
             `org/${id}`
+        )
+    }
+
+    getMyManager() : ApiResult<Schemas["UserDetailResponse"]> {
+        return apiClient.get<Schemas["UserDetailResponse"]>(
+            `org/my-manager`
         )
     }
 

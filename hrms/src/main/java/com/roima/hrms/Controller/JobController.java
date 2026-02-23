@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,14 +58,14 @@ public class JobController {
 
     @PostMapping("/share")
     @PreAuthorize("hasAuthority('PER005')")
-    public ApiResponse<Void> shareJob(@RequestBody ShareJobRequest request) {
+    public ApiResponse<Void> shareJob(@RequestBody @Valid ShareJobRequest request) {
         jobService.shareJob(request, securityUtil.getCurrentUser());
         return ApiResponse.success(null, "Job shared successfully");
     }
 
     @PostMapping(value = "/refer", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('PER005')")
-    public ApiResponse<Void> referFriend(@ModelAttribute ReferralRequest request) throws java.io.IOException {
+    public ApiResponse<Void> referFriend(@ModelAttribute @Valid ReferralRequest request) throws java.io.IOException {
         jobService.referFriend(request, securityUtil.getCurrentUser());
         return ApiResponse.success(null, "Referral submitted successfully");
     }

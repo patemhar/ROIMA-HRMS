@@ -33,11 +33,13 @@ import { useGetExpenses, useApproveExpense, useRejectExpense, useDeleteExpense, 
 import { toast } from "sonner";
 import { getErrorMessage } from "@/utils/error";
 import { travelService } from "@/services/travelService";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useQueries } from "@tanstack/react-query";
 import { useTravelById } from "@/hooks/travel/travel.hooks";
+import { useGetAllUsers } from "@/hooks/util/util.hooks";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export const ExpenseManagementPage = () => {
+export const ExpenseManagement = () => {
   const { id: travelId } = useParams<{ id: string }>();
   
   const navigate = useNavigate();
@@ -55,23 +57,23 @@ export const ExpenseManagementPage = () => {
   const travelQuery = useTravelById(travelId!);
   const travel = travelQuery.data;
 
+  const usersQuery = useGetAllUsers();
+  const users = usersQuery.data;
+
   const isHR = user?.role === "HR";
   const isTravelMember = travel?.travelMembers?.some(member => member.member_id === user?.id);
 
-  // Per-expense state stored in Maps keyed by expenseId
   const [approveMessages, setApproveMessages] = useState(new Map<string, string>());
   const [rejectMessages, setRejectMessages] = useState(new Map<string, string>());
   const [uploadFilesMap, setUploadFilesMap] = useState(new Map<string, File[]>());
   const [uploadInputKeys, setUploadInputKeys] = useState(new Map<string, number>());
 
-  // All mutations at page level
   const approveExpense = useApproveExpense();
   const rejectExpense = useRejectExpense();
   const deleteExpense = useDeleteExpense();
   const deleteExpenseDocument = useDeleteExpenseDocument();
   const uploadExpenseDocs = useUploadExpenseDocs();
 
-  // Fetch all expense documents in a single batch
   const documentsQueries = useQueries({
     queries: (expenses ?? []).map(expense => ({
       queryKey: ['expense-docs', expense.id],
@@ -90,6 +92,7 @@ export const ExpenseManagementPage = () => {
       const response = await approveExpense.mutateAsync({ expenseId, travelId: travelId!, data: message });
       toast.success(response.message || "Expense approved successfully.");
       setApproveMessages(prev => { const m = new Map(prev); m.delete(expenseId); return m; });
+      expenseQuery.refetch();
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -101,6 +104,7 @@ export const ExpenseManagementPage = () => {
       const response = await rejectExpense.mutateAsync({ expenseId, travelId: travelId!, data: message });
       toast.success(response.message || "Expense rejected successfully.");
       setRejectMessages(prev => { const m = new Map(prev); m.delete(expenseId); return m; });
+      expenseQuery.refetch();
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -110,6 +114,7 @@ export const ExpenseManagementPage = () => {
     try {
       await deleteExpense.mutateAsync({ expenseId, travelId: travelId! });
       toast.success("Expense deleted successfully");
+      expenseQuery.refetch();
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -119,6 +124,7 @@ export const ExpenseManagementPage = () => {
     try {
       await deleteExpenseDocument.mutateAsync({ docId, expenseId });
       toast.success("Document deleted successfully");
+      documentsQueries.forEach(q => q.refetch());
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -146,6 +152,7 @@ export const ExpenseManagementPage = () => {
       toast.success(response.message || "Documents uploaded successfully.");
       setUploadFilesMap(prev => new Map(prev).set(expenseId, []));
       setUploadInputKeys(prev => new Map(prev).set(expenseId, (prev.get(expenseId) ?? 0) + 1));
+      documentsQueries.forEach(q => q.refetch());
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -155,11 +162,11 @@ export const ExpenseManagementPage = () => {
 
   const addExpense = useAddExpense();
 
-  // expense form
   const {
     register: expenseRegister,
     handleSubmit: expenseSubmit,
     reset: resetExpense,
+    control: expenseControl,
     formState: { errors: expenseErrors },
   } = useForm({
     mode: "onChange",
@@ -173,7 +180,6 @@ export const ExpenseManagementPage = () => {
     },
   });
 
-  // Handler for Expense
   const onExpenseSubmit = async (data: any) => {
 
     try {
@@ -188,8 +194,8 @@ export const ExpenseManagementPage = () => {
 
       setAddExpenseDialogOpen(false);
       resetExpense();
+      expenseQuery.refetch();
     } catch (error) {
-      toast.error(getErrorMessage(error));
     }
   };
 
@@ -208,6 +214,20 @@ export const ExpenseManagementPage = () => {
       </div>
     );
   }
+
+  const groupByCurrencyAndStatus = () => {
+    const groups: Record<string, Record<string, any[]>> = {};
+    expenses?.forEach(expense => {
+      const currency = expense.currency || 'INR';
+      const status = expense.status || 'DRAFT';
+      if (!groups[currency]) groups[currency] = {};
+      if (!groups[currency][status]) groups[currency][status] = [];
+      groups[currency][status].push(expense);
+    });
+    return groups;
+  };
+
+  const groupedExpenses = groupByCurrencyAndStatus();
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -247,13 +267,11 @@ export const ExpenseManagementPage = () => {
               </DialogDescription>
             </DialogHeader>
 
-            {/* Use expenseSubmit wrapper here */}
             <form
               onSubmit={expenseSubmit(onExpenseSubmit)}
               className="space-y-5 py-4"
             >
               <div className="grid gap-4">
-                {/* Title */}
                 <div className="space-y-2">
                   <Label htmlFor="expense-title">Title *</Label>
                   <Input
@@ -273,15 +291,26 @@ export const ExpenseManagementPage = () => {
                   )}
                 </div>
 
-                {/* Paid By */}
                 <div className="space-y-2">
-                  <Label htmlFor="paid_by">Paid By *</Label>
-                  <Input
-                    id="paid_by"
-                    placeholder="Name of employee"
-                    {...expenseRegister("paid_by", {
-                      required: "Who paid for this?",
-                    })}
+                  <Label>Paid By *</Label>
+                  <Controller
+                    name="paid_by"
+                    control={expenseControl}
+                    rules={{ required: "Please select an employee" }}
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className={expenseErrors.paid_by ? "border-destructive" : ""}>
+                          <SelectValue placeholder="Select employee" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {users?.map(user => (
+                            <SelectItem key={user.userId} value={user.userId!}>
+                              {user.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   />
                   {expenseErrors.paid_by && (
                     <p className="text-sm text-destructive">
@@ -379,47 +408,51 @@ export const ExpenseManagementPage = () => {
         )}
       </div>
 
-      {/* Total Expense Card */}
       {expenses && expenses.length > 0 && (
-        <Card className="mb-6 border-primary/20 bg-linear-to-r from-primary/5 to-primary/10">
+        <Card className="mb-6">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground font-medium">Total Expenses</p>
-                <p className="text-3xl font-bold text-primary mt-1">
-                  {expenses.reduce((sum, expense) => {
-                    // Group by currency
-                    return sum + (expense.amount || 0);
-                  }, 0).toFixed(2)}
-                  {" "}
-                  <span className="text-lg text-muted-foreground">
-                    {expenses[0]?.currency || 'INR'}
-                  </span>
-                </p>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-muted-foreground font-medium">Total Expenses by Currency</p>
               <div className="bg-primary/10 p-4 rounded-full">
                 <Wallet className="h-8 w-8 text-primary" />
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Approved</p>
-                <p className="font-semibold text-green-600">
-                  {expenses.filter(e => e.status === 'APPROVED').reduce((sum, e) => sum + (e.amount || 0), 0).toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Pending</p>
-                <p className="font-semibold text-yellow-600">
-                  {expenses.filter(e => e.status === 'SUBMITTED' || e.status === 'DRAFT').reduce((sum, e) => sum + (e.amount || 0), 0).toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Rejected</p>
-                <p className="font-semibold text-red-600">
-                  {expenses.filter(e => e.status === 'REJECTED').reduce((sum, e) => sum + (e.amount || 0), 0).toFixed(2)}
-                </p>
-              </div>
+            <div className="space-y-4">
+              {Object.entries(groupedExpenses).map(([currency, statusGroups]) => {
+                const getTotal = (statuses: string[]) => {
+                  return statuses.reduce((sum, status) => {
+                    const expenses = statusGroups[status] || [];
+                    return sum + expenses.reduce((s, e) => s + (e.amount || 0), 0);
+                  }, 0);
+                };
+
+                const total = getTotal(['APPROVED', 'SUBMITTED', 'REJECTED']);
+                const approved = getTotal(['APPROVED']);
+                const pending = getTotal(['SUBMITTED']);
+                const rejected = getTotal(['REJECTED']);
+                
+                return (
+                  <div key={currency} className="border-b pb-4 last:border-0 last:pb-0">
+                    <p className="text-2xl font-bold text-primary mb-2">
+                      {total.toFixed(2)} <span className="text-lg text-muted-foreground">{currency}</span>
+                    </p>
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground">Approved</p>
+                        <p className="font-semibold text-green-600">{approved.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Pending</p>
+                        <p className="font-semibold text-yellow-600">{pending.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Rejected</p>
+                        <p className="font-semibold text-red-600">{rejected.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -434,12 +467,10 @@ export const ExpenseManagementPage = () => {
             <div className="space-y-4">
               {expenses.map((expense, idx) => {
                 const expenseId = expense.id;
-                // Read per-expense state from Maps
                 const approveMessage = approveMessages.get(expenseId!) || "";
                 const rejectMessage = rejectMessages.get(expenseId!) || "";
                 const uploadFiles = uploadFilesMap.get(expenseId!) || [];
                 const uploadInputKey = uploadInputKeys.get(expenseId!) || 0;
-                // Documents from batched queries
                 const docsQuery = documentsQueries[idx];
                 const documents = docsQuery?.data;
                 const isDocsLoading = docsQuery?.isLoading;
@@ -503,23 +534,25 @@ export const ExpenseManagementPage = () => {
                               Paid By:
                             </span>{" "}
                             <span className="font-medium text-foreground">
-                              {expense.paid_by}
+                              {expense.paid_by?.substring(39) || "Unknown Employee"}
                             </span>
                           </p>
-                          <p>
-                            <span className="text-muted-foreground">
-                              Action taken By:
-                            </span>{" "}
-                            <span
-                              className={
-                                expense.approved_by
-                                  ? "font-medium text-foreground"
-                                  : "text-orange-500 italic"
-                              }
-                            >
-                              {expense.approved_by || "Pending Approval"}
-                            </span>
-                          </p>
+                          { expense.status != "SUBMITTED" && (
+                            <p>
+                              <span className="text-muted-foreground">
+                                Action taken By:
+                              </span>{" "}
+                              <span
+                                className={
+                                  expense.approved_by
+                                    ? "font-medium text-foreground"
+                                    : "text-orange-500 italic"
+                                }
+                              >
+                                {expense.approved_by?.substring(39) || "Pending Approval"}
+                              </span>
+                            </p>
+                          )}
                         </div>
 
                         {expense.remark && (
@@ -529,7 +562,6 @@ export const ExpenseManagementPage = () => {
                           </p>
                         )}
 
-                        {/* Document Upload Section */}
                         {(isHR || isTravelMember) && expenseId && (
                           <div className="mt-4 space-y-4">
                             <div className="flex items-center gap-2">
@@ -576,7 +608,6 @@ export const ExpenseManagementPage = () => {
                           </div>
                         )}
 
-                        {/* Attached Documents */}
                         {expenseId && (
                           <div className="space-y-2 mt-2">
                             {isDocsLoading ? (
@@ -614,9 +645,8 @@ export const ExpenseManagementPage = () => {
                       </div>
                     </div>
 
-                    {expense.status === "SUBMITTED" && canApproveExpenses && (
+                    {expense.status === "SUBMITTED" && canApproveExpenses && (expense.paid_by?.substring(0, 36) != user?.id) && (
                       <div className="flex items-center gap-2 self-end md:self-center">
-                        {/* Delete Expense */}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50">
@@ -639,7 +669,6 @@ export const ExpenseManagementPage = () => {
                           </AlertDialogContent>
                         </AlertDialog>
 
-                        {/* Approve */}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="sm" variant="outline" className="text-green-600 hover:bg-green-50">
@@ -669,7 +698,6 @@ export const ExpenseManagementPage = () => {
                           </AlertDialogContent>
                         </AlertDialog>
 
-                        {/* Reject */}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="sm" variant="outline" className="text-destructive border-destructive/20 hover:bg-destructive/5">

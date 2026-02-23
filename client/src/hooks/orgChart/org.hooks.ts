@@ -20,3 +20,21 @@ export const useNextLayer = (userId: string) => {
         ...normalCacheConfig
     })
 }
+
+export const useMyManager = () => {
+    const isAuthenticated = useAuth(u => u.auth.isAuthenticated);
+
+    return useQuery({
+        queryKey: orgKeys.myManager(),
+        queryFn: async () => {
+            const response = await orgService.getMyManager();
+
+            if(!response.success || !response.data)
+                throw new Error(response.errors || "Failed to fetch manager.")
+
+            return response.data;
+        },
+        enabled: isAuthenticated,
+        ...normalCacheConfig
+    })
+}

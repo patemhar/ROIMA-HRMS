@@ -56,6 +56,10 @@ public class TravelServiceImpl implements TravelService{
 
         var existingTravel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
 
+        if (!existingTravel.isActive()) {
+            throw new RuntimeException("Travel has been deleted");
+        }
+
         return travelMapper.toResponse(existingTravel);
     }
 
@@ -82,7 +86,7 @@ public class TravelServiceImpl implements TravelService{
 
         if (role.equals("HR")) {
 
-            travels = travelRepository.findAll();
+            travels = travelRepository.findAllActive();
 
         } else if (role.equals("MANAGER")) {
 
@@ -272,8 +276,8 @@ public class TravelServiceImpl implements TravelService{
             throw new RuntimeException("Not allowed");
         }
 
-        travelRepository.delete(travel);
-
+        travel.setActive(false);
+        travelRepository.save(travel);
     }
 
     private Travel validateAccess(UUID travelId) {
@@ -281,6 +285,10 @@ public class TravelServiceImpl implements TravelService{
         User currentUser = securityUtil.getCurrentUser();
         Travel travel = travelRepository.findById(travelId)
                 .orElseThrow(() -> new RuntimeException("Travel not found"));
+
+        if (!travel.isActive()) {
+            throw new RuntimeException("Travel has been deleted");
+        }
 
         String role = currentUser.getRole().getName();
 

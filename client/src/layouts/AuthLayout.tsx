@@ -39,11 +39,10 @@ export const AuthLayout = () => {
               <Outlet />
             </div>
           </div>
+          <div className="text-center w-full text-sm text-muted-foreground">
+            &copy; {new Date().getFullYear()} Roima Intelligence. All rights reserved.
+          </div>
         </Card>
-      </div>
-
-      <div className="absolute bottom-4 text-center w-full text-sm text-muted-foreground">
-        &copy; {new Date().getFullYear()} Roima Intelligence. All rights reserved.
       </div>
     </div>
   );

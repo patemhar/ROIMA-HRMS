@@ -1,5 +1,6 @@
 package com.roima.hrms.Service.Implementation;
 
+import com.roima.hrms.Core.Entities.Travel;
 import com.roima.hrms.Core.Entities.TravelExpense;
 import com.roima.hrms.Core.Entities.User;
 import com.roima.hrms.Core.Enums.ExpenseStatus;
@@ -36,18 +37,22 @@ public class TravelExpenseServiceImpl implements TravelExpenseService {
     @Override
     public void approveExpense(UUID expenseId, String remark) {
 
-        if (remark == null || remark.isBlank()) {
+        if (remark.trim().isEmpty()) {
             throw new RuntimeException("Approve remark is mandatory");
         }
 
         User currentUser = securityUtil.getCurrentUser();
 
-        if (!currentUser.getRole().getName().equals("HR")) {
-            throw new RuntimeException("Only HR can approve expenses");
-        }
-
         TravelExpense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new RuntimeException("Expense not found"));
+
+        if (!expense.isActive()) {
+            throw new RuntimeException("Cannot approve a deleted expense");
+        }
+
+        if (!currentUser.getRole().getName().equals("HR") || currentUser.getId().equals(expense.getPaid_by().getId())) {
+            throw new RuntimeException("Access Denied");
+        }
 
         if (expense.getStatus() != ExpenseStatus.SUBMITTED) {
             throw new RuntimeException("Only submitted expenses can be approved");
@@ -72,7 +77,7 @@ public class TravelExpenseServiceImpl implements TravelExpenseService {
     @Override
     public void rejectExpense(UUID expenseId, String remark) {
 
-        if (remark == null || remark.isBlank()) {
+        if (remark.trim().isEmpty()) {
             throw new RuntimeException("Reject remark is mandatory");
         }
 
@@ -84,6 +89,10 @@ public class TravelExpenseServiceImpl implements TravelExpenseService {
 
         TravelExpense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new RuntimeException("Expense not found"));
+
+        if (!expense.isActive()) {
+            throw new RuntimeException("Cannot reject a deleted expense");
+        }
 
         if (expense.getStatus() != ExpenseStatus.SUBMITTED) {
             throw new RuntimeException("Only submitted expenses can be rejected");
@@ -130,12 +139,15 @@ public class TravelExpenseServiceImpl implements TravelExpenseService {
             throw new RuntimeException("Not allowed to delete this expense");
         }
 
-        expenseRepository.deleteById(expenseId);
+        expense.setActive(false);
+        expenseRepository.save(expense);
     }
 
     @Override
     public void deleteTravel(UUID travelId) {
-        travelRepository.deleteById(travelId);
+        Travel travel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("Travel not found"));
+        travel.setActive(false);
+        travelRepository.save(travel);
     }
 
     @Override
@@ -154,8 +166,7 @@ public class TravelExpenseServiceImpl implements TravelExpenseService {
 
         var existingTravel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
 
-        // cant add expense before and after 2 days of travel dates
-        if(dto.getExpenseDate().isAfter(existingTravel.getStart_date().plusDays(2))) {
+        if(dto.getExpenseDate().isBefore(existingTravel.getStart_date().minusDays(2))) {
             throw new RuntimeException("Expense cant be added before 2 days of travel start date.");
         }
 
@@ -172,8 +183,7 @@ public class TravelExpenseServiceImpl implements TravelExpenseService {
 
         var savedTravelExpense = travelExpenseRepository.save(travelExpense);
 
-        // Notify HR about new expense submission
-        User hrUser = existingTravel.getCreatedBy(); // Travel creator is HR
+        User hrUser = existingTravel.getCreatedBy();
         if (hrUser != null && !hrUser.getId().equals(currentUser.getId())) {
             String title = "New Travel Expense Submitted";
             String message = currentUser.getFirst_name() + " " + currentUser.getLast_name() +
