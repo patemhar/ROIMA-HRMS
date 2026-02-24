@@ -26,7 +26,12 @@ public class CycleScheduler {
 
         List<Game> games = gameRepo.findAll();
 
-        for(Game game : games) {
+        for (Game game : games) {
+
+            var currentDay = LocalDateTime.now().getDayOfWeek();
+            if(!game.getActiveOnWeekends() && (currentDay.name().equals("SATURDAY") || currentDay.name().equals("SUNDAY"))) {
+                continue;
+            }
 
             Optional<GameBookingCycle> currentCycle = cycleRepo.getCurrentCycle(game.getId());
 

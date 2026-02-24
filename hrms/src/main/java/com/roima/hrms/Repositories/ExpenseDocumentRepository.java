@@ -14,4 +14,6 @@ public interface ExpenseDocumentRepository extends JpaRepository<ExpenseDocument
 
     @NativeQuery("SELECT * FROM expense_document where expense_id = ?1")
     List<ExpenseDocument> FindByExpenseId(UUID expenseId);
+
+    Boolean existsByTravelExpenseId(UUID expenseId);
 }

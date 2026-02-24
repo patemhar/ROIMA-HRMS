@@ -26,7 +26,6 @@ public class JobMapper {
         job.setRequired_qualification(dto.getRequired_qualification());
         job.setEmployment_type(dto.getEmployment_type());
         job.setSalary_range(dto.getSalary_range());
-        job.setStatus(JobStatus.valueOf(String.valueOf(dto.getStatus())));
         job.setApplication_deadline(dto.getApplication_deadline());
         job.setMin_experience(dto.getMin_experience());
         job.setLocation(dto.getLocation());
@@ -53,7 +52,6 @@ public class JobMapper {
         dto.setDescription(entity.getDescription());
         dto.setJob_responsibilities(entity.getJob_responsibilities());
         dto.setRequired_qualification(entity.getRequired_qualification());
-        dto.setStatus(entity.getStatus().toString());
         dto.setSalary_range(entity.getSalary_range());
         dto.setLocation(entity.getLocation());
         dto.setEmployment_type(entity.getEmployment_type());

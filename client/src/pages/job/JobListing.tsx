@@ -147,7 +147,6 @@ export const JobListPage = () => {
           createForm.salaryMin && createForm.salaryMax
             ? `${createForm.salaryMin}-${createForm.salaryMax} INR`
             : undefined,
-        status: "OPEN",
         application_deadline: createForm.applicationDeadline
           ? createForm.applicationDeadline
           : undefined,
@@ -199,7 +198,7 @@ export const JobListPage = () => {
 
       const response = await refferMutation.mutateAsync(data);
 
-      setSuccessMessage(response.message || "Friend Reffered successfully");
+      setSuccessMessage(response.message || "Friend Referred successfully");
       setReferFriendOpen(false);
       setRefferForm({
         jobId: "",

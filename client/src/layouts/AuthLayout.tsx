@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
-import logo from "../assets/Roima_logo.png";
+import logo from "/Roima_logo.png";
 
 export const AuthLayout = () => {
   return (

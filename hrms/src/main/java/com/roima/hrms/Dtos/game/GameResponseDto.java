@@ -16,6 +16,7 @@ public class GameResponseDto {
 
     private LocalTime startTime;
     private LocalTime endTime;
+    private Boolean activeOnWeekends;
 
     private Integer slotDurationMinutes;
     private Integer maxPlayersPerSlot;

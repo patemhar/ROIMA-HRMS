@@ -87,7 +87,13 @@ export const ExpenseManagement = () => {
   });
 
   const handleApproveExpense = async (expenseId: string) => {
-    const message = approveMessages.get(expenseId) || "";
+    const message = approveMessages.get(expenseId);
+
+    if(!message) {
+      toast.error("Please provide an approval message.");
+      return;
+    }
+
     try {
       const response = await approveExpense.mutateAsync({ expenseId, travelId: travelId!, data: message });
       toast.success(response.message || "Expense approved successfully.");
@@ -99,7 +105,13 @@ export const ExpenseManagement = () => {
   };
 
   const handleRejectExpense = async (expenseId: string) => {
-    const message = rejectMessages.get(expenseId) || "";
+    const message = rejectMessages.get(expenseId);
+
+    if (!message) {
+      toast.error("Please provide a rejection message.");
+      return;
+    }
+    
     try {
       const response = await rejectExpense.mutateAsync({ expenseId, travelId: travelId!, data: message });
       toast.success(response.message || "Expense rejected successfully.");
@@ -195,7 +207,9 @@ export const ExpenseManagement = () => {
       setAddExpenseDialogOpen(false);
       resetExpense();
       expenseQuery.refetch();
+
     } catch (error) {
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -647,33 +661,18 @@ export const ExpenseManagement = () => {
 
                     {expense.status === "SUBMITTED" && canApproveExpenses && (expense.paid_by?.substring(0, 36) != user?.id) && (
                       <div className="flex items-center gap-2 self-end md:self-center">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50">
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Expense?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the expense and all associated documents.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteExpense(expenseId || "")} className="bg-red-600 hover:bg-red-700">
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
 
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="outline" className="text-green-600 hover:bg-green-50">
-                              Approve
-                            </Button>
+                            {deleteExpense.isPending ? (
+                              <Button size="sm" variant="outline" disabled className="text-green-600 hover:bg-green-50">
+                                Approving...
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="outline" className="text-green-600 hover:bg-green-50">
+                                Approve
+                              </Button>
+                            )}
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
@@ -700,9 +699,15 @@ export const ExpenseManagement = () => {
 
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="outline" className="text-destructive border-destructive/20 hover:bg-destructive/5">
-                              Reject
-                            </Button>
+                            { rejectExpense.isPending ? (
+                              <Button size="sm" variant="outline" disabled className="text-destructive border-destructive/20 hover:bg-destructive/5">
+                                Rejecting...
+                              </Button>
+                            ) : (
+                              <Button size="sm" variant="outline" className="text-destructive border-destructive/20 hover:bg-destructive/5">
+                                Reject
+                              </Button>
+                            )}
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
@@ -722,6 +727,28 @@ export const ExpenseManagement = () => {
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction onClick={() => handleRejectExpense(expenseId || "")} className="bg-destructive hover:bg-destructive/90">
                                 Reject
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                        
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="outline" className="text-red-600 hover:bg-red-50">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Expense?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the expense and all associated documents.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteExpense(expenseId || "")} className="bg-red-600 hover:bg-red-700">
+                                Delete
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

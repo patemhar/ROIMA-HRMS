@@ -1,10 +1,5 @@
 package com.roima.hrms.Controller;
 
-import com.roima.hrms.Core.Entities.ExpenseDocument;
-import com.roima.hrms.Core.Entities.Notification;
-import com.roima.hrms.Core.Entities.TravelDocument;
-import com.roima.hrms.Core.Enums.EntityType;
-import com.roima.hrms.Core.Enums.NotificationType;
 import com.roima.hrms.Dtos.Travel.*;
 import com.roima.hrms.Service.Interfaces.*;
 import com.roima.hrms.Dtos.ApiResponse;
@@ -171,7 +166,7 @@ public class TravelController {
 
     @PostMapping("/{travelId}/expenses")
     @PreAuthorize("hasAuthority('PER021')")
-    public ApiResponse<TravelExpenseResponse> addExpense(@PathVariable UUID travelId, @RequestBody @Valid TravelExpenseRequest request) {
+    public ApiResponse<TravelExpenseResponse> addExpense(@PathVariable UUID travelId, @Valid @RequestBody TravelExpenseRequest request) {
         return ApiResponse.success(travelExpenseService.addTravelExpense(travelId, request), "Expense added successfully");
     }
 

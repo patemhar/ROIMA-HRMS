@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import {
   useGetGame,
   useGetGameCycle,
@@ -284,7 +285,6 @@ const GameDetail = () => {
         participants: memberIds,
       });
 
-      toast.success("Booking request submitted successfully");
       setSelectedSlotId("");
       setSlotFormData({
         slotId: "",
@@ -296,7 +296,6 @@ const GameDetail = () => {
       setSelectedMemberId("");
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
-      console.error("Booking error:", getErrorMessage(error));
     }
   }, [gameId, selectedDate, slotFormData, makeBookingMutation]);
 
@@ -308,7 +307,7 @@ const GameDetail = () => {
       await cancelBookingMutation.mutateAsync(activeBooking.bookingId);
       toast.success("Booking cancelled successfully");
     } catch (error) {
-      console.error("Cancel error:", getErrorMessage(error));
+      toast.error(getErrorMessage(error));
     }
   }, [activeBooking?.bookingId, cancelBookingMutation]);
 
@@ -399,7 +398,7 @@ const GameDetail = () => {
       )}
 
       {/* if user doesnt have latest cycle stats meana he may not have set interest or set it after cycle start */}
-      {!gameStats && !statsQuery.isLoading && (
+      {!gameStats && !statsQuery.isLoading && cycleData && (
         <Card className="border-orange-200 bg-orange-50">
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -501,7 +500,7 @@ const GameDetail = () => {
             </p>
 
             <p className="text-sm text-orange-700">
-              Booking cancellation under 30 minutes of slot start time will result in a penalty.
+              Booking cancellation of confimed requests under 30 minutes of slot start time will result in a penalty.
             </p>
 
             {activeBooking.requestedBy?.substring(0, 36) == currentUserId && (
@@ -533,7 +532,7 @@ const GameDetail = () => {
             <Badge variant="outline">Active</Badge>
           </div>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-2">
+        <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div>
             <Label className="text-sm text-muted-foreground">
               Operating Start Time
@@ -564,6 +563,22 @@ const GameDetail = () => {
             </Label>
             <p className="text-sm font-medium">
               {game.slotDurationMinutes || "N/A"}
+            </p>
+          </div>
+          <div>
+            <Label className="text-sm text-muted-foreground">
+              Interested Players
+            </Label>
+            <p className="text-sm font-medium">
+              {game?.interestedCount || 0}
+            </p>
+          </div>
+          <div>
+            <Label className="text-sm text-muted-foreground">
+              Active On Weekends
+            </Label>
+            <p className="text-sm font-medium">
+              {game.activeOnWeekends ? "Yes" : "No"}
             </p>
           </div>
         </CardContent>
@@ -677,60 +692,63 @@ const GameDetail = () => {
 
               if (slots.length > 0) {
                 return (
-                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                    {slots.map((slot: any) => {
-                      const selectable = isSlotSelectable(slot, selectedDate);
-                      return (
-                        <Card
-                          key={slot.id}
-                          className={`transition-all ${
-                            selectedSlotId === slot.id
-                              ? "border-primary bg-primary/5"
-                              : selectable
-                                ? "cursor-pointer hover:border-primary/50"
-                                : "opacity-50 cursor-not-allowed"
-                          }`}
-                          onClick={
-                            selectable
-                              ? () => handleSlotSelect(slot)
-                              : undefined
-                          }
-                        >
-                          <CardContent className="pt-6">
-                            <div className="space-y-2">
-                              <div>
-                                <p className="text-sm font-medium text-muted-foreground">
-                                  Time
-                                </p>
-                                <p className="text-sm font-semibold">
-                                  {TimeDisplay(slot.startTime)} -{" "}
-                                  {TimeDisplay(slot.endTime)}
-                                </p>
-                              </div>
-                              <div className="border-t pt-2">
-                                <p className="text-sm font-medium text-muted-foreground">
-                                  Queue Count
-                                </p>
-                                <Badge variant="secondary" className="mt-1">
-                                  {slot.queueCount || 0} in queue
-                                </Badge>
-                              </div>
-                              {!selectable && (
+                  <ScrollArea className="w-full">
+                    <div className="gap-3 flex w-full space-x-4 p-3">
+                      {slots.map((slot: any) => {
+                        const selectable = isSlotSelectable(slot, selectedDate);
+                        return (
+                          <Card
+                            key={slot.id}
+                            className={`transition-all w-50 ${
+                              selectedSlotId === slot.id
+                                ? "border-primary bg-primary/5"
+                                : selectable
+                                  ? "cursor-pointer hover:border-primary/50"
+                                  : "opacity-50 cursor-not-allowed"
+                            }`}
+                            onClick={
+                              selectable
+                                ? () => handleSlotSelect(slot)
+                                : undefined
+                            }
+                          >
+                            <CardContent>
+                              <div className="space-y-2">
+                                <div>
+                                  <p className="text-sm font-medium text-muted-foreground">
+                                    Time
+                                  </p>
+                                  <p className="text-sm font-semibold">
+                                    {TimeDisplay(slot.startTime)} -{" "}
+                                    {TimeDisplay(slot.endTime)}
+                                  </p>
+                                </div>
                                 <div className="border-t pt-2">
-                                  <Badge
-                                    variant="outline"
-                                    className="text-xs text-muted-foreground"
-                                  >
-                                    Not Available
+                                  <p className="text-sm font-medium text-muted-foreground">
+                                    Queue Count
+                                  </p>
+                                  <Badge variant="secondary" className="mt-1">
+                                    {slot.queueCount || 0} in queue
                                   </Badge>
                                 </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
+                                {!selectable && (
+                                  <div className="border-t pt-2">
+                                    <Badge
+                                      variant="outline"
+                                      className="text-xs text-muted-foreground"
+                                    >
+                                      Not Available
+                                    </Badge>
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                    <ScrollBar orientation="horizontal" />
+                  </ScrollArea>
                 );
               }
 

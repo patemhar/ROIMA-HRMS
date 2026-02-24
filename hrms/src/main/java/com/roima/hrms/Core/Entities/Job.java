@@ -31,9 +31,6 @@ public class Job extends BaseEntity{
 
     private String salary_range;
 
-    @Enumerated(EnumType.STRING)
-    private JobStatus status;
-
     private LocalDate application_deadline;
 
     private String min_experience;

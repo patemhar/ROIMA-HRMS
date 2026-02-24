@@ -4,10 +4,7 @@ import com.roima.hrms.Core.Entities.Travel;
 import com.roima.hrms.Core.Entities.TravelExpense;
 import com.roima.hrms.Core.Entities.User;
 import com.roima.hrms.Core.Enums.ExpenseStatus;
-import com.roima.hrms.Repositories.TravelExpenseRepository;
-import com.roima.hrms.Repositories.TravelRepository;
-import com.roima.hrms.Repositories.UserRepository;
-import com.roima.hrms.Repositories.TravelMemberRepository;
+import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Mapper.TravelMapper;
 import com.roima.hrms.Service.Interfaces.TravelExpenseService;
 import com.roima.hrms.Dtos.Travel.TravelExpenseRequest;
@@ -33,12 +30,17 @@ public class TravelExpenseServiceImpl implements TravelExpenseService {
     private final com.roima.hrms.Service.Interfaces.NotificationService notificationService;
     private final com.roima.hrms.Service.Interfaces.EmailService emailService;
     private final TravelMemberRepository travelMemberRepo;
+    private final ExpenseDocumentRepository expenseDocumentRepository;
 
     @Override
     public void approveExpense(UUID expenseId, String remark) {
 
         if (remark.trim().isEmpty()) {
             throw new RuntimeException("Approve remark is mandatory");
+        }
+
+        if(!expenseDocumentRepository.existsByTravelExpenseId(expenseId)) {
+            throw new RuntimeException("At least one document is required to approve the expense.");
         }
 
         User currentUser = securityUtil.getCurrentUser();

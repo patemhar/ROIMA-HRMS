@@ -11,6 +11,7 @@ import com.roima.hrms.Service.Interfaces.NotificationService;
 import com.roima.hrms.Service.Interfaces.gameService;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class gameServiceImpl implements gameService {
 
@@ -96,22 +98,12 @@ public class gameServiceImpl implements gameService {
             slotParticipant.setBookingRequest(savedSlotBookingRequest);
             slotParticipant.setUser(existingUser);
 
-            var savedSlotParticipant = slotParticipantRepository.save(slotParticipant);
-
-            // memory
-            existingUser.getMy_participation().add(savedSlotParticipant);
-            savedSlotBookingRequest.getParticipants()
-                    .add(savedSlotParticipant);
+            slotParticipantRepository.save(slotParticipant);
         }
 
         savedSlotBookingRequest.setPriorityScore(teamPriority);
 
         var savedSlotBookingRequest1 = slotBookingRequestRepository.save(savedSlotBookingRequest);
-
-        //memory
-        existingSlot.getBookingRequests().add(savedSlotBookingRequest1);
-
-        processRequests(existingSlot);
 
         var game = existingSlot.getGame();
         String title = "Game Slot Booking Requested";
@@ -121,10 +113,20 @@ public class gameServiceImpl implements gameService {
         for(UUID participantId : request.getParticipants()) {
             var participant = userRepository.findById(participantId).orElse(null);
             if (participant != null) {
+
                 notificationService.createNew(participant, currentUser, NotificationType.SYSTEM, title, message);
-                emailService.sendSimpleMail(participant.getEmail(), title, message);
+
+                new Thread(() -> {
+                    try {
+                        emailService.sendSimpleMail(participant.getEmail(), title, message);
+                    } catch (Exception e) {
+                        log.debug("Failed to send email to " + participant.getEmail() + ": " + e.getMessage());
+                    }
+                }).start();
             }
         }
+
+        processRequests(existingSlot);
 
         return gameMapper.toGameSlotBookingRequestResponse(savedSlotBookingRequest1);
     }
@@ -230,7 +232,14 @@ public class gameServiceImpl implements gameService {
                         String title = "Late Cancellation Penalty";
                         String message = "You cancelled your booking for " + game.getName() + " within 30 minutes of start time. Your play count will not be refunded as a penalty.";
                         notificationService.createNew(sp.getUser(), sp.getUser(), NotificationType.SYSTEM, title, message);
-                        emailService.sendSimpleMail(sp.getUser().getEmail(), title, message);
+
+                        new Thread(() -> {
+                            try {
+                                emailService.sendSimpleMail(sp.getUser().getEmail(), title, message);
+                            } catch (Exception e) {
+                                log.debug("Failed to send email to " + sp.getUser().getEmail() + ": " + e.getMessage());
+                            }
+                        }).start();
                     }
                 }
             }
@@ -301,7 +310,14 @@ public class gameServiceImpl implements gameService {
                 String title = "Game Slot Confirmed!";
                 String message = "Your booking for " + game.getName() + " on " + slot.getSlotDate() + " has been confirmed!";
                 notificationService.createNew(participant.getUser(), participant.getUser(), NotificationType.SYSTEM, title, message);
-                emailService.sendSimpleMail(participant.getUser().getEmail(), title, message);
+
+                new Thread(() -> {
+                    try {
+                        emailService.sendSimpleMail(participant.getUser().getEmail(), title, message);
+                    } catch (Exception e) {
+                        log.debug("Failed to send email to " + participant.getUser().getEmail() + ": " + e.getMessage());
+                    }
+                }).start();
             }
         } else {
             if(!confirmedRequest.getId().equals(bestContender.getId())) {
@@ -322,8 +338,16 @@ public class gameServiceImpl implements gameService {
                     String title = "Game Slot Booking Changed";
                     String message = "Your confirmed booking for " + game.getName() + " on " + slot.getSlotDate() +
                         " has been moved to pending due to a higher priority request.";
+
                     notificationService.createNew(participant.getUser(), participant.getUser(), NotificationType.SYSTEM, title, message);
-                    emailService.sendSimpleMail(participant.getUser().getEmail(), title, message);
+
+                    new Thread(() -> {
+                        try {
+                            emailService.sendSimpleMail(participant.getUser().getEmail(), title, message);
+                        } catch (Exception e) {
+                            log.debug("Failed to send email to " + participant.getUser().getEmail() + ": " + e.getMessage());
+                        }
+                    }).start();
                 }
 
                 int updated = slotBookingRequestRepository.confirmIfNotExists(bestContender.getId());
@@ -347,7 +371,13 @@ public class gameServiceImpl implements gameService {
                     String title = "Game Slot Confirmed!";
                     String message = "Your booking for " + game.getName() + " on " + slot.getSlotDate() + " has been confirmed!";
                     notificationService.createNew(participant.getUser(), participant.getUser(), NotificationType.SYSTEM, title, message);
-                    emailService.sendSimpleMail(participant.getUser().getEmail(), title, message);
+                    new Thread(() -> {
+                        try {
+                            emailService.sendSimpleMail(participant.getUser().getEmail(), title, message);
+                        } catch (Exception e) {
+                            log.debug("Failed to send email to " + participant.getUser().getEmail() + ": " + e.getMessage());
+                        }
+                    }).start();
                 }
             }
         }

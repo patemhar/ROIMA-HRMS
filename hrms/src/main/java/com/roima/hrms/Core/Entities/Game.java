@@ -35,6 +35,9 @@ public class Game extends BaseEntity {
     @Column(nullable = false)
     private Integer maxPlayers;
 
+    @Column(name = "active_on_weekends")
+    private Boolean activeOnWeekends = false;
+
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL)
     private List<GameSlot> slots;
 

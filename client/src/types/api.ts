@@ -692,6 +692,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/org/my-manager": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMyAscendingNode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/notifications/unread": {
         parameters: {
             query?: never;
@@ -1067,17 +1083,19 @@ export interface components {
         ApiResponseVoid: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: Record<string, never>;
         };
         CreatePostRequest: {
-            title?: string;
-            description?: string;
-            tags?: string;
+            title: string;
+            description: string;
+            tags: string;
             visibility?: string;
         };
         ApiResponsePostDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["PostDto"];
         };
         CommentDto: {
@@ -1111,29 +1129,31 @@ export interface components {
             comments?: components["schemas"]["CommentDto"][];
             recentLikers?: string[];
             mediaUrls?: string[];
-            systemGenerated?: boolean;
             likedByCurrentUser?: boolean;
+            systemGenerated?: boolean;
         };
         CommentRequest: {
-            text?: string;
+            text: string;
         };
         ApiResponseCommentDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["CommentDto"];
         };
         TravelRequest: {
-            title?: string;
-            description?: string;
+            title: string;
+            description: string;
             /** Format: date */
-            start_date?: string;
+            start_date: string;
             /** Format: date */
-            end_date?: string;
-            destination?: string;
+            end_date: string;
+            destination: string;
         };
         ApiResponseTravelResponseSummary: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["TravelResponseSummary"];
         };
         TravelMemberResponse: {
@@ -1163,20 +1183,22 @@ export interface components {
         ApiResponseTravelMemberResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["TravelMemberResponse"];
         };
         TravelItineraryRequest: {
-            title?: string;
-            description?: string;
+            title: string;
+            description: string;
             /** Format: date-time */
-            startDateTime?: string;
+            startDateTime: string;
             /** Format: date-time */
-            endDateTime?: string;
-            location?: string;
+            endDateTime: string;
+            location: string;
         };
         ApiResponseTravelItineraryResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["TravelItineraryResponse"];
         };
         TravelItineraryResponse: {
@@ -1192,18 +1214,19 @@ export interface components {
         };
         TravelExpenseRequest: {
             /** Format: uuid */
-            paid_by?: string;
+            paid_by: string;
             /** @enum {string} */
-            expense_type?: "TRANSPORTATION" | "ACCOMMODATION" | "MEALS" | "ENTERTAINMENT";
-            title?: string;
-            amount?: number;
-            currency?: string;
+            expense_type: "TRANSPORTATION" | "ACCOMMODATION" | "MEALS" | "ENTERTAINMENT";
+            title: string;
+            amount: number;
+            currency: string;
             /** Format: date */
-            expenseDate?: string;
+            expenseDate: string;
         };
         ApiResponseTravelExpenseResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["TravelExpenseResponse"];
         };
         TravelExpenseResponse: {
@@ -1227,6 +1250,7 @@ export interface components {
         ApiResponseDocUploadResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["DocUploadResponse"];
         };
         DocUploadResponse: {
@@ -1236,21 +1260,22 @@ export interface components {
         };
         TravelBookingRequest: {
             /** Format: uuid */
-            travel_id?: string;
+            travel_id: string;
             /** @enum {string} */
-            bookingType?: "FLIGHT" | "HOTEL" | "TRAIN" | "BUS" | "CAB" | "OTHER";
-            provider_name?: string;
-            booking_reference?: string;
-            amount?: number;
-            currency?: string;
+            bookingType: "FLIGHT" | "HOTEL" | "TRAIN" | "BUS" | "CAB" | "OTHER";
+            provider_name: string;
+            booking_reference: string;
+            amount: number;
+            currency: string;
             /** Format: date-time */
-            start_dateTime?: string;
+            start_dateTime: string;
             /** Format: date-time */
-            end_dateTime?: string;
+            end_dateTime: string;
         };
         ApiResponseTravelBookingResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["TravelBookingResponse"];
         };
         TravelBookingResponse: {
@@ -1284,6 +1309,7 @@ export interface components {
         ApiResponseProfileResponseDTO: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["ProfileResponseDTO"];
         };
         ProfileResponseDTO: {
@@ -1312,6 +1338,7 @@ export interface components {
             slotDurationMinutes?: number;
             /** Format: int32 */
             maxPlayers?: number;
+            activeOnWeekends?: boolean;
         };
         LocalTime: {
             /** Format: int32 */
@@ -1326,6 +1353,7 @@ export interface components {
         ApiResponseGameResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["GameResponseDto"];
         };
         GameResponseDto: {
@@ -1335,6 +1363,7 @@ export interface components {
             description?: string;
             startTime?: components["schemas"]["LocalTime"];
             endTime?: components["schemas"]["LocalTime"];
+            activeOnWeekends?: boolean;
             /** Format: int32 */
             slotDurationMinutes?: number;
             /** Format: int32 */
@@ -1350,6 +1379,7 @@ export interface components {
         ApiResponseGameSlotBookingRequestResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["GameSlotBookingRequestResponse"];
         };
         GameSlotBookingRequestResponse: {
@@ -1375,6 +1405,7 @@ export interface components {
         ApiResponseRegisterResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["RegisterResponseDto"];
         };
         RegisterResponseDto: {
@@ -1388,6 +1419,7 @@ export interface components {
         ApiResponseAuthResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["AuthResponseDto"];
         };
         AuthResponseDto: {
@@ -1410,6 +1442,7 @@ export interface components {
         ApiResponseString: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: string;
         };
         LoginRequestDto: {
@@ -1438,6 +1471,7 @@ export interface components {
         ApiResponseJobResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["JobResponseDto"];
         };
         JobResponseDto: {
@@ -1460,17 +1494,17 @@ export interface components {
         };
         ShareJobRequest: {
             /** Format: uuid */
-            jobId?: string;
-            recipientEmail?: string[];
+            jobId: string;
+            recipientEmail: string[];
         };
         ReferralRequest: {
             /** Format: uuid */
-            jobId?: string;
-            friendName?: string;
-            friendEmail?: string;
-            note?: string;
+            jobId: string;
+            friendName: string;
+            friendEmail: string;
+            note: string;
             /** Format: binary */
-            cvFile?: string;
+            cvFile: string;
         };
         UserAdminUpdateDTO: {
             firstName?: string;
@@ -1485,6 +1519,7 @@ export interface components {
         ApiResponseUserDetailResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["UserDetailResponse"];
         };
         UserSelfUpdateDTO: {
@@ -1493,13 +1528,13 @@ export interface components {
             email?: string;
         };
         TravelUpdateRequest: {
-            title?: string;
-            description?: string;
+            title: string;
+            description: string;
             /** Format: date */
-            start_date?: string;
+            start_date: string;
             /** Format: date */
-            end_date?: string;
-            destination?: string;
+            end_date: string;
+            destination: string;
         };
         ProfileSelfUpdateDTO: {
             phone?: string;
@@ -1509,16 +1544,19 @@ export interface components {
         ApiResponseListUserDetailResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["UserDetailResponse"][];
         };
         ApiResponseListTravelResponseSummary: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["TravelResponseSummary"][];
         };
         ApiResponseTravelResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["TravelResponse"];
         };
         TravelDocResponse: {
@@ -1553,16 +1591,19 @@ export interface components {
         ApiResponseListTravelItineraryResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["TravelItineraryResponse"][];
         };
         ApiResponseListTravelExpenseResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["TravelExpenseResponse"][];
         };
         ApiResponseListTravelDocumentResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["TravelDocumentResponseDto"][];
         };
         TravelDocumentResponseDto: {
@@ -1578,11 +1619,13 @@ export interface components {
         ApiResponseListTravelBookingResponse: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["TravelBookingResponse"][];
         };
         ApiResponseListExpenseDocumentResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["ExpenseDocumentResponseDto"][];
         };
         ExpenseDocumentResponseDto: {
@@ -1598,6 +1641,7 @@ export interface components {
         ApiResponseListUserCycleStatsDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["UserCycleStatsDto"][];
         };
         UserCycleStatsDto: {
@@ -1612,6 +1656,7 @@ export interface components {
         ApiResponseListNotificationResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["notificationResponseDto"][];
         };
         notificationResponseDto: {
@@ -1634,6 +1679,7 @@ export interface components {
         ApiResponseListSlotResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["SlotResponseDto"][];
         };
         SlotResponseDto: {
@@ -1651,6 +1697,7 @@ export interface components {
         ApiResponseUserActiveBookingDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["UserActiveBookingDto"];
         };
         UserActiveBookingDto: {
@@ -1672,16 +1719,19 @@ export interface components {
         ApiResponseObject: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: Record<string, never>;
         };
         ApiResponseListGameResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["GameResponseDto"][];
         };
         ApiResponseListUserOptions: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["userOptions"][];
         };
         userOptions: {
@@ -1692,6 +1742,7 @@ export interface components {
         ApiResponseListRoleOptions: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["roleOptions"][];
         };
         roleOptions: {
@@ -1702,6 +1753,7 @@ export interface components {
         ApiResponseListGameOptions: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["gameOptions"][];
         };
         gameOptions: {
@@ -1712,6 +1764,7 @@ export interface components {
         ApiResponseListDepartmentOptions: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["departmentOptions"][];
         };
         departmentOptions: {
@@ -1722,6 +1775,7 @@ export interface components {
         ApiResponseListJobSharingRecordResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["JobSharingRecordResponseDto"][];
         };
         JobSharingRecordResponseDto: {
@@ -1736,6 +1790,7 @@ export interface components {
         ApiResponseListReferralResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["ReferralResponseDto"][];
         };
         ReferralResponseDto: {
@@ -1752,27 +1807,32 @@ export interface components {
         ApiResponseListJobResponseDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["JobResponseDto"][];
         };
         ApiResponseListPostDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["PostDto"][];
         };
         ApiResponseLong: {
             success?: boolean;
             message?: string;
+            errors?: string;
             /** Format: int64 */
             data?: number;
         };
         ApiResponseBoolean: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: boolean;
         };
         ApiResponseListCommentDto: {
             success?: boolean;
             message?: string;
+            errors?: string;
             data?: components["schemas"]["CommentDto"][];
         };
     };
@@ -3222,6 +3282,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseListUserDetailResponse"];
+                };
+            };
+        };
+    };
+    getMyAscendingNode: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseUserDetailResponse"];
                 };
             };
         };
