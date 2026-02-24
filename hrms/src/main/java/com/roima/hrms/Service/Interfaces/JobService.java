@@ -28,4 +28,6 @@ public interface JobService {
     List<JobSharingRecordResponseDto> getAllJobSharingRecords();
 
     List<ReferralResponseDto> getAllReferrals();
+
+    void processJobsPassedDeadline();
 }

@@ -315,8 +315,8 @@ export const AchievementsPage = () => {
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Share Achievement
+              <Plus className="md:mr-2 h-4 w-4" />
+              <p className="md:block hidden">Share Achievement</p>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl">

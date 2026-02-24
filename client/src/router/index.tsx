@@ -5,7 +5,7 @@ import NotFound from "@/pages/NotFound";
 import { Travel } from "@/pages/travel/Travel";
 import { MainLayout } from "@/layouts/MainLayout";
 import { TravelDetail } from "@/pages/travel/TravelDetail";
-import { ExpenseManagementPage } from "@/pages/travel/ExpenseManagement";
+import { ExpenseManagement } from "@/pages/travel/ExpenseManagement";
 import { AccountSettingsPage } from "@/pages/AccountSettingsPage";
 import { UserManagementPage } from "@/pages/UserManagement";
 import { JobListPage } from "@/pages/job/JobListing";
@@ -86,7 +86,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "travels/:id/expenses",
-        element: <ExpenseManagementPage />,
+        element: <ExpenseManagement />,
       },
       {
         path: "account",

@@ -49,6 +49,7 @@ public class GameMapper {
         newGame.setOperatingEndTime(requestDto.getOperatingEndTime());
         newGame.setMaxPlayers(requestDto.getMaxPlayers());
         newGame.setSlotDurationMinutes(requestDto.getSlotDurationMinutes());
+        newGame.setActiveOnWeekends(requestDto.getActiveOnWeekends());
 
         return newGame;
     }
@@ -64,6 +65,7 @@ public class GameMapper {
         gameResponse.setMaxPlayersPerSlot(game.getMaxPlayers());
         gameResponse.setStartTime(game.getOperatingStartTime());
         gameResponse.setEndTime(game.getOperatingEndTime());
+        gameResponse.setActiveOnWeekends(game.getActiveOnWeekends());
 
         gameResponse.setInterestedCount(gameInterestRepository.countInterestedUsers(game.getId()));
 
@@ -89,6 +91,9 @@ public class GameMapper {
         }
         if(request.getMaxPlayers() != null) {
             game.setMaxPlayers(request.getMaxPlayers());
+        }
+        if(request.getActiveOnWeekends() != null) {
+            game.setActiveOnWeekends(request.getActiveOnWeekends());
         }
 
         return game;

@@ -6,13 +6,13 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 public class ApiResponse<T> {
     private boolean success;
     private String message;
-    private String erorrs = null;
+    private String errors = null;
     private T data = null;
 
     public ApiResponse(boolean success, String message, String errors, T data) {
         this.success = success;
         this.message = message;
-        this.erorrs = errors;
+        this.errors = errors;
         this.data = data;
     }
 
@@ -26,5 +26,6 @@ public class ApiResponse<T> {
 
     public boolean isSuccess() { return success; }
     public String getMessage() { return message; }
+    public String getErrors() { return errors; }
     public T getData() { return data; }
 }

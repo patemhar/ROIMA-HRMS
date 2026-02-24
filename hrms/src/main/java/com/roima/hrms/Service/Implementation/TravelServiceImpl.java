@@ -11,7 +11,9 @@ import com.roima.hrms.Service.Interfaces.NotificationService;
 import com.roima.hrms.Service.Interfaces.EmailService;
 import com.roima.hrms.Service.Interfaces.TravelService;
 import com.roima.hrms.Utility.SecurityUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,6 +23,7 @@ import java.util.*;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class TravelServiceImpl implements TravelService{
 
     private final TravelRepository travelRepository;
@@ -242,6 +245,17 @@ public class TravelServiceImpl implements TravelService{
     }
 
     @Override
+    @Transactional
+    public void updateTravelStatuses() {
+        try {
+            travelRepository.updateStatus();
+            log.info("updated travel statuses successfully");
+        } catch (Exception e) {
+            log.error("Error updating travel statuses: ", e);
+        }
+    }
+
+    @Override
     public void updateTravel(UUID travelId, TravelUpdateRequest dto) {
 
         Travel travel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
@@ -279,6 +293,8 @@ public class TravelServiceImpl implements TravelService{
         travel.setActive(false);
         travelRepository.save(travel);
     }
+
+    // helpers
 
     private Travel validateAccess(UUID travelId) {
 

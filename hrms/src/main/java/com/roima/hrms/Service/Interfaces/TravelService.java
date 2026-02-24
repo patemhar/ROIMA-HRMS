@@ -19,11 +19,11 @@ public interface TravelService {
 
     List<TravelResponseSummary> getTravels();
 
+    //Travel Member
     void updateTravel(UUID travelId, TravelUpdateRequest dto);
 
     void deleteMember(UUID memberID);
 
-    //Travel Member
     TravelMemberResponse addTravelMember(UUID travelId, UUID userId);
 
     void deleteTravel(UUID travelId);
@@ -45,4 +45,8 @@ public interface TravelService {
     List<TravelItineraryResponse> getTravelItineraries(UUID travelId);
 
     void updateItinerary (UUID itineraryId, TravelItineraryRequest request);
+
+    // status update
+
+    void updateTravelStatuses();
 }

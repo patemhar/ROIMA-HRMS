@@ -368,11 +368,11 @@ export const TravelDetail = () => {
 
   if (travelDetailQuery.isLoading) {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-semibold mb-2">
+      <div className="flex justify-center items-center gap-4 flex-col text-center">
+        <h2 className="text-xl font-semibold mb-2">
           Loading Travel Details for you!
-          <Spinner />
         </h2>
+        <Spinner />
       </div>
     );
   }
@@ -1418,7 +1418,7 @@ export const TravelDetail = () => {
                   <Users className="h-5 w-5" />
                   Travel Members ({travel.travelMembers?.length || 0})
                 </div>
-                {canUpdateTravel && (
+                {canUpdateTravel && travel.status === "PLANNED" && (
                   <Dialog
                     open={addMemberDialogOpen}
                     onOpenChange={(open) => {
@@ -1518,7 +1518,7 @@ export const TravelDetail = () => {
                           </p>
                         </div>
                       </div>
-                      {canUpdateTravel && (
+                      {canUpdateTravel && travel.status === "PLANNED" && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button

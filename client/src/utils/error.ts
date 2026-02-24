@@ -13,12 +13,10 @@ export const getErrorMessage = (error: unknown): string => {
 
     if (payload) {
       
-      const errors = payload.errors || (payload as any).Errors;
-      if (Array.isArray(errors)) {
-        const detailedMessage = errors.filter(Boolean).join(", ");
-        if (detailedMessage) {
-          return detailedMessage;
-        }
+      const errors = payload.errors || (payload as any).errors;
+
+      if (errors) {
+        return errors;
       }
 
       if (errors && typeof errors === "object") {
@@ -31,7 +29,7 @@ export const getErrorMessage = (error: unknown): string => {
         }
       }
 
-      const message = payload.message || (payload as any).Message;
+      const message = payload.message || (payload as any).message;
       if (message) {
         return message;
       }

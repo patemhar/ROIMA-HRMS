@@ -90,6 +90,7 @@ public class CycleService {
         int created = 0;
 
         while (created < slotsRequired) {
+
             LocalTime slotStart = currentTime;
             LocalTime slotEnd = slotStart.plusMinutes(duration);
 
@@ -98,6 +99,15 @@ public class CycleService {
                 currentDate = currentDate.plusDays(1);
                 currentTime = operatingStart;
                 continue;
+            }
+
+            if(!game.getActiveOnWeekends()) {
+                var day = currentDate.getDayOfWeek();
+                if(day.name().equals("SATURDAY") || day.name().equals("SUNDAY")) {
+                    currentDate = currentDate.plusDays(1);
+                    currentTime = operatingStart;
+                    continue;
+                }
             }
 
             GameSlot slot = new GameSlot();

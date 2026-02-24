@@ -19,12 +19,14 @@ import com.roima.hrms.Service.Interfaces.EmailService;
 import com.roima.hrms.Service.Interfaces.JobService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobServiceImpl implements JobService {
@@ -126,5 +128,16 @@ public class JobServiceImpl implements JobService {
     public List<ReferralResponseDto> getAllReferrals() {
         List<Referral> referrals = referralRepository.findAll();
         return referrals.stream().map(referralMapper::toDto).toList();
+    }
+
+    @Override
+    @Transactional
+    public void processJobsPassedDeadline() {
+        try {
+            jobRepository.markJobAsInactive();
+            log.info("Processed jobs passed deadline and marked them as inactive.");
+        } catch(Exception e) {
+            log.error("Error processing jobs passed deadline: ", e);
+        }
     }
 }

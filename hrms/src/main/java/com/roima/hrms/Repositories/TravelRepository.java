@@ -3,6 +3,7 @@ package com.roima.hrms.Repositories;
 import com.roima.hrms.Core.Entities.Travel;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -45,5 +46,17 @@ public interface TravelRepository extends JpaRepository<Travel, UUID> {
 
     @Query("SELECT t FROM Travel t WHERE t.active = true")
     List<Travel> findAllActive();
+
+    @Modifying
+    @Query("""
+        UPDATE Travel t
+        SET t.status = CASE
+            WHEN t.end_date > CURRENT_DATE AND t.start_date < CURRENT_DATE THEN 'ONGOING'
+            WHEN t.end_date < CURRENT_DATE THEN 'COMPLETED'
+            WHEN t.start_date > CURRENT_DATE THEN 'PLANNED'
+            ELSE 'CANCELLED'
+        END
+        """)
+    void updateStatus();
 
 }

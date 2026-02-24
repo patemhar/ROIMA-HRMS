@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { useLogout } from "@/hooks/auth/logout.hooks";
 import { useState } from "react";
 import { Bell, Menu } from "lucide-react";
-import logo from "../assets/Roima_logo.png";
+import logo from "/Roima_logo.png";
 import {
   hasPermission,
   PermissionCode,

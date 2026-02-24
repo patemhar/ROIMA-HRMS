@@ -17,4 +17,6 @@ public class GameCreateRequestDto {
 
     private Integer slotDurationMinutes;
     private Integer maxPlayers;
+
+    private Boolean activeOnWeekends = false;
 }

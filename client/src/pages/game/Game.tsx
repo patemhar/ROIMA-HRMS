@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { components } from "@/types/api";
 import { hasPermission, PermissionCode } from "@/constants/permissions";
+import { toast } from "sonner";
 
 type Schemas = components["schemas"];
 
@@ -48,6 +49,7 @@ export const GamePage = () => {
     endTime: "",
     slotDurationMinutes: 0,
     maxPlayersPerSlot: 0,
+    activeOnWeekends: false,
   });
 
   const handleCreateGame = () => {
@@ -58,6 +60,7 @@ export const GamePage = () => {
       operatingEndTime: (formData.endTime + ":00") as any,
       slotDurationMinutes: formData.slotDurationMinutes,
       maxPlayers: formData.maxPlayersPerSlot,
+      activeOnWeekends: formData.activeOnWeekends,
     };
     createGameMutation.mutate(
       data,
@@ -79,21 +82,24 @@ export const GamePage = () => {
     const data: Schemas["GameCreateRequestDto"] = {
       name: formData.name,
       description: formData.description,
-      operatingStartTime: (formData.startTime + ":00") as any,
-      operatingEndTime: (formData.endTime + ":00") as any,
+      operatingStartTime: (formData.startTime) as any,
+      operatingEndTime: (formData.endTime) as any,
       slotDurationMinutes: formData.slotDurationMinutes,
       maxPlayers: formData.maxPlayersPerSlot,
+      activeOnWeekends: formData.activeOnWeekends,
     };
     updateGameMutation.mutate(
       { id: editingGame.id!, data },
       {
         onSuccess: () => {
           setSuccessMessage("Game updated successfully");
+          toast.success("Game updated successfully");
           setUpdateDialogOpen(false);
           setEditingGame(null);
           resetForm();
         },
         onError: (error) => {
+          toast.error(getErrorMessage(error));
           setErrorMessage(getErrorMessage(error));
         },
       }
@@ -108,6 +114,7 @@ export const GamePage = () => {
       endTime: "",
       slotDurationMinutes: 0,
       maxPlayersPerSlot: 0,
+      activeOnWeekends: false,
     });
   };
 
@@ -122,10 +129,11 @@ export const GamePage = () => {
     setFormData({
       name: game.name || "",
       description: game.description || "",
-      startTime: `${game.startTime?.hour?.toString().padStart(2, '0') || '00'}:${game.startTime?.minute?.toString().padStart(2, '0') || '00'}`,
-      endTime: `${game.endTime?.hour?.toString().padStart(2, '0') || '00'}:${game.endTime?.minute?.toString().padStart(2, '0') || '00'}`,
+      startTime: game.startTime?.toString() || "00:00",
+      endTime: game.endTime?.toString() || "00:00",
       slotDurationMinutes: game.slotDurationMinutes || 0,
       maxPlayersPerSlot: game.maxPlayersPerSlot || 0,
+      activeOnWeekends: game.activeOnWeekends || false,
     });
     setUpdateDialogOpen(true);
   };
@@ -223,6 +231,14 @@ export const GamePage = () => {
                                     {game.interestedCount}
                                 </p>
                             </div>
+                            <div className="flex items-center gap-2">
+                                <Label>
+                                  Active On Weekends: 
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                  {game.activeOnWeekends ? "Yes" : "No"}
+                                </p>
+                            </div>
                           </div>
                         </div>
                         <div className="flex gap-2 mt-5">
@@ -254,7 +270,7 @@ export const GamePage = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="create-name">Name</Label>
                 <Input
                   id="create-name"
@@ -263,7 +279,7 @@ export const GamePage = () => {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="create-description">Description</Label>
                 <Textarea
                   id="create-description"
@@ -273,7 +289,7 @@ export const GamePage = () => {
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="create-startTime">Start Time (HH:MM)</Label>
                   <Input
                     id="create-startTime"
@@ -282,7 +298,7 @@ export const GamePage = () => {
                     onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="create-endTime">End Time (HH:MM)</Label>
                   <Input
                     id="create-endTime"
@@ -293,7 +309,7 @@ export const GamePage = () => {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="create-slotDuration">Slot Duration (Minutes)</Label>
                   <Input
                     id="create-slotDuration"
@@ -304,7 +320,7 @@ export const GamePage = () => {
                     onChange={(e) => setFormData({ ...formData, slotDurationMinutes: Number(e.target.value) })}
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="create-maxPlayers">Max Players per Slot</Label>
                   <Input
                     id="create-maxPlayers"
@@ -313,6 +329,16 @@ export const GamePage = () => {
                     placeholder="e.g., 4"
                     value={formData.maxPlayersPerSlot || ""}
                     onChange={(e) => setFormData({ ...formData, maxPlayersPerSlot: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="weekend">Operational on Weekends: </Label>
+                  <Input
+                    id="weekend"
+                    type="checkbox"
+                    checked={formData.activeOnWeekends}
+                    onChange={(e) => setFormData({ ...formData, activeOnWeekends: e.target.checked })}
+                    className="w-auto"
                   />
                 </div>
               </div>
@@ -338,7 +364,7 @@ export const GamePage = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="update-name">Name</Label>
                 <Input
                   id="update-name"
@@ -346,7 +372,7 @@ export const GamePage = () => {
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="update-description">Description</Label>
                 <Textarea
                   id="update-description"
@@ -355,7 +381,7 @@ export const GamePage = () => {
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="update-startTime">Start Time (HH:MM)</Label>
                   <Input
                     id="update-startTime"
@@ -364,7 +390,7 @@ export const GamePage = () => {
                     onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="update-endTime">End Time (HH:MM)</Label>
                   <Input
                     id="update-endTime"
@@ -375,7 +401,7 @@ export const GamePage = () => {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="update-slotDuration">Slot Duration (Minutes)</Label>
                   <Input
                     id="update-slotDuration"
@@ -385,7 +411,7 @@ export const GamePage = () => {
                     onChange={(e) => setFormData({ ...formData, slotDurationMinutes: Number(e.target.value) })}
                   />
                 </div>
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="update-maxPlayers">Max Players per Slot</Label>
                   <Input
                     id="update-maxPlayers"
@@ -393,6 +419,16 @@ export const GamePage = () => {
                     min="1"
                     value={formData.maxPlayersPerSlot}
                     onChange={(e) => setFormData({ ...formData, maxPlayersPerSlot: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="update-weekend">Operational on Weekends</Label>
+                  <Input
+                    id="update-weekend"
+                    type="checkbox"
+                    className="w-auto"
+                    checked={formData.activeOnWeekends}
+                    onChange={(e) => setFormData({ ...formData, activeOnWeekends: e.target.checked })}
                   />
                 </div>
               </div>
