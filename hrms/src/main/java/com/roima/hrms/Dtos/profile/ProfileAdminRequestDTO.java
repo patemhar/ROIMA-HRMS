@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.profile;
+package com.roima.hrms.dtos.profile;
 
 import lombok.Getter;
 import lombok.Setter;

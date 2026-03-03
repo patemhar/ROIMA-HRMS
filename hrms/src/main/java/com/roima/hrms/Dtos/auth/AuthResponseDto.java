@@ -1,6 +1,6 @@
-package com.roima.hrms.Dtos.auth;
+package com.roima.hrms.dtos.auth;
 
-import com.roima.hrms.Dtos.User.UserDetailResponse;
+import com.roima.hrms.dtos.User.UserDetailResponse;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

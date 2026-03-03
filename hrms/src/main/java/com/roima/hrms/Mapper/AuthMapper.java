@@ -1,10 +1,10 @@
 package com.roima.hrms.Mapper;
 
 import com.roima.hrms.Core.Entities.User;
-import com.roima.hrms.Dtos.auth.AuthResponseDto;
-import com.roima.hrms.Dtos.auth.RegisterRequestDto;
-import com.roima.hrms.Dtos.auth.RegisterResponseDto;
-import com.roima.hrms.Dtos.User.UserDetailResponse;
+import com.roima.hrms.dtos.auth.AuthResponseDto;
+import com.roima.hrms.dtos.auth.RegisterRequestDto;
+import com.roima.hrms.dtos.auth.RegisterResponseDto;
+import com.roima.hrms.dtos.User.UserDetailResponse;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 

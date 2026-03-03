@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.auth;
+package com.roima.hrms.dtos.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
