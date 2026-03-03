@@ -38,8 +38,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         String token = extractAccessToken(request);
 
-        System.out.println("token: "+token);
-
         if (token != null &&
                 SecurityContextHolder.getContext().getAuthentication() == null) {
 
