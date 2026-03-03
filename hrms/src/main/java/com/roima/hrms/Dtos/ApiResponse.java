@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos;
+package com.roima.hrms.dtos;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
