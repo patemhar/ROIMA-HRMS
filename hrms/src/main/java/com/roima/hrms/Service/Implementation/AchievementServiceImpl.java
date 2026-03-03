@@ -3,19 +3,21 @@ package com.roima.hrms.Service.Implementation;
 import com.roima.hrms.Core.Entities.Post;
 import com.roima.hrms.Core.Entities.Profile;
 import com.roima.hrms.Core.Entities.User;
-import com.roima.hrms.Dtos.achievement.PostDto;
+import com.roima.hrms.dtos.achievement.PostDto;
 import com.roima.hrms.Mapper.PostMapper;
 import com.roima.hrms.Repositories.PostRepository;
 import com.roima.hrms.Repositories.ProfileRepository;
 import com.roima.hrms.Service.Interfaces.AchievementService;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +29,7 @@ public class AchievementServiceImpl implements AchievementService {
     private final SecurityUtil securityUtil;
 
     @Override
-    public List<PostDto> getAchievementFeed() {
+    public Page<PostDto> getAchievementFeed(Integer page, Integer size, String search) {
         User currentUser = securityUtil.getCurrentUser();
         String roleName = currentUser.getRole().getName();
 
@@ -46,8 +48,10 @@ public class AchievementServiceImpl implements AchievementService {
                 allowedRoles = List.of();
         }
 
-        List<Post> posts = postRepository.findActivePostsByVisibility(allowedRoles);
-        return posts.stream().map(post -> postMapper.toDto(post, currentUser)).collect(Collectors.toList());
+        Pageable pageable = PageRequest.of(page != null ? page : 0, size != null ? size : 10);
+
+        Page<Post> posts = postRepository.findActivePostsByVisibilityPaged(allowedRoles, search, pageable);
+        return posts.map(post -> postMapper.toDto(post, currentUser));
     }
 
     @Override

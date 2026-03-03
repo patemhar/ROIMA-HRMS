@@ -1,11 +1,12 @@
 package com.roima.hrms.Controller;
 
 import com.roima.hrms.Core.Entities.User;
-import com.roima.hrms.Dtos.ApiResponse;
-import com.roima.hrms.Dtos.achievement.*;
+import com.roima.hrms.dtos.ApiResponse;
+import com.roima.hrms.dtos.achievement.*;
 import com.roima.hrms.Service.Interfaces.*;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,8 +34,12 @@ public class AchievementController {
     // Get achievement feed
     @GetMapping
     @PreAuthorize("hasAuthority('PER022')")
-    public ApiResponse<List<PostDto>> getAchievementFeed() {
-        return ApiResponse.success(achievementService.getAchievementFeed(), "Achievement feed fetched successfully");
+    public ApiResponse<Page<PostDto>> getAchievementFeed(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String search
+    ) {
+        return ApiResponse.success(achievementService.getAchievementFeed(page, size, search), "Achievement feed fetched successfully");
     }
 
     // Create post
@@ -128,6 +133,67 @@ public class AchievementController {
 
         commentService.deleteComment(commentId);
         return ApiResponse.success(null, "Comment deleted successfully");
+    }
+
+    // Like comment
+    @PostMapping("/comments/{commentId}/like")
+    @PreAuthorize("hasAuthority('PER022')")
+    public ApiResponse<Void> likeComment(@PathVariable UUID commentId) {
+        commentService.likeComment(commentId);
+        return ApiResponse.success(null, "Comment liked successfully");
+    }
+
+    // Unlike comment
+    @DeleteMapping("/comments/{commentId}/like")
+    @PreAuthorize("hasAuthority('PER022')")
+    public ApiResponse<Void> unlikeComment(@PathVariable UUID commentId) {
+        commentService.unlikeComment(commentId);
+        return ApiResponse.success(null, "Comment unliked successfully");
+    }
+
+    // Add reply to comment (fetched on-demand)
+    @PostMapping("/comments/{commentId}/replies")
+    @PreAuthorize("hasAuthority('PER022')")
+    public ApiResponse<CommentReplyDto> addReply(@PathVariable UUID commentId, @RequestBody @Valid CommentRequest request) {
+        return ApiResponse.success(commentService.addReply(commentId, request), "Reply added successfully");
+    }
+
+    // Get replies for a comment (called on-demand when user expands)
+    @GetMapping("/comments/{commentId}/replies")
+    @PreAuthorize("hasAuthority('PER022')")
+    public ApiResponse<List<CommentReplyDto>> getReplies(@PathVariable UUID commentId) {
+        return ApiResponse.success(commentService.getRepliesByComment(commentId), "Replies fetched successfully");
+    }
+
+    // Update reply
+    @PutMapping("/replies/{replyId}")
+    @PreAuthorize("hasAuthority('PER022')")
+    public ApiResponse<CommentReplyDto> updateReply(@PathVariable UUID replyId, @RequestBody @Valid CommentRequest request) {
+        return ApiResponse.success(commentService.updateReply(replyId, request), "Reply updated successfully");
+    }
+
+    // Delete reply
+    @DeleteMapping("/replies/{replyId}")
+    @PreAuthorize("hasAuthority('PER022')")
+    public ApiResponse<Void> deleteReply(@PathVariable UUID replyId) {
+        commentService.deleteReply(replyId);
+        return ApiResponse.success(null, "Reply deleted successfully");
+    }
+
+    // Like reply
+    @PostMapping("/replies/{replyId}/like")
+    @PreAuthorize("hasAuthority('PER022')")
+    public ApiResponse<Void> likeReply(@PathVariable UUID replyId) {
+        commentService.likeReply(replyId);
+        return ApiResponse.success(null, "Reply liked successfully");
+    }
+
+    // Unlike reply
+    @DeleteMapping("/replies/{replyId}/like")
+    @PreAuthorize("hasAuthority('PER022')")
+    public ApiResponse<Void> unlikeReply(@PathVariable UUID replyId) {
+        commentService.unlikeReply(replyId);
+        return ApiResponse.success(null, "Reply unliked successfully");
     }
 
     // Like post

@@ -1,11 +1,13 @@
 package com.roima.hrms.Mapper;
 
 import com.roima.hrms.Core.Entities.Comment;
+import com.roima.hrms.Core.Entities.CommentReply;
 import com.roima.hrms.Core.Entities.Post;
 import com.roima.hrms.Core.Entities.PostMedia;
 import com.roima.hrms.Core.Entities.User;
-import com.roima.hrms.Dtos.achievement.CommentDto;
-import com.roima.hrms.Dtos.achievement.PostDto;
+import com.roima.hrms.dtos.achievement.CommentDto;
+import com.roima.hrms.dtos.achievement.CommentReplyDto;
+import com.roima.hrms.dtos.achievement.PostDto;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -45,7 +47,7 @@ public class PostMapper {
         return dto;
     }
 
-    public CommentDto toCommentDto(Comment comment) {
+    public CommentDto toCommentDto(Comment comment, User currentUser) {
         CommentDto dto = new CommentDto();
         dto.setId(comment.getId());
         dto.setPostId(comment.getPost().getId());
@@ -53,10 +55,52 @@ public class PostMapper {
         dto.setAuthorName(comment.getUser().getFirst_name() + " " + comment.getUser().getLast_name());
         dto.setText(comment.getContent());
         dto.setCreatedDate(comment.getCreated_at());
+        dto.setLikeCount(comment.getLikes().size());
+        dto.setReplyCount(comment.getReplies().size());
+        dto.setHasReplies(!comment.getReplies().isEmpty());
+        if (currentUser != null) {
+            boolean liked = comment.getLikes().stream()
+                    .anyMatch(like -> like.getUser().getId().equals(currentUser.getId()));
+            dto.setLikedByCurrentUser(liked);
+        } else {
+            dto.setLikedByCurrentUser(false);
+        }
         return dto;
     }
 
+    // Overload for backward compatibility where currentUser is not available
+    public CommentDto toCommentDto(Comment comment) {
+        return toCommentDto(comment, null);
+    }
+
+    public List<CommentDto> toCommentDtoList(List<Comment> comments, User currentUser) {
+        return comments.stream().map(c -> toCommentDto(c, currentUser)).collect(Collectors.toList());
+    }
+
     public List<CommentDto> toCommentDtoList(List<Comment> comments) {
-        return comments.stream().map(this::toCommentDto).collect(Collectors.toList());
+        return toCommentDtoList(comments, null);
+    }
+
+    public CommentReplyDto toCommentReplyDto(CommentReply reply, User currentUser) {
+        CommentReplyDto dto = new CommentReplyDto();
+        dto.setId(reply.getId());
+        dto.setCommentId(reply.getParentComment().getId());
+        dto.setAuthorId(reply.getUser().getId());
+        dto.setAuthorName(reply.getUser().getFirst_name() + " " + reply.getUser().getLast_name());
+        dto.setText(reply.getContent());
+        dto.setCreatedDate(reply.getCreated_at());
+        dto.setLikeCount(reply.getLikes().size());
+        if (currentUser != null) {
+            boolean liked = reply.getLikes().stream()
+                    .anyMatch(like -> like.getUser().getId().equals(currentUser.getId()));
+            dto.setLikedByCurrentUser(liked);
+        } else {
+            dto.setLikedByCurrentUser(false);
+        }
+        return dto;
+    }
+
+    public List<CommentReplyDto> toCommentReplyDtoList(List<CommentReply> replies, User currentUser) {
+        return replies.stream().map(r -> toCommentReplyDto(r, currentUser)).collect(Collectors.toList());
     }
 }

@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.achievement;
+package com.roima.hrms.dtos.achievement;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
