@@ -7,13 +7,21 @@ import type { components } from "@/types/api";
 type Schemas = components["schemas"];
 
 // Get achievement feed (all posts including celebrations)
-export const useGetAchievements = () => {
+export const useGetAchievements = (
+  pageNumber: number,
+  pageSize: number,
+  searchTerm?: string
+) => {
   const isAuthenticated = useAuth(s => s.auth.isAuthenticated);
 
   return useQuery({
-    queryKey: achievementKeys.list({}),
+    queryKey: achievementKeys.list({ pageNumber, pageSize, searchTerm }),
     queryFn: async () => {
-      const res = await achievementService.getAchievementFeed();
+      const res = await achievementService.getAchievementFeed(
+        pageNumber,
+        pageSize,
+        searchTerm
+      );
       if (!res.success || !res.data) throw new Error(res.errors || "Failed to fetch achievements");
       return res.data;
     },
@@ -155,6 +163,113 @@ export const useDeleteAchievementComment = () => {
     mutationFn: achievementService.deleteComment,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: achievementKeys.all });
+    },
+  });
+};
+
+// Like a comment
+export const useLikeAchievementComment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (commentId: string) => achievementService.likeComment(commentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: achievementKeys.all });
+    },
+  });
+};
+
+// Unlike a comment
+export const useUnlikeAchievementComment = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (commentId: string) => achievementService.unlikeComment(commentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: achievementKeys.all });
+    },
+  });
+};
+
+// Get replies for a comment (on-demand)
+export const useGetCommentReplies = (commentId: string) => {
+  const isAuthenticated = useAuth(s => s.auth.isAuthenticated);
+
+  return useQuery({
+    queryKey: achievementKeys.replies(commentId),
+    queryFn: async () => {
+      const res = await achievementService.getReplies(commentId);
+      if (!res.success || !res.data) throw new Error(res.errors || "Failed to fetch replies");
+      return res.data;
+    },
+    enabled: !!commentId && isAuthenticated,
+    ...normalCacheConfig,
+  });
+};
+
+// Add reply to a comment
+export const useAddCommentReply = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ commentId, data }: { commentId: string; data: Schemas["CommentRequest"] }) =>
+      achievementService.addReply(commentId, data),
+    onSuccess: (_, { commentId }) => {
+      queryClient.invalidateQueries({ queryKey: achievementKeys.replies(commentId) });
+      queryClient.invalidateQueries({ queryKey: achievementKeys.all });
+    },
+  });
+};
+
+// Update a reply
+export const useUpdateCommentReply = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ replyId, commentId, data }: { replyId: string; commentId: string; data: Schemas["CommentRequest"] }) =>
+      achievementService.updateReply(replyId, data),
+    onSuccess: (_, { commentId }) => {
+      queryClient.invalidateQueries({ queryKey: achievementKeys.replies(commentId) });
+    },
+  });
+};
+
+// Delete a reply
+export const useDeleteCommentReply = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ replyId, commentId }: { replyId: string; commentId: string }) =>
+      achievementService.deleteReply(replyId),
+    onSuccess: (_, { commentId }) => {
+      queryClient.invalidateQueries({ queryKey: achievementKeys.replies(commentId) });
+      queryClient.invalidateQueries({ queryKey: achievementKeys.all });
+    },
+  });
+};
+
+// Like a reply
+export const useLikeCommentReply = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ replyId, commentId }: { replyId: string; commentId: string }) =>
+      achievementService.likeReply(replyId),
+    onSuccess: (_, { commentId }) => {
+      queryClient.invalidateQueries({ queryKey: achievementKeys.replies(commentId) });
+    },
+  });
+};
+
+// Unlike a reply
+export const useUnlikeCommentReply = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ replyId, commentId }: { replyId: string; commentId: string }) =>
+      achievementService.unlikeReply(replyId),
+    onSuccess: (_, { commentId }) => {
+      queryClient.invalidateQueries({ queryKey: achievementKeys.replies(commentId) });
     },
   });
 };

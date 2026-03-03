@@ -10,15 +10,14 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CommentDto {
+public class CommentReplyDto {
     private UUID id;
-    private UUID postId;
+    private UUID commentId;
     private UUID authorId;
     private String authorName;
     private String text;
     private LocalDateTime createdDate;
     private int likeCount;
-    private int replyCount;
     private boolean isLikedByCurrentUser;
-    private boolean hasReplies;
 }
+

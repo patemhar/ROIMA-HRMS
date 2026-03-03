@@ -7,8 +7,18 @@ type ApiResult<T> = Promise<ApiResponse<T>>;
 
 class AchievementService {
   // Get achievement feed (all posts including system-generated celebrations)
-  getAchievementFeed(): ApiResult<Schemas["PostDto"][]> {
-    return apiClient.get<Schemas["PostDto"][]>("/achievements");
+  getAchievementFeed(
+    pageNumber: number,
+    pageSize: number,
+    searchTerm?: string
+  ): ApiResult<Schemas["PagePostDto"]> {
+    const params = new URLSearchParams();
+    params.append("page", pageNumber.toString());
+    params.append("size", pageSize.toString());
+    if (searchTerm) {
+      params.append("search", searchTerm);
+    }
+    return apiClient.get<Schemas["PagePostDto"]>("/achievements?" + params.toString());
   }
 
   // Create a new post
@@ -72,6 +82,46 @@ class AchievementService {
   // Delete comment
   deleteComment(commentId: string): ApiResult<void> {
     return apiClient.delete<void>(`/achievements/comments/${commentId}`);
+  }
+
+  // Like comment
+  likeComment(commentId: string): ApiResult<void> {
+    return apiClient.post<void>(`/achievements/comments/${commentId}/like`);
+  }
+
+  // Unlike comment
+  unlikeComment(commentId: string): ApiResult<void> {
+    return apiClient.delete<void>(`/achievements/comments/${commentId}/like`);
+  }
+
+  // Add reply to comment
+  addReply(commentId: string, data: Schemas["CommentRequest"]): ApiResult<Schemas["CommentReplyDto"]> {
+    return apiClient.post<Schemas["CommentReplyDto"]>(`/achievements/comments/${commentId}/replies`, data);
+  }
+
+  // Get replies for a comment
+  getReplies(commentId: string): ApiResult<Schemas["CommentReplyDto"][]> {
+    return apiClient.get<Schemas["CommentReplyDto"][]>(`/achievements/comments/${commentId}/replies`);
+  }
+
+  // Update reply
+  updateReply(replyId: string, data: Schemas["CommentRequest"]): ApiResult<Schemas["CommentReplyDto"]> {
+    return apiClient.put<Schemas["CommentReplyDto"]>(`/achievements/replies/${replyId}`, data);
+  }
+
+  // Delete reply
+  deleteReply(replyId: string): ApiResult<void> {
+    return apiClient.delete<void>(`/achievements/replies/${replyId}`);
+  }
+
+  // Like reply
+  likeReply(replyId: string): ApiResult<void> {
+    return apiClient.post<void>(`/achievements/replies/${replyId}/like`);
+  }
+
+  // Unlike reply
+  unlikeReply(replyId: string): ApiResult<void> {
+    return apiClient.delete<void>(`/achievements/replies/${replyId}/like`);
   }
 
   // Like post

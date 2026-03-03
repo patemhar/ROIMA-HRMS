@@ -54,7 +54,7 @@ public class BirthdayAnniversaryScheduler {
 
             boolean notificationExists = notificationRepository.existsCelebrationNotificationToday(user.getId(), NotificationType.BIRTHDAY, startOfDay, endOfDay);
             if (!notificationExists) {
-                String content = "Today is " + userName + "'s birthday!";
+                String content = "Happy Birthday, " + userName + "! Wishing you a wonderful day filled with joy and celebration.";
                 notificationService.createNew(user, user, NotificationType.BIRTHDAY, "Happy Birthday!", content);
                 emailService.sendSimpleMail(user.getEmail(), "Happy Birthday!", content);
             }

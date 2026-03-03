@@ -15,23 +15,21 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "comments")
-public class Comment extends BaseEntity {
+@Table(name = "comment_replies")
+public class CommentReply extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    @JoinColumn(name = "comment_id", nullable = false)
+    private Comment parentComment;
 
     @Column(nullable = false, length = 500)
     private String content;
 
-    @OneToMany(mappedBy = "parentComment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CommentReply> replies = new HashSet<>();
-
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CommentLike> likes = new HashSet<>();
+    @OneToMany(mappedBy = "commentReply", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CommentReplyLike> likes = new HashSet<>();
 }
+
