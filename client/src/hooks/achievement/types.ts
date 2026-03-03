@@ -6,6 +6,7 @@ export const achievementKeys = {
   details: () => [...achievementKeys.all, "detail"] as const,
   detail: (id: string) => [...achievementKeys.details(), id] as const,
   comments: (id: string) => [...achievementKeys.detail(id), "comments"] as const,
+  replies: (commentId: string) => [...achievementKeys.all, "comment", commentId, "replies"] as const,
   celebrations: () => [...achievementKeys.all, "celebrations"] as const,
 };
 
