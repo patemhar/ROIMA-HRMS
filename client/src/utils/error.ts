@@ -13,21 +13,21 @@ export const getErrorMessage = (error: unknown): string => {
 
     if (payload) {
       
-      const errors = payload.errors || (payload as any).errors;
+      // const errors = payload.errors || (payload as any).errors;
 
-      if (errors) {
-        return errors;
-      }
+      // if (errors) {
+      //   return errors;
+      // }
 
-      if (errors && typeof errors === "object") {
-        const errorMessages = Object.values(errors)
-          .flat()
-          .filter(Boolean)
-          .join(", ");
-        if (errorMessages) {
-          return errorMessages;
-        }
-      }
+      // if (errors && typeof errors === "object") {
+      //   const errorMessages = Object.values(errors)
+      //     .flat()
+      //     .filter(Boolean)
+      //     .join(", ");
+      //   if (errorMessages) {
+      //     return errorMessages;
+      //   }
+      // }
 
       const message = payload.message || (payload as any).message;
       if (message) {

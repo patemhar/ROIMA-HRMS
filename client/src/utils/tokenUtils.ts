@@ -18,7 +18,7 @@ export function decodeToken(token: string): JwtPayload | null {
 
 export function isTokenNearExpiryOrExpired(
     token: string,
-    bufferMinutes = 1
+    bufferMinutes = 5
 ) : boolean {
 
     const decoded = decodeToken(token);
