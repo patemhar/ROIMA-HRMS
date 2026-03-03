@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Heart,
   MessageCircle,
@@ -6,6 +6,9 @@ import {
   Edit,
   Trash2,
   ChevronDown,
+  Reply,
+  CornerDownRight,
+  Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,12 +60,20 @@ import {
   useAddAchievementComment,
   useUpdateAchievementComment,
   useDeleteAchievementComment,
+  useLikeAchievementComment,
+  useUnlikeAchievementComment,
+  useAddCommentReply,
+  useUpdateCommentReply,
+  useDeleteCommentReply,
+  useLikeCommentReply,
+  useUnlikeCommentReply,
 } from "@/hooks/achievement/achievement.hooks";
 import { useGetAllRoles, useGetAllUsers } from "@/hooks/util/util.hooks";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/utils/error";
 import { useForm } from "react-hook-form";
 import { achievementService } from "@/services/achievementService";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export const AchievementsPage = () => {
   const user = useAuth((state) => state.auth.user);
@@ -79,12 +90,33 @@ export const AchievementsPage = () => {
   const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
   const [loadedComments, setLoadedComments] = useState<Record<string, any[]>>({});
   const [editingComment, setEditingComment] = useState<{ postId: string; commentId: string; text: string } | null>(null);
+  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
+  const [loadedReplies, setLoadedReplies] = useState<Record<string, any[]>>({});
+  const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
+  const [editingReply, setEditingReply] = useState<{ commentId: string; replyId: string; text: string } | null>(null);
   const [myPostsOpen, setMyPostsOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string>(user?.id || "");
 
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  // Infinite scroll state
+  const [page, setPage] = useState(0);
+  const [allAchievements, setAllAchievements] = useState<any[]>([]);
+  const [hasMore, setHasMore] = useState(true);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const PAGE_SIZE = 10;
+
+  // Reset to page 0 whenever search term changes
+  useEffect(() => {
+    setPage(0);
+    setAllAchievements([]);
+    setHasMore(true);
+  }, [debouncedSearchTerm]);
+
   // Queries
-  const achievementsQuery = useGetAchievements();
-  const achievements = achievementsQuery.data || [];
+  const achievementsQuery = useGetAchievements(page, PAGE_SIZE, debouncedSearchTerm);
   const rolesQuery = useGetAllRoles();
   const roles = rolesQuery.data || [];
   const usersQuery = useGetAllUsers();
@@ -94,7 +126,6 @@ export const AchievementsPage = () => {
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [loadingUserPosts, setLoadingUserPosts] = useState(false);
 
-  // Fetch user posts when selectedUserId changes or myPostsOpen changes
   const fetchUserPosts = async (userId: string) => {
     if (!userId) return;
     setLoadingUserPosts(true);
@@ -110,12 +141,56 @@ export const AchievementsPage = () => {
     }
   };
 
-  // Fetch posts when collapsible opens or user changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (myPostsOpen && selectedUserId) {
       fetchUserPosts(selectedUserId);
     }
   }, [myPostsOpen, selectedUserId]);
+
+  useEffect(() => {
+    if (achievementsQuery.data?.content) {
+
+      const newContent = achievementsQuery.data.content;
+      
+      if (page === 0) {
+        setAllAchievements(newContent);
+      } else {
+        setAllAchievements(prev => {
+          const existingIds = new Set(prev.map(a => a.id));
+          const uniqueNew = newContent.filter(a => !existingIds.has(a.id));
+          return [...prev, ...uniqueNew];
+        });
+      }
+      
+      setHasMore(!achievementsQuery.data.last);
+    }
+  }, [achievementsQuery.data, page]);
+
+  const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
+    if (achievementsQuery.isLoading) return;
+    
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+    
+    observerRef.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore && !achievementsQuery.isLoading) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    
+    if (node) {
+      observerRef.current.observe(node);
+    }
+  }, [achievementsQuery.isLoading, hasMore]);
+
+  useEffect(() => {
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
 
 
   // Mutations
@@ -127,6 +202,13 @@ export const AchievementsPage = () => {
   const addComment = useAddAchievementComment();
   const updateComment = useUpdateAchievementComment();
   const deleteComment = useDeleteAchievementComment();
+  const likeComment = useLikeAchievementComment();
+  const unlikeComment = useUnlikeAchievementComment();
+  const addReply = useAddCommentReply();
+  const updateReply = useUpdateCommentReply();
+  const deleteReply = useDeleteCommentReply();
+  const likeReply = useLikeCommentReply();
+  const unlikeReply = useUnlikeCommentReply();
 
   // Forms
   const createForm = useForm({
@@ -149,6 +231,7 @@ export const AchievementsPage = () => {
       setCreateDialogOpen(false);
       createForm.reset();
       setSelectedFiles([]);
+      setPage(0);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -171,6 +254,7 @@ export const AchievementsPage = () => {
     try {
       await deleteAchievement.mutateAsync(id);
       toast.success("Achievement deleted successfully!");
+      setPage(0);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -182,7 +266,7 @@ export const AchievementsPage = () => {
         await unlikeAchievement.mutateAsync(id);
       } else {
         await likeAchievement.mutateAsync(id);
-      }
+      }  
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -196,7 +280,6 @@ export const AchievementsPage = () => {
       [postId]: isExpanding,
     }));
 
-    // Fetch comments if expanding and not already loaded
     if (isExpanding && !loadedComments[postId]) {
       try {
         const response = await achievementService.getCommentsByPost(postId);
@@ -219,7 +302,6 @@ export const AchievementsPage = () => {
       await addComment.mutateAsync({ id: postId, data: { text } });
       setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
       
-      // Refresh comments after adding
       const response = await achievementService.getCommentsByPost(postId);
       if (response.success && response.data) {
         setLoadedComments((prev) => ({
@@ -228,7 +310,6 @@ export const AchievementsPage = () => {
         }));
       }
       
-      // Expand comments section to show the new comment
       setExpandedComments((prev) => ({ ...prev, [postId]: true }));
       toast.success("Comment added!");
     } catch (error) {
@@ -247,7 +328,6 @@ export const AchievementsPage = () => {
         data: { text } 
       });
       
-      // Refresh comments after updating
       const response = await achievementService.getCommentsByPost(editingComment.postId);
       if (response.success && response.data) {
         setLoadedComments((prev) => ({
@@ -267,7 +347,6 @@ export const AchievementsPage = () => {
     try {
       await deleteComment.mutateAsync(commentId);
       
-      // Refresh comments after deleting
       const response = await achievementService.getCommentsByPost(postId);
       if (response.success && response.data) {
         setLoadedComments((prev) => ({
@@ -277,6 +356,97 @@ export const AchievementsPage = () => {
       }
       
       toast.success("Comment deleted!");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const handleLikeComment = async (commentId: string, postId: string, isLiked: boolean) => {
+    try {
+      if (isLiked) {
+        await unlikeComment.mutateAsync(commentId);
+      } else {
+        await likeComment.mutateAsync(commentId);
+      }
+      // Refresh comments
+      const response = await achievementService.getCommentsByPost(postId);
+      if (response.success && response.data) {
+        setLoadedComments(prev => ({ ...prev, [postId]: response.data || [] }));
+      }
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const handleToggleReplies = async (commentId: string) => {
+    const isExpanding = !expandedReplies[commentId];
+    setExpandedReplies(prev => ({ ...prev, [commentId]: isExpanding }));
+
+    if (isExpanding && !loadedReplies[commentId]) {
+      try {
+        const response = await achievementService.getReplies(commentId);
+        if (response.success && response.data) {
+          setLoadedReplies(prev => ({ ...prev, [commentId]: response.data || [] }));
+        }
+      } catch (error) {
+        console.error("Failed to load replies:", error);
+      }
+    }
+  };
+
+  const refreshReplies = async (commentId: string) => {
+    const response = await achievementService.getReplies(commentId);
+    if (response.success && response.data) {
+      setLoadedReplies(prev => ({ ...prev, [commentId]: response.data || [] }));
+    }
+  };
+
+  const handleAddReply = async (commentId: string) => {
+    const text = replyInputs[commentId]?.trim();
+    if (!text) return;
+    try {
+      await addReply.mutateAsync({ commentId, data: { text } });
+      setReplyInputs(prev => ({ ...prev, [commentId]: "" }));
+      setExpandedReplies(prev => ({ ...prev, [commentId]: true }));
+      await refreshReplies(commentId);
+      toast.success("Reply added!");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const handleUpdateReply = async () => {
+    if (!editingReply) return;
+    const text = editingReply.text.trim();
+    if (!text) return;
+    try {
+      await updateReply.mutateAsync({ replyId: editingReply.replyId, commentId: editingReply.commentId, data: { text } });
+      await refreshReplies(editingReply.commentId);
+      setEditingReply(null);
+      toast.success("Reply updated!");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const handleDeleteReply = async (commentId: string, replyId: string) => {
+    try {
+      await deleteReply.mutateAsync({ replyId, commentId });
+      await refreshReplies(commentId);
+      toast.success("Reply deleted!");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const handleLikeReply = async (replyId: string, commentId: string, isLiked: boolean) => {
+    try {
+      if (isLiked) {
+        await unlikeReply.mutateAsync({ replyId, commentId });
+      } else {
+        await likeReply.mutateAsync({ replyId, commentId });
+      }
+      await refreshReplies(commentId);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -292,7 +462,7 @@ export const AchievementsPage = () => {
     setEditDialogOpen(true);
   };
 
-  if (achievementsQuery.isLoading) {
+  if (achievementsQuery.isLoading && page === 0 && allAchievements.length === 0) {
     return (
       <div className="flex justify-center items-center h-120">
         <Spinner className="h-8 w-8 text-primary" />
@@ -300,7 +470,7 @@ export const AchievementsPage = () => {
     );
   }
 
-  if(achievementsQuery.isError) {
+  if(achievementsQuery.isError && page === 0 && allAchievements.length === 0) {
     return (
       <div className="text-center text-destructive">
         {getErrorMessage(achievementsQuery.error) || "Failed to load achievements."}
@@ -311,7 +481,7 @@ export const AchievementsPage = () => {
   return (
     <div className="container mx-auto py-8 px-4 space-y-6">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-semibold">Achievements & Celebrations</h1>
+        <h1 className="text-2xl font-semibold">Achievements & Celebrations</h1>
         <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>
@@ -402,10 +572,10 @@ export const AchievementsPage = () => {
       <Collapsible open={myPostsOpen} onOpenChange={setMyPostsOpen}>
         <Card>
           <CollapsibleTrigger asChild>
-            <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+            <CardHeader className="cursor-pointer">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl">My Posts</CardTitle>
+                  <CardTitle className="text-lg">My Posts</CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">
                     View and manage your achievement posts
                   </p>
@@ -550,7 +720,14 @@ export const AchievementsPage = () => {
 
       {/* Posts Feed */}
       <div className="space-y-6">
-        {achievements.length === 0 ? (
+        <div>
+          <Input
+            placeholder="Search achievements..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        {allAchievements.length === 0 && !achievementsQuery.isLoading ? (
           <Card>
             <CardContent className="text-center py-12">
               <p className="text-muted-foreground">
@@ -559,7 +736,7 @@ export const AchievementsPage = () => {
             </CardContent>
           </Card>
         ) : (
-          achievements.map((achievement) => {
+          allAchievements.map((achievement) => {
             const isOwnPost = achievement.authorId === user?.id;
             const isLiked = achievement.likedByCurrentUser === true;
             const isSystemPost = achievement.systemGenerated;
@@ -638,7 +815,7 @@ export const AchievementsPage = () => {
                   <p className="mb-4">{achievement.description}</p>
                   {achievement.mediaUrls && achievement.mediaUrls.length > 0 && (
                     <div className="mb-4 grid grid-cols-1 gap-2">
-                      {achievement.mediaUrls.map((url, index) => (
+                      {achievement.mediaUrls.map((url: string, index: number) => (
                         <div key={index} className="relative">
                           {url.includes('.mp4') || url.includes('.webm') || url.includes('.ogg') ? (
                             <video controls className="w-full max-h-96 rounded-lg">
@@ -730,10 +907,15 @@ export const AchievementsPage = () => {
                                     // View mode
                                     <>
                                       <div className="flex justify-between items-start">
-                                        <p className="text-sm flex-1">
-                                          <strong className="font-semibold">{comment.authorName}:</strong>{" "}
-                                          {comment.text}
-                                        </p>
+                                        <div className="flex-1">
+                                          <p className="text-sm">
+                                            <strong className="font-semibold">{comment.authorName}</strong>
+                                            <span className="text-xs text-muted-foreground ml-2">
+                                              {new Date(comment.createdDate!).toLocaleDateString()} at {new Date(comment.createdDate!).toLocaleTimeString()}
+                                            </span>
+                                          </p>
+                                          <p className="text-sm mt-0.5">{comment.text}</p>
+                                        </div>
                                         {(isOwnComment || canDeleteComment) && (
                                           <div className="flex gap-1 ml-2">
                                             {isOwnComment && (
@@ -765,9 +947,7 @@ export const AchievementsPage = () => {
                                                 </AlertDialogTrigger>
                                                 <AlertDialogContent>
                                                   <AlertDialogHeader>
-                                                    <AlertDialogTitle>
-                                                      Delete Comment?
-                                                    </AlertDialogTitle>
+                                                    <AlertDialogTitle>Delete Comment?</AlertDialogTitle>
                                                     <AlertDialogDescription>
                                                       This action cannot be undone.
                                                     </AlertDialogDescription>
@@ -775,12 +955,7 @@ export const AchievementsPage = () => {
                                                   <AlertDialogFooter>
                                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                                                     <AlertDialogAction
-                                                      onClick={() =>
-                                                        handleDeleteComment(
-                                                          achievement.id || "",
-                                                          comment.id
-                                                        )
-                                                      }
+                                                      onClick={() => handleDeleteComment(achievement.id || "", comment.id)}
                                                       className="bg-destructive"
                                                     >
                                                       Delete
@@ -792,10 +967,127 @@ export const AchievementsPage = () => {
                                           </div>
                                         )}
                                       </div>
-                                      <p className="text-xs text-muted-foreground mt-1">
-                                        {new Date(comment.createdDate!).toLocaleDateString()} at{" "}
-                                        {new Date(comment.createdDate!).toLocaleTimeString()}
-                                      </p>
+                                      {/* Comment action bar: like + reply */}
+                                      <div className="flex items-center gap-2 mt-1.5">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className={`h-6 px-2 text-xs gap-1 ${comment.likedByCurrentUser ? "text-red-500" : ""}`}
+                                          onClick={() => handleLikeComment(comment.id, achievement.id || "", !!comment.likedByCurrentUser)}
+                                        >
+                                          <Heart className={`h-3 w-3 ${comment.likedByCurrentUser ? "fill-current" : ""}`} />
+                                          {comment.likeCount || 0}
+                                        </Button>
+                                        {comment.hasReplies || comment.replyCount > 0 ? (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 px-2 text-xs gap-1 text-muted-foreground"
+                                            onClick={() => handleToggleReplies(comment.id)}
+                                          >
+                                            <CornerDownRight className="h-3 w-3" />
+                                            {expandedReplies[comment.id] ? "Hide" : `${comment.replyCount || ""} Replies`}
+                                          </Button>
+                                        ) : null}
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 px-2 text-xs gap-1 text-muted-foreground"
+                                          onClick={() => {
+                                            setReplyInputs(prev => ({ ...prev, [comment.id]: prev[comment.id] ?? "" }));
+                                            if (!expandedReplies[comment.id]) handleToggleReplies(comment.id);
+                                          }}
+                                        >
+                                          <Reply className="h-3 w-3" />
+                                          Reply
+                                        </Button>
+                                      </div>
+
+                                      {/* Replies section */}
+                                      {expandedReplies[comment.id] && (
+                                        <div className="mt-2 ml-4 space-y-2 border-l-2 border-muted pl-3">
+                                          {(loadedReplies[comment.id] || []).map((reply: any) => {
+                                            const isOwnReply = reply.authorId === user?.id;
+                                            return (
+                                              <div key={reply.id} className="bg-background rounded p-2">
+                                                {editingReply?.replyId === reply.id ? (
+                                                  <div className="space-y-1.5">
+                                                    <input
+                                                      className="w-full text-sm border rounded px-2 py-1 bg-background"
+                                                      value={editingReply!.text}
+                                                      onChange={e => setEditingReply(prev => prev ? { ...prev, text: e.target.value } : prev)}
+                                                    />
+                                                    <div className="flex gap-1">
+                                                      <Button size="sm" className="h-6 text-xs" onClick={handleUpdateReply}>Save</Button>
+                                                      <Button size="sm" variant="outline" className="h-6 text-xs" onClick={() => setEditingReply(null)}>Cancel</Button>
+                                                    </div>
+                                                  </div>
+                                                ) : (
+                                                  <>
+                                                    <div className="flex justify-between items-start">
+                                                      <div>
+                                                        <span className="text-xs font-semibold">{reply.authorName}</span>
+                                                        <span className="text-xs text-muted-foreground ml-2">{new Date(reply.createdDate).toLocaleDateString()}</span>
+                                                        <p className="text-xs mt-0.5">{reply.text}</p>
+                                                      </div>
+                                                      <div className="flex gap-1">
+                                                        {isOwnReply && (
+                                                          <Button variant="ghost" size="sm" className="h-5 w-5 p-0"
+                                                            onClick={() => setEditingReply({ commentId: comment.id, replyId: reply.id, text: reply.text })}>
+                                                            <Edit className="h-2.5 w-2.5" />
+                                                          </Button>
+                                                        )}
+                                                        {(isOwnReply || isHR) && (
+                                                          <AlertDialog>
+                                                            <AlertDialogTrigger asChild>
+                                                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-destructive">
+                                                                <Trash2 className="h-2.5 w-2.5" />
+                                                              </Button>
+                                                            </AlertDialogTrigger>
+                                                            <AlertDialogContent>
+                                                              <AlertDialogHeader>
+                                                                <AlertDialogTitle>Delete Reply?</AlertDialogTitle>
+                                                                <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+                                                              </AlertDialogHeader>
+                                                              <AlertDialogFooter>
+                                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                <AlertDialogAction onClick={() => handleDeleteReply(comment.id, reply.id)} className="bg-destructive">Delete</AlertDialogAction>
+                                                              </AlertDialogFooter>
+                                                            </AlertDialogContent>
+                                                          </AlertDialog>
+                                                        )}
+                                                      </div>
+                                                    </div>
+                                                    <Button
+                                                      variant="ghost" size="sm"
+                                                      className={`h-5 px-1.5 text-xs gap-1 mt-1 ${reply.likedByCurrentUser ? "text-red-500" : "text-muted-foreground"}`}
+                                                      onClick={() => handleLikeReply(reply.id, comment.id, !!reply.likedByCurrentUser)}
+                                                    >
+                                                      <Heart className={`h-2.5 w-2.5 ${reply.likedByCurrentUser ? "fill-current" : ""}`} />
+                                                      {reply.likeCount || 0}
+                                                    </Button>
+                                                  </>
+                                                )}
+                                              </div>
+                                            );
+                                          })}
+                                          {/* Reply input */}
+                                          <div className="flex gap-1.5 mt-2">
+                                            <input
+                                              className="flex-1 text-xs border rounded px-2 py-1 bg-background"
+                                              placeholder={`Reply to ${comment.authorName}...`}
+                                              value={replyInputs[comment.id] || ""}
+                                              onChange={e => setReplyInputs(prev => ({ ...prev, [comment.id]: e.target.value }))}
+                                              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAddReply(comment.id); } }}
+                                            />
+                                            <Button size="sm" className="h-7 w-7 p-0"
+                                              disabled={!replyInputs[comment.id]?.trim()}
+                                              onClick={() => handleAddReply(comment.id)}>
+                                              <Send className="h-3 w-3" />
+                                            </Button>
+                                          </div>
+                                        </div>
+                                      )}
                                     </>
                                   )}
                                 </div>
@@ -839,6 +1131,24 @@ export const AchievementsPage = () => {
               </Card>
             );
           })
+        )}
+        
+        {achievementsQuery.isLoading && page > 0 && (
+          <div className="flex justify-center py-8">
+            <Spinner className="h-6 w-6 text-primary" />
+          </div>
+        )}
+        
+        {hasMore && !achievementsQuery.isLoading && allAchievements.length > 0 && (
+          <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
+            <p className="text-sm text-muted-foreground">Scroll for more...</p>
+          </div>
+        )}
+        
+        {!hasMore && allAchievements.length > 0 && (
+          <div className="text-center py-8">
+            <p className="text-sm text-muted-foreground">You've reached the end!</p>
+          </div>
         )}
       </div>
 
