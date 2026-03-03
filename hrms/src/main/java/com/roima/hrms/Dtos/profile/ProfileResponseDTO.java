@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.profile;
+package com.roima.hrms.dtos.profile;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -25,5 +25,5 @@ public class ProfileResponseDTO {
     private UUID departmentId;
     private String departmentName;
 
-    private List<UUID> gameInterests;
+    private List<String> gameInterests;
 }

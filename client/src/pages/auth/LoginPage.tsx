@@ -1,5 +1,5 @@
 import { Navigate, useNavigate } from "react-router-dom";
-import { get, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,6 @@ import { useAuth } from "@/store";
 import type { components } from "@/types/api";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/utils/error";
-
-const STAFF_ROLES = new Set(["HR", "EMPLOYEE", "MANAGER"]);
 
 const getDefaultRoute = (role?: string | null) => {
   return "/employee/achievements";
@@ -91,6 +89,7 @@ export const LoginPage = () => {
   });
 
   const onSubmit = handleSubmit((values) => {
+    if (mutation.isPending) return;
     setLoginState({ status: "loading" });
     mutation.mutate(values);
   });

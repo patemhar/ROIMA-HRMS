@@ -28,6 +28,10 @@ public class User extends BaseEntity{
 
     private LocalDateTime last_login;
 
+    private Integer failed_login_attempts = 0;
+
+    private LocalDateTime account_locked_until = null;
+
     @Column(name = "is_active")
     private boolean active = true;
 
@@ -60,6 +64,15 @@ public class User extends BaseEntity{
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Set<Comment> my_comments = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<CommentLike> my_comment_likes = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<CommentReply> my_comment_replies = new HashSet<>();
+
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private Set<CommentReplyLike> my_comment_reply_likes = new HashSet<>();
 
     @OneToMany(mappedBy = "createdBy", fetch = FetchType.LAZY)
     private Set<Travel> travel_created_by_me = new HashSet<>();

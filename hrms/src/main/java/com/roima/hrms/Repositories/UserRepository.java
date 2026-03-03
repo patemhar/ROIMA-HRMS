@@ -1,9 +1,12 @@
 package com.roima.hrms.Repositories;
 
 import com.roima.hrms.Core.Entities.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.NativeQuery;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import javax.swing.text.html.Option;
@@ -28,4 +31,31 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 
     @NativeQuery("SELECT * FROM users WHERE reports_to = ?1")
     List<User> findByReportsTo(UUID userId);
+
+    @Query("""
+            SELECT u FROM User u
+            WHERE (:search IS NULL OR LOWER(u.first_name) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(u.last_name) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(u.role.name) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(u.reports_to.first_name) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(u.reports_to.last_name) LIKE LOWER(CONCAT('%', :search, '%')))
+            """)
+    Page<User> findAllWithSearch(String search, Pageable pageable);
+
+    @Query("""
+            SELECT u FROM User u
+            WHERE u.reports_to.id = :managerId
+            AND (:search IS NULL OR LOWER(u.first_name) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(u.last_name) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(u.role.name) LIKE LOWER(CONCAT('%', :search, '%')))
+            """)
+    Page<User> findByManagerWithSearch(UUID managerId, String search, Pageable pageable);
+
+    @Query("""
+        SELECT u from User u
+                WHERE u.account_locked_until IS NOT NULL AND u.account_locked_until > CURRENT_TIMESTAMP
+        """)
+    List<User> findLockedUsers();
 }

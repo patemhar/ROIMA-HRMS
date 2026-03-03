@@ -15,6 +15,7 @@ export const PermissionCode = {
   TRAVEL_DOC: "PER021",              // Manage travel documents & expenses
   ACHIEVEMENT: "PER022",             // Access achievements page
   READ_ALL_TRAVELS: "PER023",              // Read all travels (HR/Manager)
+  USER_VIEW: "PER024",              // View user details (Manager)
 } as const;
 
 export type PermissionCodeValue =

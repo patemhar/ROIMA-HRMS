@@ -59,6 +59,14 @@ class AuthService {
         return apiClient.updateUserByHR(userId, data);
     }
 
+    unlockUserAccount(userId: string) : ApiResult<void> {
+        return apiClient.unlockUserAccount(userId);
+    }
+
+    resetUserPassword(userId: string, newPassword: string, confirmPassword: string) : ApiResult<void> {
+        return apiClient.resetUserPassword(userId, newPassword, confirmPassword);
+    }
+
     logout() : ApiResult<void> {
         const response = apiClient.logout();
         this.clearAccessToken();
