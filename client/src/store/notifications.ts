@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { notificationService } from "@/services/notificationService";
+import { getErrorMessage } from "@/utils/error";
 
 export type NotificationItem = {
   id: string;
@@ -33,13 +34,27 @@ export const useNotificationsStore = create<NotificationState>((set) => ({
     setNotifications: (notifications) =>
       set({ notifications }),
   
-    markAllRead: () =>
-      set((state) => ({
-        notifications: state.notifications.map((item) => ({
-          ...item,
-          read: true,
-        })),
-    })),
+    markAllRead: async () => {
+
+        set((state) => ({
+          notifications: state.notifications.map((item) => ({
+            ...item,
+            read: true,
+          }))
+        }));
+        
+        try {
+          await notificationService.markAllAsRead();
+        } catch (error) {
+          console.error("Failed to mark all notifications as read:", getErrorMessage(error));
+          set((state) => ({
+            notifications: state.notifications.map((item) => ({
+              ...item,
+              read: false,
+            }))
+          }));
+        }
+    },
   
     markRead: async (id) => {
       set((state) => ({

@@ -32,12 +32,12 @@ const navItems: Array<{
   { to: "jobs", label: "Jobs" },
   {
     to: "hr/job-records",
-    label: "Job Records",
-    permission: PermissionCode.USER_MANAGE,
+    label: "Job Records"
   },
-  { to: "hr/users", label: "Users", permission: PermissionCode.USER_MANAGE },
+  { to: "users", label: "Users", permission: PermissionCode.USER_VIEW },
   { to: "games", label: "Games" },
   { to: "account", label: "Account" },
+  { to: "admin/dashboard", label: "Admin Dashboard", permission: PermissionCode.USER_MANAGE },
 ];
 
 export const MainLayout = () => {
@@ -79,7 +79,7 @@ export const MainLayout = () => {
               <Menu className="h-4 w-4" />
             </Button>
             <div>
-              <img src={logo} className="h-6"/>
+              <img src={logo} className="h-6" alt="Roima Logo"/>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -116,9 +116,13 @@ export const MainLayout = () => {
                             : "bg-emerald-50 border-emerald-200",
                         )}
                       >
+                        <div>
+                          <span className="font-semibold">{item.title}</span>
+                        </div>
                         <div className="font-medium text-foreground">
                           {item.message}
                         </div>
+                        <div className="text-xs text-muted-foreground">From {item.actor}</div>
                         <div className="text-xs text-muted-foreground">
                           {DateTimeDisplay(item.created_at)}
                         </div>
