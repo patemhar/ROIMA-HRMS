@@ -1,11 +1,12 @@
 package com.roima.hrms.Controller;
 
-import com.roima.hrms.Dtos.Travel.*;
+import com.roima.hrms.dtos.Travel.*;
 import com.roima.hrms.Service.Interfaces.*;
-import com.roima.hrms.Dtos.ApiResponse;
-import com.roima.hrms.Dtos.DocUploadResponse;
+import com.roima.hrms.dtos.ApiResponse;
+import com.roima.hrms.dtos.DocUploadResponse;
 import com.roima.hrms.Utility.SecurityUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -13,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 // content according to relation pending,
@@ -26,8 +26,6 @@ public class TravelController {
     private final TravelDocumentService travelDocumentService;
     private final TravelExpenseService travelExpenseService;
     private final ExpenseDocumentService expenseDocumentService;
-    private final SecurityUtil securityUtil;
-    private final NotificationService notificationService;
 
     // Travel
 
@@ -43,8 +41,12 @@ public class TravelController {
     }
 
     @GetMapping("/my")
-    public ApiResponse<List<TravelResponseSummary>> getMyTravels() {
-        return ApiResponse.success(travelService.getMyTravel(), "Travels fetched successfully");
+    public ApiResponse<Page<TravelResponseSummary>> getMyTravels(
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer size,
+            @RequestParam(required = false) String search
+    ) {
+        return ApiResponse.success(travelService.getMyTravel(page - 1, size, search), "Travels fetched successfully");
     }
 
     // travels that are created by user
@@ -55,8 +57,12 @@ public class TravelController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('PER023')")
-    public ApiResponse<List<TravelResponseSummary>> getAllTravels() {
-        return ApiResponse.success(travelService.getTravels(), "Travels fetched successfully");
+    public ApiResponse<Page<TravelResponseSummary>> getAllTravels(
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "10") Integer size,
+            @RequestParam(required = false) String search
+    ) {
+        return ApiResponse.success(travelService.getTravels(page - 1, size, search), "Travels fetched successfully");
     }
 
     @PatchMapping("/{travelId}")
@@ -64,6 +70,13 @@ public class TravelController {
     public ApiResponse<Void> updateTravel(@PathVariable UUID travelId, @RequestBody @Valid TravelUpdateRequest request) {
         travelService.updateTravel(travelId, request);
         return ApiResponse.success(null, "Travel updated successfully.");
+    }
+
+    @PostMapping("/{travelId}/cancel")
+    @PreAuthorize("hasAuthority('PER010')")
+    public ApiResponse<Void> cancelTravel(@PathVariable UUID travelId) {
+        travelService.cancelTravel(travelId);
+        return ApiResponse.success(null, "Travel cancelled successfully.");
     }
 
     @DeleteMapping("/{travelId}")
@@ -121,13 +134,18 @@ public class TravelController {
 
     @GetMapping("/{travelId}/booking")
     @PreAuthorize("hasAuthority('PER010')")
-    public ApiResponse<List<TravelBookingResponse>> getBookings(@PathVariable UUID travelId) {
-        return ApiResponse.success(travelService.getTravelBookings(travelId), "Bookings fetched successfully");
+    public ApiResponse<List<TravelBookingResponse>> getBookings(
+            @PathVariable UUID travelId,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) String search
+    ) {
+        return ApiResponse.success(travelService.getTravelBookings(travelId, page, size, search), "Bookings fetched successfully");
     }
 
     @PatchMapping("booking/{bookingId}")
     @PreAuthorize("hasAuthority('PER010')")
-    public ApiResponse<Void> updateBooking(@PathVariable UUID bookingId, @RequestBody @Valid TravelBookingRequest request) {
+    public ApiResponse<Void> updateBooking(@PathVariable UUID bookingId, @RequestBody TravelBookingRequest request) {
         travelService.updateBooking(bookingId, request);
         return ApiResponse.success(null, "Booking updated successfully.");
     }
