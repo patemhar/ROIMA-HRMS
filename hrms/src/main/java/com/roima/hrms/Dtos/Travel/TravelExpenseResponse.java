@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.Travel;
+package com.roima.hrms.dtos.Travel;
 
 import com.roima.hrms.Core.Enums.ExpenseStatus;
 import com.roima.hrms.Core.Enums.ExpenseType;
@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

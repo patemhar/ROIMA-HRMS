@@ -1,7 +1,7 @@
 package com.roima.hrms.Service.Interfaces;
 
-import com.roima.hrms.Dtos.Travel.TravelExpenseRequest;
-import com.roima.hrms.Dtos.Travel.TravelExpenseResponse;
+import com.roima.hrms.dtos.Travel.TravelExpenseRequest;
+import com.roima.hrms.dtos.Travel.TravelExpenseResponse;
 
 import java.util.List;
 import java.util.UUID;

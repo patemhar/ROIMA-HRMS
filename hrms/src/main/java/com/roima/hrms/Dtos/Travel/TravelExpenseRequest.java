@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.Travel;
+package com.roima.hrms.dtos.Travel;
 
 import com.roima.hrms.Core.Enums.ExpenseType;
 import lombok.AllArgsConstructor;

@@ -1,7 +1,7 @@
 package com.roima.hrms.Mapper;
 
 import com.roima.hrms.Core.Entities.ExpenseDocument;
-import com.roima.hrms.Dtos.Travel.ExpenseDocumentResponseDto;
+import com.roima.hrms.dtos.Travel.ExpenseDocumentResponseDto;
 import org.springframework.stereotype.Component;
 
 @Component
