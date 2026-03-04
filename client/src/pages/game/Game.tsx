@@ -8,8 +8,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 import { getErrorMessage } from "@/utils/error";
-import { CheckCircle2, XCircle, Plus } from "lucide-react";
-import { useGetAllGames, useUpdateGame, useCreateGame } from "@/hooks/game/game.hooks";
+import { CheckCircle2, XCircle, Plus, Clock, Timer, Users, Calendar, Heart } from "lucide-react";
+import { useGetAllGames, useUpdateGame, useCreateGame, useToggleGameActive } from "@/hooks/game/game.hooks";
 import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import type { components } from "@/types/api";
 import { hasPermission, PermissionCode } from "@/constants/permissions";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 
 type Schemas = components["schemas"];
 
@@ -38,6 +39,7 @@ export const GamePage = () => {
 
   const updateGameMutation = useUpdateGame();
   const createGameMutation = useCreateGame();
+  const gameActiveToggleMutation = useToggleGameActive();
 
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -138,22 +140,49 @@ export const GamePage = () => {
     setUpdateDialogOpen(true);
   };
 
+  const handleGameActiveToggle = (gameId: string) => {
+
+    if(!gameId) {
+      toast.error("Invalid game ID");
+      return;
+    }
+
+    if(!window.confirm("Are you sure you want to toggle the active status of this game?")) return;
+
+    try {
+      gameActiveToggleMutation.mutate(gameId);
+  
+      toast.success("Game active status toggled successfully");        
+    } catch (error) {
+      toast.error("Failed to toggle game active status" + getErrorMessage(error));
+      return;
+    }
+  };
+
   return (
     
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold">Games</h1>
-            <p className="text-muted-foreground">
+            <p className="text-muted-foreground mt-1">
               All the games currently available.
             </p>
           </div>
-          {canManageGames && (
-            <Button onClick={openCreateDialog}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Game
+          <div className="flex gap-3">
+            {canManageGames && (
+              <Button onClick={openCreateDialog}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Game
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => navigate("bookings")}
+            >
+              My Bookings
             </Button>
-          )}
+          </div>
         </div>
 
         {/* Success Message */}
@@ -185,69 +214,103 @@ export const GamePage = () => {
                 {getErrorMessage(allGamesQuery.error)}
               </p>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                 {games?.map((game) => (
                   <Card
                     key={game.id}
-                    className="hover:shadow-lg transition-shadow w-fit"
+                    className="hover:shadow-xl transition-all duration-300 rounded-xl border border-gray-200 bg-white overflow-hidden group"
                   >
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start flex-col">
-                        <div className="space-y-1 flex-1">
-                          <h4 className="font-semibold">{game.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {game.description}
-                          </p>
-                          <div className="grid sm:grid-cols-2 gap-3 mt-3 bg-amber-100 p-5 rounded-lg">
-                            <div className="flex items-center gap-2">
-                                <Label>
-                                    Operating hours: 
-                                </Label>
-                                <p className="text-sm text-muted-foreground">
-                                    {String(game.startTime)} - {String(game.endTime)}
-                                </p>
+                    <CardContent className="p-6 border-t border-gray-50 h-full">
+                      <div className="flex flex-col justify-between h-full">
+                        <div className="space-y-4 flex-1">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="text-lg font-semibold text-gray-800">
+                                  {game.name}
+                                </h4>
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  game.active 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {game.active ? 'Active' : 'Inactive'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {game.description}
+                              </p>
                             </div>
-                            <div className="flex items-center gap-2">
-                                <Label>
-                                    Slot Duration:    
-                                </Label>
-                                <p className="text-sm text-muted-foreground">
-                                    {game.slotDurationMinutes} Minutes
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Label>
-                                    Max players per slot:
-                                </Label>
-                                <p className="text-sm text-muted-foreground">
-                                    {game.maxPlayersPerSlot}
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Label>
-                                    Currently Interested People in this game:
-                                </Label>
-                                <p className="text-sm text-muted-foreground">
-                                    {game.interestedCount}
-                                </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Label>
-                                  Active On Weekends: 
-                                </Label>
-                                <p className="text-sm text-muted-foreground">
-                                  {game.activeOnWeekends ? "Yes" : "No"}
-                                </p>
-                            </div>
+                            {canManageGames && (
+                              <Switch
+                                checked={game.active}
+                                onCheckedChange={() => handleGameActiveToggle(game.id!)}
+                              />
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 bg-linear-to-br from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
+                            {[
+                              {
+                                label: "Operating Hours",
+                                value: `${game.startTime} - ${game.endTime}`,
+                                icon: Clock,
+                              },
+                              {
+                                label: "Slot Duration",
+                                value: `${game.slotDurationMinutes} minutes`,
+                                icon: Timer,
+                              },
+                              {
+                                label: "Max Players/Slot",
+                                value: game.maxPlayersPerSlot,
+                                icon: Users,
+                              },
+                              {
+                                label: "Active On Weekends",
+                                value: game.activeOnWeekends ? "Yes" : "No",
+                                icon: Calendar,
+                              },
+                              {
+                                label: "Interested",
+                                value: game.interestedCount,
+                                icon: Heart,
+                              },
+                            ].map(({ label, value, icon: Icon }) => (
+                              <div className="flex items-center gap-3" key={label}>
+                                <Icon className="h-4 w-4 text-blue-600" />
+                                <div>
+                                  <Label className="font-medium text-gray-700 text-sm">{label}:</Label>
+                                  <p className="text-sm text-gray-600 truncate">
+                                    {value}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
-                        <div className="flex gap-2 mt-5">
-                          <Button onClick={() => navigate(`${game.id}`)}>
-                            Book a Slot
+
+                        <div className="mt-6 flex flex-wrap gap-3">
+                          <Button
+                            onClick={() => navigate(`${game.id}`)}
+                            disabled={!game.active}
+                            className={`min-w-32 transition-all duration-200 ${
+                              game.active 
+                                ? 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg' 
+                                : 'bg-gray-400 cursor-not-allowed'
+                            }`}
+                          >
+                            <Calendar className="h-4 w-4 mr-2" />
+                            Book Slot
                           </Button>
                           {canManageGames && (
-                            <Button variant="outline" onClick={() => openUpdateDialog(game)}>
-                              Update Game
+                            <Button 
+                              variant="outline" 
+                              onClick={() => openUpdateDialog(game)}
+                              className="min-w-25 border-gray-300 hover:bg-gray-50 transition-colors duration-200"
+                            >
+                              <Plus className="h-4 w-4 mr-2" />
+                              Update
                             </Button>
                           )}
                         </div>
@@ -333,12 +396,10 @@ export const GamePage = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <Label htmlFor="weekend">Operational on Weekends: </Label>
-                  <Input
+                  <Switch
                     id="weekend"
-                    type="checkbox"
                     checked={formData.activeOnWeekends}
-                    onChange={(e) => setFormData({ ...formData, activeOnWeekends: e.target.checked })}
-                    className="w-auto"
+                    onCheckedChange={(checked) => setFormData({ ...formData, activeOnWeekends: checked })}
                   />
                 </div>
               </div>
@@ -423,12 +484,10 @@ export const GamePage = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <Label htmlFor="update-weekend">Operational on Weekends</Label>
-                  <Input
+                  <Switch
                     id="update-weekend"
-                    type="checkbox"
-                    className="w-auto"
                     checked={formData.activeOnWeekends}
-                    onChange={(e) => setFormData({ ...formData, activeOnWeekends: e.target.checked })}
+                    onCheckedChange={(checked) => setFormData({ ...formData, activeOnWeekends: checked })}
                   />
                 </div>
               </div>

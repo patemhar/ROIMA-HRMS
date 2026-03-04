@@ -29,17 +29,24 @@ import {
 import { useGetAllUsers } from "@/hooks/util/util.hooks";
 import {
   DateDisplay,
+  DateTimeDisplay,
   DateTimeWSDisplay,
   TimeDisplay,
   getDatesBetween,
 } from "@/utils/dateUtils";
-import { ArrowLeft, Calendar, Plus, Trash2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Plus, Trash2, AlertCircle, Info, Car } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
-import dayjs from "dayjs";
 import { getErrorMessage } from "@/utils/error";
 import { useAuth } from "@/store";
+import Countdown from 'react-countdown';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import CountUp from "@/components/ui/CountUp";
+import type { components } from "@/types/api";
+import { SearchableSelect } from "@/components/ui/searchable-select";
+
+type Schemas = components["schemas"];
 
 interface SelectedMember {
   id: string;
@@ -54,31 +61,6 @@ interface SlotFormData {
   members: SelectedMember[];
 }
 
-const isTimePast = (timeObj: any): boolean => {
-  if (!timeObj) return false;
-
-  const now = new Date();
-  let hours = 0;
-  let minutes = 0;
-  let seconds = 0;
-
-  if (typeof timeObj === "string") {
-    const parts = timeObj.split(":");
-    hours = parseInt(parts[0], 10);
-    minutes = parseInt(parts[1], 10);
-    seconds = parseInt(parts[2], 10);
-  } else {
-    hours = timeObj.hour ?? 0;
-    minutes = timeObj.minute ?? 0;
-    seconds = timeObj.second ?? 0;
-  }
-
-  const slotTime = new Date();
-  slotTime.setHours(hours, minutes, seconds, 0);
-
-  return slotTime <= now;
-};
-
 const isDateBeforeToday = (dateString: string): boolean => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -89,26 +71,13 @@ const isDateBeforeToday = (dateString: string): boolean => {
   return checkDate < today;
 };
 
-const isToday = (dateString: string): boolean => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const checkDate = new Date(dateString);
-  checkDate.setHours(0, 0, 0, 0);
-
-  return checkDate.getTime() === today.getTime();
-};
-
 const isSlotSelectable = (slot: any, dateString: string): boolean => {
-  if (isDateBeforeToday(dateString)) {
-    return false;
-  }
+ 
+  const now = new Date();
 
-  if (isToday(dateString)) {
-    return !isTimePast(slot.startTime);
-  }
+  const slotStartTime = new Date(`${dateString}T${slot.startTime}`);
 
-  return true;
+  return slotStartTime > now;
 };
 
 const GameDetail = () => {
@@ -132,40 +101,28 @@ const GameDetail = () => {
   const activeBookingQuery = useGetUserActiveBooking(gameId || "");
   const activeBooking = activeBookingQuery.data;
 
+  const bookingOngoingInfo = useMemo(() => {
+   
+    if (!activeBooking || activeBooking.status !== 'CONFIRMED' || !activeBooking.startTime || !activeBooking.endTime) return null;
+
+    const combinedStart = `${activeBooking.slotDate}T${activeBooking.startTime}`;
+    const slotStart = new Date(combinedStart);
+    
+    const combinedEnd = `${activeBooking.slotDate}T${activeBooking.endTime}`;
+    const slotEnd = new Date(combinedEnd);
+    
+    const now = new Date();
+    if (now > slotStart && now < slotEnd) {
+      return { ongoing: true, endDateTime: slotEnd };
+    }
+
+    return null;
+  }, [activeBooking]);
+
   const makeBookingMutation = useMakeBookingRequest();
   const cancelBookingMutation = useCancelBooking();
 
-  const gameStats = useMemo(() => {
-    if (!game || !cycleData || !allStats || allStats.length === 0) return null;
-
-    const stats = allStats.find((stat: any) => {
-      const gameNameMatch =
-        stat.gameName?.trim().toLowerCase() === game.name?.trim().toLowerCase();
-
-      let cycleMatch = false;
-      if (
-        stat.cycleStart &&
-        stat.cycleEnd &&
-        cycleData.cycle_start &&
-        cycleData.cycle_end
-      ) {
-        const statCycleStart = dayjs(stat.cycleStart).startOf("day").valueOf();
-        const statCycleEnd = dayjs(stat.cycleEnd).startOf("day").valueOf();
-        const dataCycleStart = dayjs(cycleData.cycle_start)
-          .startOf("day")
-          .valueOf();
-        const dataCycleEnd = dayjs(cycleData.cycle_end)
-          .startOf("day")
-          .valueOf();
-        cycleMatch =
-          statCycleStart === dataCycleStart && statCycleEnd === dataCycleEnd;
-      }
-
-      return gameNameMatch && cycleMatch;
-    });
-
-    return stats || null;
-  }, [game, cycleData, allStats]);
+  const gameStats = allStats.find((stat) => stat.gameId === gameId);
 
   // State
 
@@ -180,7 +137,7 @@ const GameDetail = () => {
     startTime: null,
     endTime: null,
     queueCount: 0,
-    members: [],
+    members: [{ id: currentUserId!, name: "You" }],
   });
   const [selectedMemberId, setSelectedMemberId] = useState<string>("");
 
@@ -200,11 +157,7 @@ const GameDetail = () => {
     date: selectedDate,
   });
 
-  const slots = useMemo(() => {
-    if (!slotsQuery.data) return [];
-
-    return slotsQuery.data;
-  }, [slotsQuery.data]);
+  const slots = slotsQuery.data || [];
 
   // Handle date selection
   const handleDateSelect = useCallback((date: string) => {
@@ -227,7 +180,7 @@ const GameDetail = () => {
       startTime: slot.startTime,
       endTime: slot.endTime,
       queueCount: slot.queueCount || 0,
-      members: [],
+      members: [{ id: currentUserId!, name: "You" }],
     });
     setSelectedMemberId("");
   }, []);
@@ -235,7 +188,13 @@ const GameDetail = () => {
   const handleAddMember = useCallback(() => {
     if (!selectedMemberId) return;
 
+    if(slotFormData.members.length >= (game?.maxPlayersPerSlot!)) {
+      toast.error(`Cannot add more than ${game?.maxPlayersPerSlot} members to a slot`);
+      return;
+    }
+
     const member = allUsers.find((u: any) => u.userId === selectedMemberId);
+
     if (!member || !member.userId || !member.name) {
       toast.error("Invalid member selected");
       return;
@@ -266,6 +225,9 @@ const GameDetail = () => {
   }, []);
 
   const handleSubmitBooking = useCallback(async () => {
+
+    if (makeBookingMutation.isPending) return;
+
     if (!slotFormData.slotId || slotFormData.members.length === 0) {
       toast.error("Please select a slot and add members");
       return;
@@ -273,12 +235,6 @@ const GameDetail = () => {
 
     try {
       const memberIds = slotFormData.members.map((m) => m.id);
-
-      console.log("Submitting booking with data:", {
-        gameId,
-        slotId: slotFormData.slotId,
-        participants: memberIds,
-      });
 
       await makeBookingMutation.mutateAsync({
         slotId: slotFormData.slotId,
@@ -295,16 +251,23 @@ const GameDetail = () => {
       });
       setSelectedMemberId("");
     } catch (error) {
+      toast.error(getErrorMessage(error));
       setErrorMessage(getErrorMessage(error));
     }
   }, [gameId, selectedDate, slotFormData, makeBookingMutation]);
 
   // Handle cancel booking
   const handleCancelBooking = useCallback(async () => {
-    if (!activeBooking?.bookingId) return;
+
+    if(cancelBookingMutation.isPending) return;
+
+    if (!activeBooking?.bookingId) {
+      toast.error("No active booking to cancel");
+      return;
+    }
 
     try {
-      await cancelBookingMutation.mutateAsync(activeBooking.bookingId);
+      await cancelBookingMutation.mutateAsync({ bookingId: activeBooking.bookingId, gameId: gameId! });
       toast.success("Booking cancelled successfully");
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -337,8 +300,25 @@ const GameDetail = () => {
     );
   }
 
+  if(!game.active) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4 justify-center flex-col h-110">
+          <h1 className="text-xl font-semibold text-destructive">
+            Sorry, This game is currently unavailable!
+          </h1>
+          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" >
       {/* Success/Error Messages */}
       {errorMessage && (
         <div className="bg-red-50 text-red-800 p-3 rounded-md text-sm">
@@ -347,55 +327,27 @@ const GameDetail = () => {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
-        </Button>
+      <div className="flex items-center justify-between">  
+        <div>
+          <h1 className="text-2xl font-bold">{game?.name}</h1>
+          <p className="text-muted-foreground mt-1">
+            View details and manage your bookings for this game
+          </p>
+        </div>
         <Button
           variant="outline"
           size="sm"
-          onClick={() => gameQuery.refetch()}
+          onClick={() => {
+            gameQuery.refetch();
+            cycleQuery.refetch();
+            statsQuery.refetch();
+            activeBookingQuery.refetch();
+          }}
           disabled={gameQuery.isLoading}
         >
           Refresh
         </Button>
       </div>
-
-      {/* User Stats Card */}
-      {gameStats && (
-        <Card className="bg-linear-to-r from-blue-50 to-cyan-50 border-blue-200">
-          <CardHeader>
-            <CardTitle className="text-lg">Your Stats</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-3">
-            <div>
-              <Label className="text-sm text-muted-foreground">
-                Times Played
-              </Label>
-              <p className="text-3xl font-bold text-blue-600">
-                {gameStats.playCount || 0}
-              </p>
-            </div>
-            <div>
-              <Label className="text-sm text-muted-foreground">
-                Cycle Start
-              </Label>
-              <p className="text-sm font-medium">
-                {gameStats.cycleStart
-                  ? DateDisplay(gameStats.cycleStart)
-                  : "N/A"}
-              </p>
-            </div>
-            <div>
-              <Label className="text-sm text-muted-foreground">Cycle End</Label>
-              <p className="text-sm font-medium">
-                {gameStats.cycleEnd ? DateDisplay(gameStats.cycleEnd) : "N/A"}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* if user doesnt have latest cycle stats meana he may not have set interest or set it after cycle start */}
       {!gameStats && !statsQuery.isLoading && cycleData && (
@@ -409,41 +361,95 @@ const GameDetail = () => {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-orange-800">
-              You are not eligible to book slots for this game in the current
-              cycle. You can book from the next cycle once it becomes available.
-            </p>
             <p className="text-sm text-orange-700">
-              To express interest in playing this game in future cycles, please
-              visit your Account page.
+              You are not eligible to book slots for this game in the current
+              cycle. You can book from the next cycle once you express interest in this game or if already then wait for the next cycle to start.
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* User Stats & Cycle Info Card */}
+      {gameStats && cycleData && (
+        <Card className="bg-linear-to-r from-blue-50 to-cyan-50 border-blue-200">
+          <CardHeader>
+            <CardTitle className="text-lg">Your Stats & Cycle Info</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <Label className="text-sm text-muted-foreground">
+                Times Played
+              </Label>
+              <p className="text-3xl font-bold text-blue-600">
+                {gameStats.playCount || 0}
+              </p>
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">
+                Cycle Start
+              </Label>
+              <p className="text-sm font-medium">
+                {cycleData.cycle_start
+                  ? DateTimeDisplay(cycleData.cycle_start)
+                  : "N/A"}
+              </p>
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">Cycle End</Label>
+              <p className="text-sm font-medium">
+                {cycleData.cycle_end ? DateTimeDisplay(cycleData.cycle_end) : "N/A"}
+              </p>
+            </div>
+            <div>
+              <Label className="text-sm text-muted-foreground">
+                Total Slots
+              </Label>
+              <p className="text-2xl font-bold text-cyan-600">
+                {cycleData.total_slots || 0}
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
 
       {/* Active Booking Card */}
       {activeBooking && (
-        <Card className="border-amber-200 bg-amber-50">
+        <Card className="border-emerald-200 bg-emerald-50">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
-                <CardTitle className="text-lg text-amber-900">
+                <CardTitle className="text-lg text-emerald-900 flex items-center justify-center">
                   Your Active Booking
+                  <HoverCard openDelay={10} closeDelay={100}>
+                    <HoverCardTrigger asChild>
+                      <Button variant="link"><Info className="h-4 w-4 ml-1"/></Button>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="flex w-lg flex-col gap-0.5 bg-amber-50 border-amber-200" side="right">
+                      <div className="font-semibold">Important Info</div>
+                      <div className="text-muted-foreground mt-1 text-sm">• Booking can only cancelled by the user who requested it.</div>
+                      <div className="text-muted-foreground mt-1 text-sm">
+                        • Cancellation of a confimed request under 30 minutes of slot start time will result in a penalty.
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
                 </CardTitle>
               </div>
               <Badge
                 variant="outline"
                 className={`${
                   activeBooking.status === "CONFIRMED"
-                    ? "border-green-200 bg-green-50 text-green-700"
-                    : activeBooking.status === "PENDING"
-                      ? "border-blue-200 bg-blue-50 text-blue-700"
-                      : "border-gray-200 bg-gray-50"
+                  ? "border-green-200 bg-green-50 text-green-700"
+                  : activeBooking.status === "PENDING"
+                  ? "border-blue-200 bg-blue-50 text-blue-700"
+                  : "border-gray-200 bg-gray-50"
                 }`}
-              >
+                >
                 {activeBooking.status}
               </Badge>
             </div>
+            <CardDescription>
+              You have an active booking for this game. Please find the details below.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
@@ -456,7 +462,7 @@ const GameDetail = () => {
                 </p>
               </div>
               <div>
-                <Label className="text-sm text-muted-foreground">Time</Label>
+                <Label className="text-sm text-muted-foreground">Slot Time</Label>
                 <p className="text-sm font-medium">
                   {TimeDisplay(activeBooking.startTime)} - {TimeDisplay(activeBooking.endTime)}
                 </p>
@@ -495,19 +501,24 @@ const GameDetail = () => {
               </div>
             </div>
 
-            <p className="text-sm text-orange-700">
-              Booking can only cancelled by the user who requested it.
-            </p>
+            {bookingOngoingInfo?.ongoing && (
+              <div className="border-t pt-4">
+                <Label className="text-sm text-muted-foreground">Time Remaining</Label>
+                <Countdown date={bookingOngoingInfo.endDateTime} renderer={({ hours, minutes, seconds, completed }) => {
+                  if (completed) {
+                    return <p className="text-lg font-bold text-green-600">Slot Ended</p>;
+                  }
+                  return <p className="text-lg font-bold text-amber-400">{String(hours).padStart(2,'0')}:{String(minutes).padStart(2,'0')}:{String(seconds).padStart(2,'0')}</p>;
+                }} />
+              </div>
+            )}
 
-            <p className="text-sm text-orange-700">
-              Booking cancellation of confimed requests under 30 minutes of slot start time will result in a penalty.
-            </p>
-
-            {activeBooking.requestedBy?.substring(0, 36) == currentUserId && (
+            {/* cancellation button */}
+            {activeBooking.requestedBy?.substring(0, 36) == currentUserId && !bookingOngoingInfo?.ongoing && (
               <Button
-                onClick={handleCancelBooking}
-                disabled={cancelBookingMutation.isPending}
-                className=" hover:bg-red-500"
+              onClick={handleCancelBooking}
+              disabled={cancelBookingMutation.isPending}
+              className=" hover:bg-red-500"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 {cancelBookingMutation.isPending
@@ -570,7 +581,7 @@ const GameDetail = () => {
               Interested Players
             </Label>
             <p className="text-sm font-medium">
-              {game?.interestedCount || 0}
+              <CountUp to={game.interestedCount || 0} className="text-blue-600" />
             </p>
           </div>
           <div>
@@ -584,72 +595,38 @@ const GameDetail = () => {
         </CardContent>
       </Card>
 
-      {/* Cycle Info Card */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Game Cycle</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {cycleData ? (
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <Label className="text-sm text-muted-foreground">
-                  Cycle Start
-                </Label>
-                <p className="text-sm font-medium">
-                  {cycleData.cycle_start
-                    ? `${DateDisplay(cycleData.cycle_start)} ${TimeDisplay(cycleData.cycle_start)}`
-                    : "N/A"}
-                </p>
-              </div>
-              <div>
-                <Label className="text-sm text-muted-foreground">
-                  Cycle End
-                </Label>
-                <p className="text-sm font-medium">
-                  {cycleData.cycle_end
-                    ? `${DateDisplay(cycleData.cycle_end)} ${TimeDisplay(cycleData.cycle_end)}`
-                    : "N/A"}
-                </p>
-              </div>
-              <div>
-                <Label className="text-sm text-muted-foreground">
-                  Total Slots
-                </Label>
-                <p className="text-sm font-medium">
-                  {cycleData.total_slots || "N/A"}
-                </p>
-              </div>
+      { !cycleData && !cycleQuery.isLoading && (
+        <Card className="border-gray-200 bg-gray-50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Info className="h-5 w-5 text-gray-600" />
+              <CardTitle className="text-md font-semibold text-gray-900">
+                {cycleResponse?.message || "No Cycle Data"}
+              </CardTitle>
             </div>
-          ) : (
-            <div className="text-center py-4">
-              <p className="text-sm text-muted-foreground">
-                {cycleResponse?.message || "No active game cycle"}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
+        </Card>
+      )}
 
       {/* Date Selection Strip */}
-      {!activeBooking && gameStats && (
+      {gameStats && !bookingOngoingInfo?.ongoing && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
               Select Date
-            </CardTitle>
+            </CardTitle>            
           </CardHeader>
           <CardContent>
             <div className="flex gap-2 overflow-x-auto pb-2">
               {cycleDates.length > 0 ? (
                 cycleDates.map((date) => (
                   <Button
-                    key={date}
-                    variant={selectedDate === date ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleDateSelect(date)}
-                    className="shrink-0"
+                  key={date}
+                  variant={selectedDate === date ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleDateSelect(date)}
+                  className="shrink-0"
                   >
                     {new Date(date).toLocaleDateString("en-US", {
                       month: "short",
@@ -668,16 +645,15 @@ const GameDetail = () => {
       )}
 
       {/* Slots Display */}
-      {!activeBooking && gameStats && selectedDate && (
+      {gameStats && selectedDate && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Available Slots</CardTitle>
             <CardDescription>
-              {new Date(selectedDate).toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
+              {DateDisplay(selectedDate)}.
+              {activeBooking && (
+                <span className="text-amber-700 ml-2">• View-only</span>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -689,58 +665,116 @@ const GameDetail = () => {
                   </div>
                 );
               }
-
+              
               if (slots.length > 0) {
                 return (
                   <ScrollArea className="w-full">
-                    <div className="gap-3 flex w-full space-x-4 p-3">
-                      {slots.map((slot: any) => {
+                    <div className="flex w-full gap-4 p-3">
+                      {slots.map((slot: Schemas["SlotResponseDto"]) => {
                         const selectable = isSlotSelectable(slot, selectedDate);
+                        
+                        const slotState = slot.booked 
+                          ? 'booked' 
+                          : selectable 
+                          ? 'available' 
+                          : 'unavailable';
+                        
+                        const cardStyles = {
+                          booked: "border-amber-200 bg-amber-50 hover:border-amber-500",
+                          available: "cursor-pointer hover:border-primary/50",
+                          unavailable: "opacity-50 cursor-not-allowed"
+                        };
+                        
+                        const statusBadge = {
+                          booked: { label: "Booked", className: "bg-amber-100 text-amber-700 border-amber-300" },
+                          available: { label: "Available", className: "bg-green-100 text-green-700 border-green-300" },
+                          unavailable: { label: "Unavailable", className: "bg-gray-100 text-gray-600" }
+                        };
+
+                        const queueBadgeStyle = (slot.queueCount || 0) === 0 
+                          ? "bg-gray-100" 
+                          : (slot.queueCount || 0) < 3
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-orange-100 text-orange-700";
+
+                        const priorityBadgeStyle = slot.bookingPriority != null && slot.bookingPriority <= 2
+                          ? "bg-red-100 text-red-700 border-red-300"
+                          : slot.bookingPriority != null && slot.bookingPriority <= 5
+                          ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+                          : "bg-blue-100 text-blue-700 border-blue-300";
+                        
                         return (
                           <Card
                             key={slot.id}
-                            className={`transition-all w-50 ${
-                              selectedSlotId === slot.id
-                                ? "border-primary bg-primary/5"
-                                : selectable
-                                  ? "cursor-pointer hover:border-primary/50"
-                                  : "opacity-50 cursor-not-allowed"
+                            className={`relative transition-all w-50 ${
+                              selectable ? selectedSlotId === slot.id ? "border-primary bg-primary/5" : cardStyles[slotState] : "opacity-50 cursor-not-allowed"
                             }`}
-                            onClick={
-                              selectable
-                                ? () => handleSlotSelect(slot)
-                                : undefined
-                            }
+                            onClick={selectable ? () => handleSlotSelect(slot) : undefined}
                           >
-                            <CardContent>
+                            <div className="absolute top-2 right-2">
+                              <Badge variant="outline" className={selectable ? statusBadge[slotState].className : "opacity-50"}>
+                                {selectable ? statusBadge[slotState].label : "Unavailable"}
+                              </Badge>
+                            </div>
+
+                            <CardContent className="p-4 pt-8 pb-3">
                               <div className="space-y-2">
+                                {/* Time */}
                                 <div>
-                                  <p className="text-sm font-medium text-muted-foreground">
-                                    Time
-                                  </p>
+                                  <p className="text-sm font-medium text-muted-foreground">Time</p>
                                   <p className="text-sm font-semibold">
-                                    {TimeDisplay(slot.startTime)} -{" "}
-                                    {TimeDisplay(slot.endTime)}
+                                    {TimeDisplay(slot.startTime)} - {TimeDisplay(slot.endTime)}
                                   </p>
                                 </div>
-                                <div className="border-t pt-2">
-                                  <p className="text-sm font-medium text-muted-foreground">
-                                    Queue Count
-                                  </p>
-                                  <Badge variant="secondary" className="mt-1">
-                                    {slot.queueCount || 0} in queue
-                                  </Badge>
-                                </div>
-                                {!selectable && (
+
+                                {slot.booked && selectable && slot.bookingPriority != null ? (
                                   <div className="border-t pt-2">
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs text-muted-foreground"
-                                    >
-                                      Not Available
+                                    <p className="text-xs font-medium text-muted-foreground mb-1">
+                                      Booking Priority
+                                    </p>
+                                    <HoverCard openDelay={100} closeDelay={100}>
+                                      <HoverCardTrigger asChild>
+                                        <Badge variant="secondary" className={`cursor-help ${priorityBadgeStyle}`}>
+                                          Priority: {slot.bookingPriority}
+                                        </Badge>
+                                      </HoverCardTrigger>
+                                      <HoverCardContent className="w-64 text-sm" side="top">
+                                        <div className="space-y-2">
+                                          <p className="font-semibold">Lower number = Higher priority</p>
+                                          <p className="text-muted-foreground">
+                                            This slot is booked by a team with priority {slot.bookingPriority}.
+                                          </p>
+                                          <p className="text-muted-foreground text-xs">
+                                            Priority is based on the maximum play count among team members. 
+                                            Teams with fewer plays get lower priority numbers (higher priority).
+                                          </p>
+                                        </div>
+                                      </HoverCardContent>
+                                    </HoverCard>
+                                  </div>
+                                ) : (
+                                  <div className="border-t pt-2">
+                                    <p className="text-xs font-medium text-muted-foreground mb-1">Status</p>
+                                    <Badge variant="secondary" className={
+                                      selectable 
+                                        ? "bg-emerald-100 text-emerald-700 border-emerald-300" 
+                                        : "bg-gray-100 text-gray-600"
+                                    }>
+                                      {selectable ? "Ready to Book" : "Can't Book"}
                                     </Badge>
                                   </div>
                                 )}
+
+                                <div className="border-t pt-2">
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-xs font-medium text-muted-foreground">
+                                      Requests in Queue
+                                    </p>
+                                    <Badge variant="secondary" className={queueBadgeStyle}>
+                                      {slot.queueCount || 0}
+                                    </Badge>
+                                  </div>
+                                </div>
                               </div>
                             </CardContent>
                           </Card>
@@ -751,7 +785,7 @@ const GameDetail = () => {
                   </ScrollArea>
                 );
               }
-
+              
               return (
                 <p className="text-sm text-muted-foreground text-center py-8">
                   No available slots for this date
@@ -782,27 +816,22 @@ const GameDetail = () => {
               <div className="space-y-3">
                 <Label htmlFor="user-select">Select Member</Label>
                 <div className="flex gap-2">
-                  <Select
+                  <SearchableSelect
+                    options={allUsers
+                      .filter((user) => !slotFormData.members.some((m) => m.id === user.userId))
+                      .map((user) => ({
+                        value: user.userId!,
+                        label: user.name || "Unnamed User",
+                      }))}
                     value={selectedMemberId}
-                    onValueChange={setSelectedMemberId}
-                  >
-                    <SelectTrigger id="user-select" className="flex-1">
-                      <SelectValue placeholder="Choose a member..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allUsers
-                        .filter((user) => user.userId && user.name)
-                        .map((user) => (
-                          <SelectItem key={user.userId} value={user.userId!}>
-                            {user.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
+                    onValueChange={(value: string) => setSelectedMemberId(value)}
+                    placeholder="Choose a member..."
+                    className="flex-1"
+                  />
                   <Button
                     onClick={handleAddMember}
                     disabled={!selectedMemberId}
-                  >
+                    >
                     <Plus className="h-4 w-4 mr-2" />
                     Add
                   </Button>
@@ -816,19 +845,26 @@ const GameDetail = () => {
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {slotFormData.members.map((member) => (
                       <div
-                        key={member.id}
-                        className="flex items-center justify-between rounded-md border p-3 bg-muted/50"
+                      key={member.id}
+                      className="flex items-center justify-between rounded-md border p-3 bg-muted/50"
                       >
                         <span className="text-sm font-medium">
                           {member.name}
                         </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveMember(member.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        { member.id === currentUserId ? (
+                          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-300">
+                            You
+                          </Badge>
+                          ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveMember(member.id)}
+                            >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                          )
+                        }
                       </div>
                     ))}
                   </div>
@@ -854,7 +890,7 @@ const GameDetail = () => {
                     });
                   }}
                   disabled={makeBookingMutation.isPending}
-                >
+                  >
                   Clear
                 </Button>
                 <Button
@@ -863,7 +899,7 @@ const GameDetail = () => {
                     makeBookingMutation.isPending
                   }
                   onClick={handleSubmitBooking}
-                >
+                  >
                   {makeBookingMutation.isPending ? (
                     <>
                       <Spinner className="mr-2 h-4 w-4" />
@@ -878,6 +914,7 @@ const GameDetail = () => {
           </Card>
         )}
     </div>
+    
   );
 };
 
