@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.Travel;
+package com.roima.hrms.dtos.Travel;
 
 import lombok.Data;
 

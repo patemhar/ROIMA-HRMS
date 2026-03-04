@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.Travel;
+package com.roima.hrms.dtos.Travel;
 
 import lombok.Data;
 
@@ -10,6 +10,5 @@ public class TravelDocumentResponseDto {
     private UUID id;
     private String docUrl;
     private String uploadedBy;
-    private UUID travelId;
     private LocalDateTime createdAt;
 }

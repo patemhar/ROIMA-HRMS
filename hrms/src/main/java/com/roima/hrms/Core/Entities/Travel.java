@@ -34,6 +34,8 @@ public class Travel extends BaseEntity {
 
     private String destination;
 
+    private Double allowance;
+
     @Enumerated(EnumType.STRING)
     private TravelStatus status;
 

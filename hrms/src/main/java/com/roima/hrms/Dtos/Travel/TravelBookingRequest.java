@@ -1,6 +1,5 @@
-package com.roima.hrms.Dtos.Travel;
+package com.roima.hrms.dtos.Travel;
 
-import com.roima.hrms.Core.Entities.Travel;
 import com.roima.hrms.Core.Enums.BookingType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
