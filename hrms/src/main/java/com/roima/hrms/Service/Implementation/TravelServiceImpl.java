@@ -1,10 +1,9 @@
 package com.roima.hrms.Service.Implementation;
 
 import com.roima.hrms.Core.Entities.*;
-import com.roima.hrms.Core.Enums.EntityType;
 import com.roima.hrms.Core.Enums.NotificationType;
 import com.roima.hrms.Core.Enums.TravelStatus;
-import com.roima.hrms.Dtos.Travel.*;
+import com.roima.hrms.dtos.Travel.*;
 import com.roima.hrms.Mapper.TravelMapper;
 import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Service.Interfaces.NotificationService;
@@ -14,11 +13,12 @@ import com.roima.hrms.Utility.SecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -53,6 +53,36 @@ public class TravelServiceImpl implements TravelService{
     }
 
     @Override
+    public Void cancelTravel(UUID travelId) {
+
+        Travel travel = validateAccess(travelId);
+
+        if (travel.getStatus() == TravelStatus.CANCELLED) {
+            throw new RuntimeException("Travel is already canceled");
+        }
+
+        if(travel.getStart_date().isBefore(LocalDate.now())) {
+            throw new RuntimeException("Cannot cancel travel that has already started or completed");
+        }
+
+        travel.setStatus(TravelStatus.CANCELLED);
+        travelRepository.save(travel);
+
+        log.info("Travel cancelled: {} by {}", travel.getTitle(), securityUtil.getCurrentUser().getEmail());
+
+        // Notify members
+        String title = "Travel Plan Canceled";
+        String message = "The travel plan: " + travel.getTitle() + ", On " + travel.getStart_date() + " - " + travel.getEnd_date() + " has been canceled.";
+        for (TravelMember member : travel.getMembers()) {
+            User user = member.getUser();
+            notificationService.createNew(user, securityUtil.getCurrentUser(), NotificationType.TRAVEL, title, message);
+            emailService.sendSimpleMail(user.getEmail(), title, message);
+        }
+
+        return null;
+    }
+
+    @Override
     public TravelResponse getTravel(UUID travelId) {
 
         validateAccess(travelId);
@@ -67,41 +97,41 @@ public class TravelServiceImpl implements TravelService{
     }
 
     @Override
-    public List<TravelResponseSummary> getMyTravel() {
+    public Page<TravelResponseSummary> getMyTravel(Integer page, Integer size, String search) {
 
         User currentUser = securityUtil.getCurrentUser();
 
-        List<Travel> travels = travelRepository.findByMemberUserId(currentUser.getId());
+        Pageable pageable = PageRequest.of(page != null ? page : 0, size != null ? size : 10);
 
-        return travels.stream()
-                .map(travelMapper::ToTravelResSum)
-                .toList();
+        Page<Travel> travels = travelRepository.findByMemberUserId(currentUser.getId(), search, pageable);
+
+        return travels.map(travelMapper::ToTravelResSum);
     }
 
 
     @Override
-    public List<TravelResponseSummary> getTravels() {
+    public Page<TravelResponseSummary> getTravels(Integer page, Integer size, String search) {
 
         User currentUser = securityUtil.getCurrentUser();
         String role = currentUser.getRole().getName();
 
-        List<Travel> travels;
+        Pageable pageable = PageRequest.of(page != null ? page : 0, size != null ? size : 10);
+
+        Page<Travel> travels;
 
         if (role.equals("HR")) {
 
-            travels = travelRepository.findAllActive();
+            travels = travelRepository.findAllActive(search, pageable);
 
         } else if (role.equals("MANAGER")) {
 
-            travels = travelRepository.findByReportsTo(currentUser.getId());
+            travels = travelRepository.findByReportsTo(currentUser.getId(), search, pageable);
 
         } else {
-            travels = travelRepository.findByMemberUserId(currentUser.getId());
+            travels = travelRepository.findByMemberUserId(currentUser.getId(), search, pageable);
         }
 
-        return travels.stream()
-                .map(travelMapper::ToTravelResSum)
-                .toList();
+        return travels.map(travelMapper::ToTravelResSum);
     }
 
 
@@ -137,7 +167,6 @@ public class TravelServiceImpl implements TravelService{
         User currentUser = securityUtil.getCurrentUser();
         var existingUser = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Member not found."));
 
-        // Check if member already exists in this travel
         boolean alreadyExists = travelMemberRepo.existsByTravelIdAndUserId(existingTravel.getId(), existingUser.getId());
         if (alreadyExists) {
             throw new RuntimeException("User " + existingUser.getFirst_name() + " " + existingUser.getLast_name() + " is already a member of this travel");
@@ -149,7 +178,6 @@ public class TravelServiceImpl implements TravelService{
 
         var savedTravelMember = travelMemberRepo.save(travelMember);
 
-        // Notify the added member
         String title = "Added to Travel Plan";
         String message = "You have been added to travel: " + existingTravel.getTitle() +
             " from " + existingTravel.getStart_date() + " to " + existingTravel.getEnd_date();
@@ -170,13 +198,11 @@ public class TravelServiceImpl implements TravelService{
 
         travelBookingRepository.save(travelBooking);
 
-
-
         return travelMapper.ToBookingResponse(travelBooking);
     }
 
     @Override
-    public List<TravelBookingResponse> getTravelBookings(UUID travelId) {
+    public List<TravelBookingResponse> getTravelBookings(UUID travelId, Integer page, Integer size, String search) {
 
         var travelBookings = travelBookingRepository.findByTravelId(travelId);
 
@@ -292,6 +318,7 @@ public class TravelServiceImpl implements TravelService{
 
         travel.setActive(false);
         travelRepository.save(travel);
+
     }
 
     // helpers

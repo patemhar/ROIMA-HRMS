@@ -1,7 +1,8 @@
 package com.roima.hrms.Mapper;
 
 import com.roima.hrms.Core.Entities.*;
-import com.roima.hrms.Dtos.Travel.*;
+import com.roima.hrms.dtos.Travel.*;
+import com.roima.hrms.dtos.admin.TravelManagementDto;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
 import org.modelmapper.ModelMapper;
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Component;
 public class TravelMapper {
 
     private final ModelMapper modelMapper;
+
+    private final TravelDocumentMapper travelDocumentMapper;
 
     public TravelResponseSummary ToTravelResSum (Travel travel) {
 
@@ -51,6 +54,35 @@ public class TravelMapper {
         return travelMemberResponse;
     }
 
+
+    public TravelManagementDto convertToTravelManagementDto(com.roima.hrms.Core.Entities.Travel travel) {
+
+        TravelManagementDto dto = new TravelManagementDto();
+
+        dto.setId(travel.getId());
+        dto.setTitle(travel.getTitle());
+        dto.setDescription(travel.getDescription());
+        dto.setDestination(travel.getDestination());
+        dto.setStartDate(travel.getStart_date());
+        dto.setEndDate(travel.getEnd_date());
+        dto.setStatus(travel.getStatus());
+        dto.setActive(travel.isActive());
+        dto.setCreatedAt(travel.getCreated_at());
+        dto.setUpdatedAt(travel.getUpdated_at());
+
+        if (travel.getCreatedBy() != null) {
+            dto.setCreatedById(travel.getCreatedBy().getId());
+            dto.setCreatedByName(travel.getCreatedBy().getFirst_name() + " " + travel.getCreatedBy().getLast_name());
+        }
+
+        dto.setMemberCount(travel.getMembers() != null ? travel.getMembers().size() : 0);
+        dto.setItineraryCount(travel.getItineraries() != null ? travel.getItineraries().size() : 0);
+        dto.setExpenseCount(travel.getExpenses() != null ? travel.getExpenses().size() : 0);
+        dto.setBookingCount(travel.getTravel_bookings() != null ? travel.getTravel_bookings().size() : 0);
+
+        return dto;
+    }
+
     // Travel
 
     public Travel ToTravel (TravelRequest travelRequest) {
@@ -71,6 +103,7 @@ public class TravelMapper {
         response.setStart_date(travel.getStart_date());
         response.setEnd_date(travel.getEnd_date());
         response.setStatus(travel.getStatus());
+        response.setAllowance(travel.getAllowance());
 
         if (travel.getCreatedBy() != null) {
             response.setCreated_by(travel.getCreatedBy().getId());
@@ -102,7 +135,7 @@ public class TravelMapper {
             response.setTravelDocument(
                     travel.getTravel_documents()
                             .stream()
-                            .map(this::toDocumentResponse)
+                            .map(travelDocumentMapper::toDto)
                             .toList()
             );
         }
@@ -122,10 +155,10 @@ public class TravelMapper {
 
     public Travel updateTravel (Travel travel, TravelUpdateRequest request) {
 
-        if(request.getTitle() != null) {
+        if(request.getTitle() != null && request.getTitle().trim() != "") {
             travel.setTitle(request.getTitle());
         }
-        if(request.getDescription() != null) {
+        if(request.getDescription() != null && request.getDescription().trim() != "") {
             travel.setDescription(request.getDescription());
         }
         if(request.getStart_date() != null) {
@@ -134,8 +167,11 @@ public class TravelMapper {
         if(request.getEnd_date() != null) {
             travel.setEnd_date(request.getEnd_date());
         }
-        if(request.getDestination() != null) {
+        if(request.getDestination() != null && request.getDestination().trim() != "") {
             travel.setDestination(request.getDestination());
+        }
+        if (request.getAllowance()!= null && request.getAllowance() > 0) {
+            travel.setAllowance(request.getAllowance());
         }
 
         return travel;

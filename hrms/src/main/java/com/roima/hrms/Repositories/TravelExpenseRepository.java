@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,4 +21,14 @@ public interface TravelExpenseRepository extends JpaRepository<TravelExpense, UU
 
     @NativeQuery("SELECT expense_type, currency, SUM(amount) from travel_expenses WHERE is_active = 1 GROUP BY expense_type, currency")
     BigDecimal sumByTravelId(UUID travelId);
+
+    @Query("""
+        SELECT SUM(te.amount)
+        FROM TravelExpense te
+        WHERE te.paid_by.id = :userId
+          AND te.travel.id = :travelId
+          AND te.expenseDate = :date
+          AND te.active = true
+    """)
+    Double sumOfTheDayOfUser(UUID userId, UUID travelId, LocalDate date);
 }

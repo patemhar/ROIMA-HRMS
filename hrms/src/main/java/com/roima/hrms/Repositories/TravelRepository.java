@@ -1,6 +1,8 @@
 package com.roima.hrms.Repositories;
 
 import com.roima.hrms.Core.Entities.Travel;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -44,14 +46,52 @@ public interface TravelRepository extends JpaRepository<Travel, UUID> {
             """)
     List<Travel> findByReportsTo(UUID userId);
 
-    @Query("SELECT t FROM Travel t WHERE t.active = true")
-    List<Travel> findAllActive();
+    @Query("""
+            SELECT DISTINCT t
+            FROM Travel t
+            JOIN t.members m
+            WHERE m.user.id = :userId AND t.active = true
+            AND (:search IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.description) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.destination) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.createdBy.first_name) LIKE LOWER(CONCAT('%', :search, '%')))
+            """)
+    Page<Travel> findByMemberUserId(UUID userId, String search, Pageable pageable);
+
+    @Query("""
+            SELECT DISTINCT t
+            FROM Travel t
+            JOIN t.members m
+            WHERE m.user.reports_to.id = :userId AND t.active = true
+            AND (:search IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.description) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.destination) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.createdBy.first_name) LIKE LOWER(CONCAT('%', :search, '%')))
+            """)
+    Page<Travel> findByReportsTo(UUID userId, String search, Pageable pageable);
+
+    @Query("""
+            SELECT t FROM Travel t WHERE t.active = true
+            AND (:search IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.description) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.destination) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.createdBy.first_name) LIKE LOWER(CONCAT('%', :search, '%')))
+            """)
+    Page<Travel> findAllActive(String search, Pageable pageable);
+
+    @Query("""
+            SELECT t FROM Travel t WHERE (:search IS NULL OR LOWER(t.title) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.description) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.destination) LIKE LOWER(CONCAT('%', :search, '%'))
+            OR LOWER(t.createdBy.first_name) LIKE LOWER(CONCAT('%', :search, '%')))
+            """)
+    Page<Travel> findAll(String search, Pageable pageable);
 
     @Modifying
     @Query("""
         UPDATE Travel t
         SET t.status = CASE
-            WHEN t.end_date > CURRENT_DATE AND t.start_date < CURRENT_DATE THEN 'ONGOING'
+            WHEN t.end_date >= CURRENT_DATE AND t.start_date <= CURRENT_DATE THEN 'ONGOING'
             WHEN t.end_date < CURRENT_DATE THEN 'COMPLETED'
             WHEN t.start_date > CURRENT_DATE THEN 'PLANNED'
             ELSE 'CANCELLED'

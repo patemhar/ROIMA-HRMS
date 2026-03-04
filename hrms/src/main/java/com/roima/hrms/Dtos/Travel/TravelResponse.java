@@ -1,11 +1,10 @@
-package com.roima.hrms.Dtos.Travel;
+package com.roima.hrms.dtos.Travel;
 
 import com.roima.hrms.Core.Enums.TravelStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -31,13 +30,15 @@ public class TravelResponse {
 
     private TravelStatus status;
 
+    private Double allowance;
+
     private List<TravelMemberResponse> travelMembers = new ArrayList<>();
 
     private List<TravelItineraryResponse> itineraries = new ArrayList<>();
 
     private List<TravelBookingResponse> travel_bookings = new ArrayList<>();
 
-    private List<TravelDocResponse> travelDocument = new ArrayList<>();
+    private List<TravelDocumentResponseDto> travelDocument = new ArrayList<>();
 
     private UUID created_by;
 

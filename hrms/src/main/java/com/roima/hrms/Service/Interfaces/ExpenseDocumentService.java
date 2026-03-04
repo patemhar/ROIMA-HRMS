@@ -1,8 +1,7 @@
 package com.roima.hrms.Service.Interfaces;
 
-import com.roima.hrms.Core.Entities.ExpenseDocument;
-import com.roima.hrms.Dtos.DocUploadResponse;
-import com.roima.hrms.Dtos.Travel.ExpenseDocumentResponseDto;
+import com.roima.hrms.dtos.DocUploadResponse;
+import com.roima.hrms.dtos.Travel.ExpenseDocumentResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;

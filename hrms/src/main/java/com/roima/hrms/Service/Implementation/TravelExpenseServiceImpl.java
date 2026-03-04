@@ -7,9 +7,10 @@ import com.roima.hrms.Core.Enums.ExpenseStatus;
 import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Mapper.TravelMapper;
 import com.roima.hrms.Service.Interfaces.TravelExpenseService;
-import com.roima.hrms.Dtos.Travel.TravelExpenseRequest;
-import com.roima.hrms.Dtos.Travel.TravelExpenseResponse;
+import com.roima.hrms.dtos.Travel.TravelExpenseRequest;
+import com.roima.hrms.dtos.Travel.TravelExpenseResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TravelExpenseServiceImpl implements TravelExpenseService {
 
     private final TravelExpenseRepository expenseRepository;
@@ -66,6 +68,8 @@ public class TravelExpenseServiceImpl implements TravelExpenseService {
         expense.setRemark(remark);
 
         expenseRepository.save(expense);
+
+        log.info("Expense rejected: {} amount {} by {}", expenseId, expense.getAmount(), currentUser.getEmail());
 
         User submitter = expense.getPaid_by();
         String title = "Travel Expense Approved";
@@ -164,9 +168,22 @@ public class TravelExpenseServiceImpl implements TravelExpenseService {
             throw new RuntimeException("Not allowed to add expenses");
         }
 
+        boolean paidByMember = travelMemberRepo.existsByTravelIdAndUserId(travelId, dto.getPaid_by());
+
+        if (!paidByMember) {
+            throw new RuntimeException("The user specified in paid_by is not a member of this travel.");
+        }
+
         var travelExpense = travelMapper.ToTravelExpense(dto);
 
         var existingTravel = travelRepository.findById(travelId).orElseThrow(() -> new RuntimeException("No travel found for provided id."));
+
+        // allowance check
+        var existingExpensesOfTheDay = travelExpenseRepository.sumOfTheDayOfUser(dto.getPaid_by(), travelId, dto.getExpenseDate());
+
+        if(existingExpensesOfTheDay != null && existingExpensesOfTheDay + dto.getAmount().doubleValue() > existingTravel.getAllowance()) {
+            throw new RuntimeException("Daily expense limit exceeded for this user.");
+        }
 
         if(dto.getExpenseDate().isBefore(existingTravel.getStart_date().minusDays(2))) {
             throw new RuntimeException("Expense cant be added before 2 days of travel start date.");

@@ -252,175 +252,175 @@ export const ExpenseManagement = () => {
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-semibold">Expense Management</h1>
+            <h1 className="text-2xl font-semibold">Expense Management</h1>
           </div>
         </div>
-      </div>
-
-      <div className="flex justify-end mb-4">
-        {(isHR || isTravelMember) && (
-          <Dialog
-            open={addExpenseDialogOpen}
-            onOpenChange={(open) => {
-              setAddExpenseDialogOpen(open);
-              if (!open) resetExpense();
-            }}
-          >
-            <DialogTrigger asChild>
-              <Button className="bg-black text-white">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Expense
-              </Button>
-            </DialogTrigger>
-
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add Expense</DialogTitle>
-              <DialogDescription>
-                Enter expense details for this travel.
-              </DialogDescription>
-            </DialogHeader>
-
-            <form
-              onSubmit={expenseSubmit(onExpenseSubmit)}
-              className="space-y-5 py-4"
+        <div className="flex mb-4">
+          {(isHR || isTravelMember) && (
+            <Dialog
+              open={addExpenseDialogOpen}
+              onOpenChange={(open) => {
+                setAddExpenseDialogOpen(open);
+                if (!open) resetExpense();
+              }}
             >
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="expense-title">Title *</Label>
-                  <Input
-                    id="expense-title"
-                    placeholder="e.g., Dinner with client"
-                    className={
-                      expenseErrors.title ? "border-destructive" : ""
-                    }
-                    {...expenseRegister("title", {
-                      required: "Title is required",
-                    })}
-                  />
-                  {expenseErrors.title && (
-                    <p className="text-sm text-destructive">
-                      {expenseErrors.title.message as string}
-                    </p>
-                  )}
-                </div>
+              <DialogTrigger asChild>
+                <Button className="bg-black text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Expense
+                </Button>
+              </DialogTrigger>
 
-                <div className="space-y-2">
-                  <Label>Paid By *</Label>
-                  <Controller
-                    name="paid_by"
-                    control={expenseControl}
-                    rules={{ required: "Please select an employee" }}
-                    render={({ field }) => (
-                      <Select value={field.value} onValueChange={field.onChange}>
-                        <SelectTrigger className={expenseErrors.paid_by ? "border-destructive" : ""}>
-                          <SelectValue placeholder="Select employee" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {users?.map(user => (
-                            <SelectItem key={user.userId} value={user.userId!}>
-                              {user.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
-                  {expenseErrors.paid_by && (
-                    <p className="text-sm text-destructive">
-                      {expenseErrors.paid_by.message as string}
-                    </p>
-                  )}
-                </div>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Add Expense</DialogTitle>
+                <DialogDescription>
+                  Enter expense details for this travel.
+                </DialogDescription>
+              </DialogHeader>
 
-                <div className="space-y-2">
-                  <Label>Expense Type *</Label>
-                  <select
-                    className={`w-full border rounded-md h-10 px-2 bg-background ${expenseErrors.expense_type ? "border-destructive" : ""}`}
-                    {...expenseRegister("expense_type", {
-                      required: "Please select a type",
-                    })}
-                  >
-                    <option value="">Select type</option>
-                    <option value="TRANSPORTATION">Transportation</option>
-                    <option value="ACCOMMODATION">Accommodation</option>
-                    <option value="MEALS">Meals</option>
-                    <option value="ENTERTAINMENT">Entertainment</option>
-                  </select>
-                  {expenseErrors.expense_type && (
-                    <p className="text-sm text-destructive">
-                      {expenseErrors.expense_type.message as string}
-                    </p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+              <form
+                onSubmit={expenseSubmit(onExpenseSubmit)}
+                className="space-y-5 py-4"
+              >
+                <div className="grid gap-4">
                   <div className="space-y-2">
-                    <Label>Amount *</Label>
+                    <Label htmlFor="expense-title">Title *</Label>
                     <Input
-                      type="number"
-                      step="0.01"
-                      placeholder="0.00"
-                      {...expenseRegister("amount", {
-                        valueAsNumber: true,
-                        required: "Amount is required",
-                        min: {
-                          value: 0.01,
-                          message: "Amount must be greater than 0",
-                        },
+                      id="expense-title"
+                      placeholder="e.g., Dinner with client"
+                      className={
+                        expenseErrors.title ? "border-destructive" : ""
+                      }
+                      {...expenseRegister("title", {
+                        required: "Title is required",
                       })}
                     />
-                    {expenseErrors.amount && (
+                    {expenseErrors.title && (
                       <p className="text-sm text-destructive">
-                        {expenseErrors.amount.message as string}
+                        {expenseErrors.title.message as string}
                       </p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Currency *</Label>
+                    <Label>Paid By *</Label>
+                    <Controller
+                      name="paid_by"
+                      control={expenseControl}
+                      rules={{ required: "Please select an employee" }}
+                      render={({ field }) => (
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger className={expenseErrors.paid_by ? "border-destructive" : ""}>
+                            <SelectValue placeholder="Select employee" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {users?.map(user => (
+                              <SelectItem key={user.userId} value={user.userId!}>
+                                {user.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    />
+                    {expenseErrors.paid_by && (
+                      <p className="text-sm text-destructive">
+                        {expenseErrors.paid_by.message as string}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Expense Type *</Label>
+                    <select
+                      className={`w-full border rounded-md h-10 px-2 bg-background ${expenseErrors.expense_type ? "border-destructive" : ""}`}
+                      {...expenseRegister("expense_type", {
+                        required: "Please select a type",
+                      })}
+                    >
+                      <option value="">Select type</option>
+                      <option value="TRANSPORTATION">Transportation</option>
+                      <option value="ACCOMMODATION">Accommodation</option>
+                      <option value="MEALS">Meals</option>
+                      <option value="ENTERTAINMENT">Entertainment</option>
+                    </select>
+                    {expenseErrors.expense_type && (
+                      <p className="text-sm text-destructive">
+                        {expenseErrors.expense_type.message as string}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Amount *</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...expenseRegister("amount", {
+                          valueAsNumber: true,
+                          required: "Amount is required",
+                          min: {
+                            value: 0.01,
+                            message: "Amount must be greater than 0",
+                          },
+                        })}
+                      />
+                      {expenseErrors.amount && (
+                        <p className="text-sm text-destructive">
+                          {expenseErrors.amount.message as string}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Currency *</Label>
+                      <Input
+                        placeholder="INR, USD, etc."
+                        {...expenseRegister("currency", {
+                          required: "Currency is required",
+                        })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Expense Date *</Label>
                     <Input
-                      placeholder="INR, USD, etc."
-                      {...expenseRegister("currency", {
-                        required: "Currency is required",
+                      type="date"
+                      {...expenseRegister("expenseDate", {
+                        required: "Date is required",
                       })}
                     />
+                    {expenseErrors.expenseDate && (
+                      <p className="text-sm text-destructive">
+                        {expenseErrors.expenseDate.message as string}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Expense Date *</Label>
-                  <Input
-                    type="date"
-                    {...expenseRegister("expenseDate", {
-                      required: "Date is required",
-                    })}
-                  />
-                  {expenseErrors.expenseDate && (
-                    <p className="text-sm text-destructive">
-                      {expenseErrors.expenseDate.message as string}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setAddExpenseDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={addExpense.isPending}>
-                  {addExpense.isPending ? "Adding..." : "Add Expense"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-        )}
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setAddExpenseDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={addExpense.isPending}>
+                    {addExpense.isPending ? "Adding..." : "Add Expense"}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+          )}
+        </div>
       </div>
+
 
       {expenses && expenses.length > 0 && (
         <Card className="mb-6">
