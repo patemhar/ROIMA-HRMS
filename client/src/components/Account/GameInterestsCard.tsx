@@ -1,18 +1,18 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useMyProfile, useAddInterest, useRemoveInterest } from "@/hooks/user/user.hooks";
+import { useAddInterest, useRemoveInterest, useMyInterests } from "@/hooks/user/user.hooks";
 import { useGetAllGames } from "@/hooks/util/util.hooks";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/utils/error";
 
 export function GameInterestsCard() {
   // Queries
-  const myProfileQuery = useMyProfile();
+  const myInterestsQuery = useMyInterests();
   const gamesQuery = useGetAllGames();
 
   const games = gamesQuery.data ?? [];
-  const myInterests = myProfileQuery.data?.gameInterests ?? [];
+  const myInterests = myInterestsQuery.data?.map(i => i.gameId) ?? [];
 
   // Mutations
   const addInterestMutation = useAddInterest();
@@ -53,7 +53,7 @@ export function GameInterestsCard() {
           </Label>
           {myInterests.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {myInterests.map((gameId: string) => {
+              {myInterests.map((gameId) => {
                 const game = games.find((g) => g.id === gameId);
                 if (!game) return null;
                 return (
@@ -63,7 +63,7 @@ export function GameInterestsCard() {
                   >
                     <span className="text-sm font-medium">{game.name}</span>
                     <button
-                      onClick={() => handleRemoveInterest(gameId)}
+                      onClick={() => handleRemoveInterest(gameId!)}
                       disabled={removeInterestMutation.isPending}
                       className="text-muted-foreground text-lg "
                       title="Remove interest"
