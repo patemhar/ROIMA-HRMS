@@ -1,6 +1,7 @@
 import { apiClient } from "./apiClient";
 import type { components } from "@/types/api";
 import type { ApiResponse } from "@/types/http";
+import type { Search } from "lucide-react";
 
 type Schemas = components["schemas"];
 type ApiResult<T> = Promise<ApiResponse<T>>;
@@ -13,6 +14,14 @@ class gameService {
         return apiClient.post<Schemas["GameResponseDto"]> (
             '/games',
             data
+        )
+    }
+
+    toggleGameActive(
+        gameId: string
+    ) : ApiResult<void> {
+        return apiClient.post<void> (
+            `/games/${gameId}/toggle-active`
         )
     }
 
@@ -33,6 +42,26 @@ class gameService {
     getAllGames() : ApiResult<Schemas["GameResponseDto"][]> {
         return apiClient.get(
             '/games/all'
+        )
+    }
+
+    getAllGameBookingRequests(
+        pageNumber: number = 1,
+        pageSize: number = 10,
+        searchTerm?: string
+    ) : ApiResult<Schemas["PageBookingRequestListDto"]> {
+
+        const params = new URLSearchParams();
+        params.append("pageNumber", pageNumber.toString());
+        params.append("pageSize", pageSize.toString());
+
+        if (searchTerm) {
+            params.append("searchTerm", searchTerm);
+        }
+
+        return apiClient.get<Schemas["PageBookingRequestListDto"]> (
+            '/games/bookings',
+            { params }
         )
     }
 

@@ -1,6 +1,6 @@
 import { useAuth } from "@/store";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
-import { gameKeys, normalCacheConfig } from "./types";
+import { gameKeys, normalCacheConfig, smallCacheConfig } from "./types";
 import { GameService } from "@/services/gameService";
 import type { components } from "@/types/api";
 
@@ -17,6 +17,28 @@ export const useGetAllGames = () => {
 
       if (!res.success || !res.data)
         throw new Error(res.errors || "Failed to fetch games");
+
+      return res.data;
+    },
+    enabled: isAuthenticated,
+    ...normalCacheConfig,
+  });
+};
+
+export const useGetAllGameBookingRequests = (
+  pageNumber: number = 1,
+  pageSize: number = 10,
+  searchTerm?: string
+) => {
+  const isAuthenticated = useAuth().auth.isAuthenticated;
+
+  return useQuery({
+    queryKey: gameKeys.bookings(pageNumber, pageSize, searchTerm),
+    queryFn: async () => {
+      const res = await GameService.getAllGameBookingRequests(pageNumber, pageSize, searchTerm);
+
+      if (!res.success || !res.data)
+        throw new Error(res.errors || "Failed to fetch bookings");
 
       return res.data;
     },
@@ -45,7 +67,7 @@ export const useGetGameSlots = ({
       return res.data;
     },
     enabled: isAuthenticated && !!gameId && !!date,
-    ...normalCacheConfig,
+    ...smallCacheConfig,
   })
 }
 
@@ -57,7 +79,6 @@ export const useGetGame = (
   return useQuery({
     queryKey: gameKeys.gameById(gameId),
     queryFn: async () => {
-      console.log(gameId);
       const res = await GameService.getGameById(gameId);
 
       if (!res.success || !res.data)
@@ -113,12 +134,11 @@ export const useGetUserActiveBooking = (gameId: string) => {
   const isAuthenticated = useAuth().auth.isAuthenticated;
 
   return useQuery({
-    queryKey: ["activeBooking", gameId],
+    queryKey: gameKeys.activeBooking(gameId),
     queryFn: async () => {
       const res = await GameService.getUserActiveBooking(gameId);
 
       if (!res.success) {
-        // No active booking is not an error
         return null;
       }
 
@@ -142,7 +162,7 @@ export const useMakeBookingRequest = () => {
       return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["activeBooking"] });
+      queryClient.invalidateQueries({ queryKey: gameKeys.activeBooking("") });
       queryClient.invalidateQueries({ queryKey: ["game", "slots"] });
       queryClient.invalidateQueries({ queryKey: ["gameStats"] });
     },
@@ -153,9 +173,9 @@ export const useCancelBooking = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (bookingId: string) => GameService.cancelBooking(bookingId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["activeBooking"] });
+    mutationFn: (params: { bookingId: string; gameId: string }) => GameService.cancelBooking(params.bookingId),
+    onSuccess: (_, params) => {
+      queryClient.invalidateQueries({ queryKey: gameKeys.activeBooking(params.gameId) });
       queryClient.invalidateQueries({ queryKey: ["game", "slots"] });
       queryClient.invalidateQueries({ queryKey: ["gameStats"] });
     },
@@ -173,6 +193,18 @@ export const useCreateGame = () => {
     },
   });
 };
+
+export const useToggleGameActive = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (gameId: string) => GameService.toggleGameActive(gameId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: gameKeys.all });
+    }
+  });
+}
+
 
 export const useUpdateGame = () => {
   const queryClient = useQueryClient();
