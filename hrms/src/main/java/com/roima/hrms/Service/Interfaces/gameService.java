@@ -1,7 +1,7 @@
 package com.roima.hrms.Service.Interfaces;
 
-import com.roima.hrms.Core.Entities.SlotBookingRequest;
-import com.roima.hrms.Dtos.game.*;
+import com.roima.hrms.dtos.game.*;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -13,6 +13,8 @@ public interface gameService {
     GameSlotBookingRequestResponse makeRequest(GameSlotBookingRequestDto request);
 
     GameResponseDto createGame(GameCreateRequestDto request);
+
+    Void toggleGameActiveStatus(UUID gameId);
 
     Void updateGame(GameCreateRequestDto request, UUID gameId);
 
@@ -26,5 +28,9 @@ public interface gameService {
 
     UserActiveBookingDto getUserActiveBooking(UUID gameId);
 
+    void processExpiredBookings();
+
     void cancelBooking(UUID bookingId);
+
+    Page<BookingRequestListDto> getAllBookingRequests(int page, int size, String search);
 }

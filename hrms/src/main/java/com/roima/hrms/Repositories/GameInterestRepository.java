@@ -1,5 +1,6 @@
 package com.roima.hrms.Repositories;
 
+import com.roima.hrms.Core.Entities.Game;
 import com.roima.hrms.Core.Entities.GameInterest;
 import com.roima.hrms.Core.Entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,10 +28,10 @@ public interface GameInterestRepository extends JpaRepository<GameInterest, UUID
     List<User> getInterestedUsers(UUID gameId);
 
     @Query("""
-        SELECT gi.game.id FROM GameInterest gi
+        SELECT gi FROM GameInterest gi
         WHERE gi.user.id = :userId
     """)
-    List<UUID> getUserInterests(UUID userId);
+    List<GameInterest> getUserInterests(UUID userId);
 
     @Query("""
         SELECT CASE WHEN COUNT(gi) > 0 THEN true ELSE false END

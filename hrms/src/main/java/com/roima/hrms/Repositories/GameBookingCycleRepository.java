@@ -26,4 +26,10 @@ public interface GameBookingCycleRepository extends JpaRepository<GameBookingCyc
 
     @Query("SELECT COUNT(c) > 0 FROM GameBookingCycle c WHERE c.game.id = :gameId AND c.cycle_start > :now")
     boolean existsFutureCycle(UUID gameId, LocalDateTime now);
+
+    @Query("""
+        SELECT c.cycle_start FROM GameBookingCycle c
+        WHERE c.game.id = :gameId AND c.cycle_start > CURRENT_TIMESTAMP
+    """)
+    LocalDateTime findNextCycleStartTime(UUID gameId);
 }

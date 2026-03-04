@@ -3,15 +3,17 @@ package com.roima.hrms.Service.Implementation;
 import com.roima.hrms.Core.Entities.*;
 import com.roima.hrms.Core.Enums.BookingRequestStatus;
 import com.roima.hrms.Core.Enums.NotificationType;
-import com.roima.hrms.Dtos.game.*;
+import com.roima.hrms.dtos.game.*;
 import com.roima.hrms.Mapper.GameMapper;
 import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Service.Interfaces.EmailService;
 import com.roima.hrms.Service.Interfaces.NotificationService;
 import com.roima.hrms.Service.Interfaces.gameService;
 import com.roima.hrms.Utility.SecurityUtil;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -43,16 +45,24 @@ public class gameServiceImpl implements gameService {
     @Override
     public GameSlotBookingRequestResponse makeRequest(GameSlotBookingRequestDto request) {
 
-        for (UUID participant : request.getParticipants()) {
-            if(slotParticipantRepository.existsActiveFutureBooking(participant)) {
-                throw new RuntimeException("One or more users already have an active booking request.");
-            }
-        }
-
         var teamPriority = 0;
 
         var currentUser = securityUtil.getCurrentUser();
         var existingSlot = gameSlotRepository.findById(request.getSlotId()).orElseThrow(() -> new RuntimeException("No Slot Found"));
+
+        if(!existingSlot.getGame().getActive()) {
+            throw new RuntimeException("Sorry, this game is currently inactive and cannot be booked.");
+        }
+
+        for (UUID participant : request.getParticipants()) {
+            if(slotParticipantRepository.existsActiveFutureBooking(participant, existingSlot.getGame().getId())) {
+                throw new RuntimeException("One or more users already have an active booking request.");
+            }
+        }
+
+        if(request.getParticipants().size() > existingSlot.getGame().getMaxPlayers()) {
+            throw new RuntimeException("Number of participants exceeds the maximum allowed for this game.");
+        }
 
         LocalDateTime slotStart = LocalDateTime.of(existingSlot.getSlotDate(), existingSlot.getStartTime());
         if (slotStart.isBefore(LocalDateTime.now())) {
@@ -128,6 +138,10 @@ public class gameServiceImpl implements gameService {
 
         processRequests(existingSlot);
 
+        log.info("Game slot booking requested: {} for slot {} by {} with {} participants",
+            existingSlot.getGame().getName(), existingSlot.getSlotDate(),
+            currentUser.getEmail(), request.getParticipants().size());
+
         return gameMapper.toGameSlotBookingRequestResponse(savedSlotBookingRequest1);
     }
 
@@ -191,6 +205,17 @@ public class gameServiceImpl implements gameService {
     }
 
     @Override
+    @Transactional
+    public void processExpiredBookings() {
+        try {
+            slotBookingRequestRepository.processExpiredBookings();
+            log.info("Expired bookings processed successfully.");
+        } catch (Exception e) {
+            log.error("Error processing expired bookings: " + e.getMessage());
+        }
+    }
+
+    @Override
     public void cancelBooking(UUID bookingId) {
         SlotBookingRequest booking = slotBookingRequestRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
@@ -246,6 +271,9 @@ public class gameServiceImpl implements gameService {
 
             processRequests(booking.getSlot());
         }
+
+        log.info("Game booking cancelled: {} for game {} by {}",
+            bookingId, booking.getSlot().getGame().getName(), currentUser.getEmail());
     }
 
     @Override
@@ -263,7 +291,23 @@ public class gameServiceImpl implements gameService {
 
         var savedGame = gameRepository.save(newGame);
 
+        log.info("Game created: {}", savedGame.getName());
+
         return gameMapper.toGameResponseDto(savedGame);
+    }
+
+    @Override
+    public Void toggleGameActiveStatus(UUID gameId) {
+
+        var existingGame = gameRepository.findById(gameId).orElseThrow(() -> new RuntimeException("No game found"));
+
+        existingGame.setActive(!existingGame.getActive());
+
+        gameRepository.save(existingGame);
+
+        log.info("Game active status toggled: {} is now {}", existingGame.getName(), existingGame.getActive() ? "active" : "inactive");
+
+        return null;
     }
 
     @Override
@@ -275,8 +319,12 @@ public class gameServiceImpl implements gameService {
 
         gameRepository.save(updatedGame);
 
+        log.info("Game updated: {}", updatedGame.getName());
+
         return null;
     }
+
+
 
     private void processRequests(GameSlot slot) {
 
@@ -308,7 +356,7 @@ public class gameServiceImpl implements gameService {
                 }
 
                 String title = "Game Slot Confirmed!";
-                String message = "Your booking for " + game.getName() + " on " + slot.getSlotDate() + " has been confirmed!";
+                String message = "Your booking for " + game.getName() + " on " + slot.getSlotDate() + " at " + slot.getStartTime() + " - " + slot.getEndTime() + " has been confirmed!";
                 notificationService.createNew(participant.getUser(), participant.getUser(), NotificationType.SYSTEM, title, message);
 
                 new Thread(() -> {
@@ -336,7 +384,7 @@ public class gameServiceImpl implements gameService {
                     }
 
                     String title = "Game Slot Booking Changed";
-                    String message = "Your confirmed booking for " + game.getName() + " on " + slot.getSlotDate() +
+                    String message = "Your confirmed booking for " + game.getName() + " on " + slot.getSlotDate() + " at " + slot.getStartTime() + " - " + slot.getEndTime() +
                         " has been moved to pending due to a higher priority request.";
 
                     notificationService.createNew(participant.getUser(), participant.getUser(), NotificationType.SYSTEM, title, message);
@@ -369,7 +417,7 @@ public class gameServiceImpl implements gameService {
 
                     // Notify participant about newly confirmed booking
                     String title = "Game Slot Confirmed!";
-                    String message = "Your booking for " + game.getName() + " on " + slot.getSlotDate() + " has been confirmed!";
+                    String message = "Your booking for " + game.getName() + " on " + slot.getSlotDate() + " at " + slot.getStartTime() + " - " + slot.getEndTime() + " has been confirmed!";
                     notificationService.createNew(participant.getUser(), participant.getUser(), NotificationType.SYSTEM, title, message);
                     new Thread(() -> {
                         try {
@@ -382,5 +430,24 @@ public class gameServiceImpl implements gameService {
             }
         }
 
+    }
+
+    @Override
+    public Page<BookingRequestListDto> getAllBookingRequests(int page, int size, String search) {
+
+        var currentUser = securityUtil.getCurrentUser();
+        var userRole = currentUser.getRole().getName();
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<SlotBookingRequest> bookingRequests;
+
+        if ("HR".equals(userRole)) {
+            bookingRequests = slotBookingRequestRepository.findAllWithSearch(search, pageable);
+        } else {
+            bookingRequests = slotBookingRequestRepository.findByUserInvolvedWithSearch(
+                currentUser.getId(), search, pageable);
+        }
+
+        return bookingRequests.map(gameMapper::toBookingRequestListDto);
     }
 }
