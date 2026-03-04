@@ -27,13 +27,17 @@ export const useTravelById = (travelId: string) => {
   });
 };
 
-export const useGetMyTravels = () => {
+export const useGetMyTravels = (
+    pageNumber: number,
+    pageSize: number,
+    searchTerm?: string
+) => {
   const user = useAuth((state) => state.auth.user);
 
   return useQuery({
-    queryKey: hrKeys.myTravels(user?.id ?? "anonymus"),
+    queryKey: hrKeys.myTravels(user?.id ?? "anonymus", pageNumber, pageSize, searchTerm),
     queryFn: async () => {
-      const res = await travelService.getMyTravels();
+      const res = await travelService.getMyTravels(pageNumber, pageSize, searchTerm);
 
       if (!res.success || !res.data)
         throw new Error(res.errors || "Failed");
@@ -69,13 +73,17 @@ export const useGetUserTravels = (
   });
 };
 
-export const useGetAllTravels = (isEnabled: boolean) => {
+export const useGetAllTravels = (
+    pageNumber: number,
+    pageSize: number,
+    searchTerm?: string,
+    isEnabled?: boolean) => {
   const user = useAuth((state) => state.auth.user);
 
   return useQuery({
-    queryKey: hrKeys.allTravels(user?.role ?? "public"),
+    queryKey: hrKeys.allTravels(user?.role ?? "public", pageNumber, pageSize, searchTerm),
     queryFn: async () => {
-      const res = await travelService.getAllTravels();
+      const res = await travelService.getAllTravels(pageNumber, pageSize, searchTerm);
 
       if (!res.success || !res.data)
         throw new Error(res.errors || "Failed");
@@ -155,7 +163,7 @@ export const useCreateTravel = () => {
 
             return response;
         },
-        onSuccess: () => {
+        onSuccess: (_, data) => {
             queryClient.invalidateQueries({ queryKey: hrKeys.allTravels(user?.role ?? "public") })
         }
     })
@@ -189,6 +197,30 @@ export const useUpdateTravel = () => {
             queryClient.invalidateQueries({ queryKey: hrKeys.travelById(id) });
         }
     })
+}
+
+export const useCancelTravel = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (
+            id: string
+        ) => {
+            
+            const response = await travelService.cancelTravel(
+                id
+            );
+            
+            if(!response.success) {
+                throw new Error(response.errors || "Failed to cancel travel")
+            }
+
+            return response;
+        },
+        onSuccess: (_, id) => {
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(id) })
+        }
+    })  
 }
 
 export const useDeleteTravel = () => {
@@ -343,6 +375,7 @@ export const useUpdateBooking = () => {
             bookingId: string,
             data: Schemas["TravelBookingRequest"]
         }) => {
+
             const response = await travelService.updateBooking(
                 bookingId,
                 data
@@ -355,7 +388,7 @@ export const useUpdateBooking = () => {
             return response;
         },
         onSuccess: (_, { travelId }) => {
-            queryClient.invalidateQueries({queryKey: hrKeys.bookingByTravelId(travelId) })
+            queryClient.invalidateQueries({queryKey: hrKeys.travelById(travelId) })
         }
     })
 }
@@ -382,7 +415,7 @@ export const useDeleteBooking = () => {
             return response;
         },
         onSuccess: (_, {travelId}) => {
-            queryClient.invalidateQueries({ queryKey: hrKeys.bookingByTravelId(travelId) })
+            queryClient.invalidateQueries({ queryKey: hrKeys.travelById(travelId) })
         }
     })
 }

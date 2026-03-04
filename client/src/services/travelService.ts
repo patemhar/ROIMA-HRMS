@@ -24,9 +24,16 @@ class TravelService {
         )
     }
 
-    getMyTravels () : ApiResult<Schemas["TravelResponseSummary"][]> {
-        return apiClient.get<Schemas["TravelResponseSummary"][]> (
-            'travels/my'
+    getMyTravels (pageNumber: number, pageSize: number, searchTerm?: string) : ApiResult<Schemas["PageTravelResponseSummary"]> {
+        const params = new URLSearchParams();
+        params.append("page", pageNumber.toString());
+        params.append("size", pageSize.toString());
+        if (searchTerm) {
+            params.append("search", searchTerm);
+        }
+        return apiClient.get<Schemas["PageTravelResponseSummary"]> (
+            'travels/my',
+            { params }
         )
     }
 
@@ -38,9 +45,16 @@ class TravelService {
         )
     }
 
-    getAllTravels () : ApiResult<Schemas["TravelResponseSummary"][]> {
-        return apiClient.get<Schemas["TravelResponseSummary"][]> (
-            '/travels'
+    getAllTravels (pageNumber: number, pageSize: number, searchTerm?: string) : ApiResult<Schemas["PageTravelResponseSummary"]> {
+        const params = new URLSearchParams();
+        params.append("page", pageNumber.toString());
+        params.append("size", pageSize.toString());
+        if (searchTerm) {
+            params.append("search", searchTerm);
+        }
+        return apiClient.get<Schemas["PageTravelResponseSummary"]> (
+            '/travels',
+            { params }
         )
     }
 
@@ -55,6 +69,14 @@ class TravelService {
         return apiClient.patch<void> (
             `travels/${id}`,
             data
+        )
+    }
+
+    cancelTravel (
+        id: String
+    ) : ApiResult<void> {
+        return apiClient.post<void> (
+            `travels/${id}/cancel`
         )
     }
 

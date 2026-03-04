@@ -5,11 +5,11 @@ export const hrKeys = {
   travels: () => [...hrKeys.all, "travels"] as const,
 
   // travel
-  allTravels: (role: string) =>
-    [...hrKeys.travels(), "all", role] as const,
+  allTravels: (role: string, pageNumber?: number, pageSize?: number, searchTerm?: string) =>
+    [...hrKeys.travels(), "all", role, pageNumber, pageSize, searchTerm] as const,
 
-  myTravels: (userId: string) =>
-    [...hrKeys.travels(), "my", userId] as const,
+  myTravels: (userId: string, pageNumber: number, pageSize: number, searchTerm?: string) =>
+    [...hrKeys.travels(), "my", userId, pageNumber, pageSize, searchTerm] as const,
 
   travelById: (travelId: string) =>
     [...hrKeys.travels(), "detail", travelId] as const,

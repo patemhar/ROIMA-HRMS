@@ -36,6 +36,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/system-config/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getConfigById"];
+        put: operations["updateConfig"];
+        post?: never;
+        delete: operations["deleteConfig"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/notifications/{notificationId}/read": {
         parameters: {
             query?: never;
@@ -47,6 +63,54 @@ export interface paths {
         put: operations["markAsRead"];
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/notifications/mark-all-read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["markAllAsRead"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/roles/{roleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getRoleById"];
+        put: operations["updateRole"];
+        post?: never;
+        delete: operations["deleteRole"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/departments/{departmentId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDepartmentById"];
+        put: operations["updateDepartment"];
+        post?: never;
+        delete: operations["deleteDepartment"];
         options?: never;
         head?: never;
         patch?: never;
@@ -68,6 +132,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/achievements/replies/{replyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["updateReply"];
+        post?: never;
+        delete: operations["deleteReply"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/achievements/comments/{commentId}": {
         parameters: {
             query?: never;
@@ -79,6 +159,38 @@ export interface paths {
         put: operations["updateComment"];
         post?: never;
         delete: operations["deleteComment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{userId}/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["unlockUserAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/users/{userId}/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["resetUserPassword"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -164,6 +276,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/travels/{travelId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["cancelTravel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/travels/{travelId}/booking": {
         parameters: {
             query?: never;
@@ -190,6 +318,22 @@ export interface paths {
         get: operations["getExpenseDocs"];
         put?: never;
         post: operations["uploadExpenseDocs"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/system-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllConfigs"];
+        put?: never;
+        post: operations["createConfig"];
         delete?: never;
         options?: never;
         head?: never;
@@ -254,6 +398,22 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["createGame"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/games/{gameId}/toggle-active": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["toggleGameActiveStatus"];
         delete?: never;
         options?: never;
         head?: never;
@@ -347,7 +507,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["getAllJobs"];
         put?: never;
         post: operations["createJob"];
         delete?: never;
@@ -382,6 +542,38 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["referFriend"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllRoles"];
+        put?: never;
+        post: operations["createRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/departments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllDepartments"];
+        put?: never;
+        post: operations["createDepartment"];
         delete?: never;
         options?: never;
         head?: never;
@@ -431,6 +623,54 @@ export interface paths {
         put?: never;
         post: operations["addComment"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/achievements/replies/{replyId}/like": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["likeReply"];
+        delete: operations["unlikeReply"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/achievements/comments/{commentId}/replies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getReplies"];
+        put?: never;
+        post: operations["addReply"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/achievements/comments/{commentId}/like": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["likeComment"];
+        delete: operations["unlikeComment"];
         options?: never;
         head?: never;
         patch?: never;
@@ -580,6 +820,38 @@ export interface paths {
         patch: operations["cancelBooking"];
         trace?: never;
     };
+    "/api/jobs/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete: operations["deleteJob"];
+        options?: never;
+        head?: never;
+        patch: operations["updateJob"];
+        trace?: never;
+    };
+    "/api/admin/jobs/{jobId}/toggle-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["toggleJobActiveStatus"];
+        trace?: never;
+    };
     "/users/my": {
         parameters: {
             query?: never;
@@ -652,6 +924,22 @@ export interface paths {
             cookie?: never;
         };
         get: operations["getProfile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/profiles/interests/my": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getMyInterests"];
         put?: never;
         post?: never;
         delete?: never;
@@ -788,6 +1076,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/games/bookings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getAllBookingRequests"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/games/all": {
         parameters: {
             query?: never;
@@ -827,7 +1131,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getAllRoles"];
+        get: operations["getAllRoles_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -875,7 +1179,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get: operations["getAllDepartments"];
+        get: operations["getAllDepartments_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -916,14 +1220,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/jobs/active": {
+    "/api/admin/users/locked": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get: operations["getAllActiveJobs"];
+        get: operations["getLockedUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/dashboard/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getDashboardStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/dashboard/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getSystemActivity"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1060,22 +1396,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/jobs/{jobId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        delete: operations["deleteJob"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1085,6 +1405,70 @@ export interface components {
             message?: string;
             errors?: string;
             data?: Record<string, never>;
+        };
+        SystemConfigRequestDto: {
+            keyName?: string;
+            value?: string;
+        };
+        ApiResponseSystemConfigResponseDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["SystemConfigResponseDto"];
+        };
+        SystemConfigResponseDto: {
+            /** Format: uuid */
+            id?: string;
+            keyName?: string;
+            value?: string;
+        };
+        RoleRequestDto: {
+            name: string;
+            description?: string;
+        };
+        ApiResponseRoleResponseDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["RoleResponseDto"];
+        };
+        RoleResponseDto: {
+            /** Format: uuid */
+            id?: string;
+            name?: string;
+            description?: string;
+            /** Format: int32 */
+            userCount?: number;
+            /** Format: int32 */
+            permissionCount?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
+        DepartmentRequestDto: {
+            departmentName: string;
+            departmentCode: string;
+        };
+        ApiResponseDepartmentResponseDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["DepartmentResponseDto"];
+        };
+        DepartmentResponseDto: {
+            /** Format: uuid */
+            id?: string;
+            departmentName?: string;
+            departmentCode?: string;
+            /** Format: int32 */
+            employeeCount?: number;
+            /** Format: int32 */
+            jobOpeningsCount?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: date-time */
+            updatedAt?: string;
         };
         CreatePostRequest: {
             title: string;
@@ -1109,6 +1493,12 @@ export interface components {
             text?: string;
             /** Format: date-time */
             createdDate?: string;
+            /** Format: int32 */
+            likeCount?: number;
+            /** Format: int32 */
+            replyCount?: number;
+            hasReplies?: boolean;
+            likedByCurrentUser?: boolean;
         };
         PostDto: {
             /** Format: uuid */
@@ -1135,11 +1525,36 @@ export interface components {
         CommentRequest: {
             text: string;
         };
+        ApiResponseCommentReplyDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["CommentReplyDto"];
+        };
+        CommentReplyDto: {
+            /** Format: uuid */
+            id?: string;
+            /** Format: uuid */
+            commentId?: string;
+            /** Format: uuid */
+            authorId?: string;
+            authorName?: string;
+            text?: string;
+            /** Format: date-time */
+            createdDate?: string;
+            /** Format: int32 */
+            likeCount?: number;
+            likedByCurrentUser?: boolean;
+        };
         ApiResponseCommentDto: {
             success?: boolean;
             message?: string;
             errors?: string;
             data?: components["schemas"]["CommentDto"];
+        };
+        PasswordResetDTO: {
+            newPassword?: string;
+            confirmPassword?: string;
         };
         TravelRequest: {
             title: string;
@@ -1364,6 +1779,7 @@ export interface components {
             startTime?: components["schemas"]["LocalTime"];
             endTime?: components["schemas"]["LocalTime"];
             activeOnWeekends?: boolean;
+            active?: boolean;
             /** Format: int32 */
             slotDurationMinutes?: number;
             /** Format: int32 */
@@ -1389,7 +1805,7 @@ export interface components {
             /** Format: date-time */
             requestedAt?: string;
             /** @enum {string} */
-            status?: "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED";
+            status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "EXPIRED";
         };
         RegisterRequestDto: {
             first_name?: string;
@@ -1435,6 +1851,7 @@ export interface components {
             /** Format: date-time */
             last_login?: string;
             is_active?: boolean;
+            is_locked?: boolean;
             role?: string;
             reports_to?: string;
             permission?: string[];
@@ -1481,7 +1898,6 @@ export interface components {
             description?: string;
             job_responsibilities?: string;
             required_qualification?: string;
-            status?: string;
             salary_range?: string;
             location?: string;
             employment_type?: string;
@@ -1491,6 +1907,7 @@ export interface components {
             departmentName?: string;
             default_reviewer?: string;
             createdBy?: string;
+            isActive?: boolean;
         };
         ShareJobRequest: {
             /** Format: uuid */
@@ -1525,33 +1942,86 @@ export interface components {
         UserSelfUpdateDTO: {
             firstName?: string;
             lastName?: string;
-            email?: string;
         };
         TravelUpdateRequest: {
-            title: string;
-            description: string;
+            title?: string;
+            description?: string;
             /** Format: date */
-            start_date: string;
+            start_date?: string;
             /** Format: date */
-            end_date: string;
-            destination: string;
+            end_date?: string;
+            destination?: string;
+            /** Format: double */
+            allowance?: number;
         };
         ProfileSelfUpdateDTO: {
             phone?: string;
             bio?: string;
             location?: string;
         };
-        ApiResponseListUserDetailResponse: {
+        ApiResponsePageUserDetailResponse: {
             success?: boolean;
             message?: string;
             errors?: string;
-            data?: components["schemas"]["UserDetailResponse"][];
+            data?: components["schemas"]["PageUserDetailResponse"];
         };
-        ApiResponseListTravelResponseSummary: {
+        PageUserDetailResponse: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["UserDetailResponse"][];
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
+        };
+        PageableObject: {
+            /** Format: int64 */
+            offset?: number;
+            sort?: components["schemas"]["SortObject"];
+            paged?: boolean;
+            /** Format: int32 */
+            pageNumber?: number;
+            /** Format: int32 */
+            pageSize?: number;
+            unpaged?: boolean;
+        };
+        SortObject: {
+            empty?: boolean;
+            sorted?: boolean;
+            unsorted?: boolean;
+        };
+        ApiResponsePageTravelResponseSummary: {
             success?: boolean;
             message?: string;
             errors?: string;
-            data?: components["schemas"]["TravelResponseSummary"][];
+            data?: components["schemas"]["PageTravelResponseSummary"];
+        };
+        PageTravelResponseSummary: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["TravelResponseSummary"][];
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
         };
         ApiResponseTravelResponse: {
             success?: boolean;
@@ -1559,14 +2029,13 @@ export interface components {
             errors?: string;
             data?: components["schemas"]["TravelResponse"];
         };
-        TravelDocResponse: {
+        TravelDocumentResponseDto: {
             /** Format: uuid */
             id?: string;
-            fileUrl?: string;
-            /** Format: uuid */
+            docUrl?: string;
             uploadedBy?: string;
             /** Format: date-time */
-            uploadedAt?: string;
+            createdAt?: string;
         };
         TravelResponse: {
             title?: string;
@@ -1578,10 +2047,12 @@ export interface components {
             destination?: string;
             /** @enum {string} */
             status?: "PLANNED" | "ONGOING" | "COMPLETED" | "CANCELLED";
+            /** Format: double */
+            allowance?: number;
             travelMembers?: components["schemas"]["TravelMemberResponse"][];
             itineraries?: components["schemas"]["TravelItineraryResponse"][];
             travel_bookings?: components["schemas"]["TravelBookingResponse"][];
-            travelDocument?: components["schemas"]["TravelDocResponse"][];
+            travelDocument?: components["schemas"]["TravelDocumentResponseDto"][];
             /** Format: uuid */
             created_by?: string;
             created_by_name?: string;
@@ -1606,21 +2077,17 @@ export interface components {
             errors?: string;
             data?: components["schemas"]["TravelDocumentResponseDto"][];
         };
-        TravelDocumentResponseDto: {
-            /** Format: uuid */
-            id?: string;
-            docUrl?: string;
-            uploadedBy?: string;
-            /** Format: uuid */
-            travelId?: string;
-            /** Format: date-time */
-            createdAt?: string;
-        };
         ApiResponseListTravelBookingResponse: {
             success?: boolean;
             message?: string;
             errors?: string;
             data?: components["schemas"]["TravelBookingResponse"][];
+        };
+        ApiResponseListTravelResponseSummary: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["TravelResponseSummary"][];
         };
         ApiResponseListExpenseDocumentResponseDto: {
             success?: boolean;
@@ -1638,6 +2105,23 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
+        ApiResponseListSystemConfigResponseDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["SystemConfigResponseDto"][];
+        };
+        ApiResponseListInterestResponseDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["InterestResponseDto"][];
+        };
+        InterestResponseDto: {
+            /** Format: uuid */
+            gameId?: string;
+            gameName?: string;
+        };
         ApiResponseListUserCycleStatsDto: {
             success?: boolean;
             message?: string;
@@ -1645,6 +2129,8 @@ export interface components {
             data?: components["schemas"]["UserCycleStatsDto"][];
         };
         UserCycleStatsDto: {
+            /** Format: uuid */
+            gameId?: string;
             gameName?: string;
             /** Format: date-time */
             cycleStart?: string;
@@ -1652,6 +2138,12 @@ export interface components {
             cycleEnd?: string;
             /** Format: int32 */
             playCount?: number;
+        };
+        ApiResponseListUserDetailResponse: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["UserDetailResponse"][];
         };
         ApiResponseListNotificationResponseDto: {
             success?: boolean;
@@ -1691,7 +2183,10 @@ export interface components {
             slotDate?: string;
             startTime?: components["schemas"]["LocalTime"];
             endTime?: components["schemas"]["LocalTime"];
+            booked?: boolean;
             /** Format: int32 */
+            bookingPriority?: number;
+            /** Format: int64 */
             queueCount?: number;
         };
         ApiResponseUserActiveBookingDto: {
@@ -1710,7 +2205,7 @@ export interface components {
             startTime?: components["schemas"]["LocalTime"];
             endTime?: components["schemas"]["LocalTime"];
             /** @enum {string} */
-            status?: "PENDING" | "CONFIRMED" | "REJECTED" | "CANCELLED";
+            status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "EXPIRED";
             requestedBy?: string;
             /** Format: date-time */
             requestedAt?: string;
@@ -1721,6 +2216,54 @@ export interface components {
             message?: string;
             errors?: string;
             data?: Record<string, never>;
+        };
+        ApiResponsePageBookingRequestListDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["PageBookingRequestListDto"];
+        };
+        BookingRequestListDto: {
+            /** Format: uuid */
+            bookingId?: string;
+            gameName?: string;
+            /** Format: date */
+            slotDate?: string;
+            startTime?: components["schemas"]["LocalTime"];
+            endTime?: components["schemas"]["LocalTime"];
+            requestedBy?: string;
+            requestedByEmail?: string;
+            /** Format: date-time */
+            requestedAt?: string;
+            /** @enum {string} */
+            status?: "PENDING" | "CONFIRMED" | "CANCELLED" | "EXPIRED";
+            /** Format: int32 */
+            priorityScore?: number;
+            participants?: components["schemas"]["ParticipantDto"][];
+        };
+        PageBookingRequestListDto: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["BookingRequestListDto"][];
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
+        };
+        ParticipantDto: {
+            /** Format: uuid */
+            userId?: string;
+            name?: string;
+            email?: string;
         };
         ApiResponseListGameResponseDto: {
             success?: boolean;
@@ -1772,11 +2315,35 @@ export interface components {
             departmentId?: string;
             name?: string;
         };
-        ApiResponseListJobSharingRecordResponseDto: {
+        ApiResponsePageJobResponseDto: {
             success?: boolean;
             message?: string;
             errors?: string;
-            data?: components["schemas"]["JobSharingRecordResponseDto"][];
+            data?: components["schemas"]["PageJobResponseDto"];
+        };
+        PageJobResponseDto: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["JobResponseDto"][];
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
+        };
+        ApiResponsePageJobSharingRecordResponseDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["PageJobSharingRecordResponseDto"];
         };
         JobSharingRecordResponseDto: {
             /** Format: uuid */
@@ -1787,11 +2354,47 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
-        ApiResponseListReferralResponseDto: {
+        PageJobSharingRecordResponseDto: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["JobSharingRecordResponseDto"][];
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
+        };
+        ApiResponsePageReferralResponseDto: {
             success?: boolean;
             message?: string;
             errors?: string;
-            data?: components["schemas"]["ReferralResponseDto"][];
+            data?: components["schemas"]["PageReferralResponseDto"];
+        };
+        PageReferralResponseDto: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["ReferralResponseDto"][];
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
         };
         ReferralResponseDto: {
             /** Format: uuid */
@@ -1804,17 +2407,131 @@ export interface components {
             /** Format: date-time */
             createdAt?: string;
         };
-        ApiResponseListJobResponseDto: {
+        ApiResponsePageRoleResponseDto: {
             success?: boolean;
             message?: string;
             errors?: string;
-            data?: components["schemas"]["JobResponseDto"][];
+            data?: components["schemas"]["PageRoleResponseDto"];
         };
-        ApiResponseListPostDto: {
+        PageRoleResponseDto: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["RoleResponseDto"][];
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
+        };
+        ApiResponsePageDepartmentResponseDto: {
             success?: boolean;
             message?: string;
             errors?: string;
-            data?: components["schemas"]["PostDto"][];
+            data?: components["schemas"]["PageDepartmentResponseDto"];
+        };
+        PageDepartmentResponseDto: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["DepartmentResponseDto"][];
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
+        };
+        ApiResponseDashboardStatsDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["DashboardStatsDto"];
+        };
+        DashboardStatsDto: {
+            /** Format: int64 */
+            totalUsers?: number;
+            /** Format: int64 */
+            activeUsers?: number;
+            /** Format: int64 */
+            inactiveUsers?: number;
+            /** Format: int64 */
+            totalDepartments?: number;
+            /** Format: int64 */
+            totalRoles?: number;
+            /** Format: int64 */
+            totalTravels?: number;
+            /** Format: int64 */
+            activeTravels?: number;
+            /** Format: int64 */
+            totalJobs?: number;
+            /** Format: int64 */
+            activeJobs?: number;
+            /** Format: int64 */
+            totalGames?: number;
+            /** Format: int64 */
+            totalPosts?: number;
+            /** Format: int64 */
+            pendingBookingRequests?: number;
+            /** Format: int64 */
+            totalTravelExpenses?: number;
+            /** Format: int64 */
+            pendingExpenseApprovals?: number;
+        };
+        ApiResponseSystemActivityDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["SystemActivityDto"];
+        };
+        SystemActivityDto: {
+            /** Format: int64 */
+            recentLogins?: number;
+            /** Format: int64 */
+            newUsersThisMonth?: number;
+            /** Format: int64 */
+            newTravelsThisMonth?: number;
+            /** Format: int64 */
+            newJobsThisMonth?: number;
+            /** Format: int64 */
+            newPostsThisMonth?: number;
+        };
+        ApiResponsePagePostDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["PagePostDto"];
+        };
+        PagePostDto: {
+            /** Format: int32 */
+            totalPages?: number;
+            /** Format: int64 */
+            totalElements?: number;
+            first?: boolean;
+            last?: boolean;
+            /** Format: int32 */
+            numberOfElements?: number;
+            /** Format: int32 */
+            size?: number;
+            content?: components["schemas"]["PostDto"][];
+            /** Format: int32 */
+            number?: number;
+            sort?: components["schemas"]["SortObject"];
+            pageable?: components["schemas"]["PageableObject"];
+            empty?: boolean;
         };
         ApiResponseLong: {
             success?: boolean;
@@ -1834,6 +2551,18 @@ export interface components {
             message?: string;
             errors?: string;
             data?: components["schemas"]["CommentDto"][];
+        };
+        ApiResponseListPostDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["PostDto"][];
+        };
+        ApiResponseListCommentReplyDto: {
+            success?: boolean;
+            message?: string;
+            errors?: string;
+            data?: components["schemas"]["CommentReplyDto"][];
         };
     };
     responses: never;
@@ -1896,12 +2625,242 @@ export interface operations {
             };
         };
     };
+    getConfigById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseSystemConfigResponseDto"];
+                };
+            };
+        };
+    };
+    updateConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SystemConfigRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseSystemConfigResponseDto"];
+                };
+            };
+        };
+    };
+    deleteConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
     markAsRead: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 notificationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    markAllAsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    getRoleById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseRoleResponseDto"];
+                };
+            };
+        };
+    };
+    updateRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseRoleResponseDto"];
+                };
+            };
+        };
+    };
+    deleteRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    getDepartmentById: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                departmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDepartmentResponseDto"];
+                };
+            };
+        };
+    };
+    updateDepartment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                departmentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DepartmentRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDepartmentResponseDto"];
+                };
+            };
+        };
+    };
+    deleteDepartment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                departmentId: string;
             };
             cookie?: never;
         };
@@ -1988,6 +2947,54 @@ export interface operations {
             };
         };
     };
+    updateReply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                replyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCommentReplyDto"];
+                };
+            };
+        };
+    };
+    deleteReply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                replyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
     updateComment: {
         parameters: {
             query?: never;
@@ -2036,9 +3043,61 @@ export interface operations {
             };
         };
     };
-    getAllTravels: {
+    unlockUserAccount: {
         parameters: {
             query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    resetUserPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetDTO"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    getAllTravels: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                search?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2051,7 +3110,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListTravelResponseSummary"];
+                    "*/*": components["schemas"]["ApiResponsePageTravelResponseSummary"];
                 };
             };
         };
@@ -2245,9 +3304,35 @@ export interface operations {
             };
         };
     };
-    getBookings: {
+    cancelTravel: {
         parameters: {
             query?: never;
+            header?: never;
+            path: {
+                travelId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    getBookings: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                search?: string;
+            };
             header?: never;
             path: {
                 travelId: string;
@@ -2335,6 +3420,50 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseDocUploadResponse"];
+                };
+            };
+        };
+    };
+    getAllConfigs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListSystemConfigResponseDto"];
+                };
+            };
+        };
+    };
+    createConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SystemConfigRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseSystemConfigResponseDto"];
                 };
             };
         };
@@ -2458,6 +3587,28 @@ export interface operations {
             };
         };
     };
+    toggleGameActiveStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                gameId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
     makeBookingRequest: {
         parameters: {
             query?: never;
@@ -2570,6 +3721,30 @@ export interface operations {
             };
         };
     };
+    getAllJobs: {
+        parameters: {
+            query?: {
+                pageNumber?: number;
+                pageSize?: number;
+                searchTerm?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePageJobResponseDto"];
+                };
+            };
+        };
+    };
     createJob: {
         parameters: {
             query?: never;
@@ -2642,9 +3817,13 @@ export interface operations {
             };
         };
     };
-    getAchievementFeed: {
+    getAllRoles: {
         parameters: {
-            query?: never;
+            query?: {
+                pageNumber?: number;
+                pageSize?: number;
+                searchTerm?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -2657,7 +3836,103 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListPostDto"];
+                    "*/*": components["schemas"]["ApiResponsePageRoleResponseDto"];
+                };
+            };
+        };
+    };
+    createRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RoleRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseRoleResponseDto"];
+                };
+            };
+        };
+    };
+    getAllDepartments: {
+        parameters: {
+            query?: {
+                pageNumber?: number;
+                pageSize?: number;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePageDepartmentResponseDto"];
+                };
+            };
+        };
+    };
+    createDepartment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DepartmentRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDepartmentResponseDto"];
+                };
+            };
+        };
+    };
+    getAchievementFeed: {
+        parameters: {
+            query?: {
+                page?: number;
+                size?: number;
+                search?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePagePostDto"];
                 };
             };
         };
@@ -2778,6 +4053,142 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseCommentDto"];
+                };
+            };
+        };
+    };
+    likeReply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                replyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    unlikeReply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                replyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    getReplies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListCommentReplyDto"];
+                };
+            };
+        };
+    };
+    addReply: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseCommentReplyDto"];
+                };
+            };
+        };
+    };
+    likeComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    unlikeComment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                commentId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
                 };
             };
         };
@@ -3138,6 +4549,76 @@ export interface operations {
             };
         };
     };
+    deleteJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
+    updateJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobRequestDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseJobResponseDto"];
+                };
+            };
+        };
+    };
+    toggleJobActiveStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseVoid"];
+                };
+            };
+        };
+    };
     getMyDetail: {
         parameters: {
             query?: never;
@@ -3160,7 +4641,13 @@ export interface operations {
     };
     getAllUsers: {
         parameters: {
-            query?: never;
+            query?: {
+                pageNumber?: number;
+                pageSize?: number;
+                searchTerm?: string;
+                sortBy?: string;
+                sortDir?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3173,7 +4660,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListUserDetailResponse"];
+                    "*/*": components["schemas"]["ApiResponsePageUserDetailResponse"];
                 };
             };
         };
@@ -3202,7 +4689,11 @@ export interface operations {
     };
     getMyTravels: {
         parameters: {
-            query?: never;
+            query?: {
+                page?: number;
+                size?: number;
+                search?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3215,7 +4706,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListTravelResponseSummary"];
+                    "*/*": components["schemas"]["ApiResponsePageTravelResponseSummary"];
                 };
             };
         };
@@ -3238,6 +4729,26 @@ export interface operations {
                 };
                 content: {
                     "*/*": components["schemas"]["ApiResponseProfileResponseDTO"];
+                };
+            };
+        };
+    };
+    getMyInterests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseListInterestResponseDto"];
                 };
             };
         };
@@ -3413,6 +4924,30 @@ export interface operations {
             };
         };
     };
+    getAllBookingRequests: {
+        parameters: {
+            query?: {
+                pageNumber?: number;
+                pageSize?: number;
+                searchTerm?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponsePageBookingRequestListDto"];
+                };
+            };
+        };
+    };
     getAllGames: {
         parameters: {
             query?: never;
@@ -3453,7 +4988,7 @@ export interface operations {
             };
         };
     };
-    getAllRoles: {
+    getAllRoles_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3515,7 +5050,7 @@ export interface operations {
             };
         };
     };
-    getAllDepartments: {
+    getAllDepartments_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3537,7 +5072,13 @@ export interface operations {
     };
     getJobSharingRecords: {
         parameters: {
-            query?: never;
+            query?: {
+                pageNumber?: number;
+                pageSize?: number;
+                searchTerm?: string;
+                sortBy?: string;
+                sortDir?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3550,14 +5091,20 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListJobSharingRecordResponseDto"];
+                    "*/*": components["schemas"]["ApiResponsePageJobSharingRecordResponseDto"];
                 };
             };
         };
     };
     getReferrals: {
         parameters: {
-            query?: never;
+            query?: {
+                pageNumber?: number;
+                pageSize?: number;
+                searchTerm?: string;
+                sortBy?: string;
+                sortDir?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -3570,12 +5117,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListReferralResponseDto"];
+                    "*/*": components["schemas"]["ApiResponsePageReferralResponseDto"];
                 };
             };
         };
     };
-    getAllActiveJobs: {
+    getLockedUsers: {
         parameters: {
             query?: never;
             header?: never;
@@ -3590,7 +5137,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["ApiResponseListJobResponseDto"];
+                    "*/*": components["schemas"]["ApiResponseListUserDetailResponse"];
+                };
+            };
+        };
+    };
+    getDashboardStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseDashboardStatsDto"];
+                };
+            };
+        };
+    };
+    getSystemActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ApiResponseSystemActivityDto"];
                 };
             };
         };
@@ -3755,28 +5342,6 @@ export interface operations {
             header?: never;
             path: {
                 docId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ApiResponseVoid"];
-                };
-            };
-        };
-    };
-    deleteJob: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                jobId: string;
             };
             cookie?: never;
         };

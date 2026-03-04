@@ -8,6 +8,8 @@ import {
   Plus,
   Upload,
   Trash2,
+  Pen,
+  MoreHorizontal,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,8 +44,11 @@ import {
   useUpdateTravel,
   useUploadTravelDocs,
   useDeleteTravelDocument,
+  useUpdateBooking,
+  useDeleteBooking,
+  useCancelTravel,
 } from "@/hooks/travel/travel.hooks";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -60,6 +65,12 @@ import { DateTimeDisplay } from "@/utils/dateUtils";
 import { useAuth } from "@/store";
 import { hasPermission, PermissionCode } from "@/constants/permissions";
 import { useGetAllUsers } from "@/hooks/util/util.hooks";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { components } from "@/types/api"; 
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+
+type Schemas = components["schemas"];
+type bookingResponse = Schemas["TravelBookingResponse"]
 
 export const TravelDetail = () => {
   const permissions = useAuth((state) => state.auth.user?.permission);
@@ -79,6 +90,7 @@ export const TravelDetail = () => {
   const [itineraryDialogOpen, setItineraryDialogOpen] =
     useState<boolean>(false);
   const [bookingDialogOpen, setBookingDialogOpen] = useState<boolean>(false);
+  const [updateBookingDialogOpen, setUpdateBookingDialogOpen] = useState<boolean>(false);
   const [documentUploadOpen, setDocumentUploadOpen] = useState<boolean>(false);
   const [updateTravelDialogOpen, setUpdateTravelDialogOpen] =
     useState<boolean>(false);
@@ -97,6 +109,9 @@ export const TravelDetail = () => {
   const deleteMember = useDeleteMember();
   const updateTravel = useUpdateTravel();
   const updateItinerary = useUpdateItinerary();
+  const updateBooking = useUpdateBooking();
+  const deleteBooking = useDeleteBooking();
+  const cancelTravel = useCancelTravel();
 
   const travelDetailQuery = useTravelById(travelId!);
   const uploadTravelDocs = useUploadTravelDocs(travelId!);
@@ -126,8 +141,30 @@ export const TravelDetail = () => {
   const {
     register: bookingRegister,
     handleSubmit: bookingSubmit,
-    reset: bookingExpense,
+    reset: bookingReset,
+    control: bookingControl,
     formState: { errors: bookingErrors },
+  } = useForm({
+    mode: "onChange",
+    defaultValues: {
+      bookingType: "OTHER",
+      provider_name: "",
+      booking_reference: "",
+      amount: 0,
+      currency: "",
+      start_dateTime: "",
+      end_dateTime: "",
+    },
+  });
+
+  // update booking
+  const {
+    register: updateBookingRegister,
+    handleSubmit: updateBookingSubmit,
+    reset: resetUpdateBooking,
+    setValue: setUpdateBookingValue,
+    control: updateControl,
+    formState: { errors: updateBookingErrors },
   } = useForm({
     mode: "onChange",
     defaultValues: {
@@ -173,13 +210,79 @@ export const TravelDetail = () => {
         return;
       }
 
-      const response = await addBooking.mutateAsync({ id: travelId, data });
+      const response = await addBooking.mutateAsync({ id: travelId, data: { ...data, travel_id: travelId } });
 
       setSuccessMessage(response.message || "Booking added successfully!");
       toast.success(response.message || "Booking added successfully!");
 
       setBookingDialogOpen(false);
-      bookingExpense();
+      bookingReset();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const handleBookingUpdateDialogOpen = (booking: bookingResponse) => {
+    setUpdateBookingDialogOpen(true);
+    resetUpdateBooking();
+    setUpdateBookingValue("bookingType", booking.bookingType!);
+    setUpdateBookingValue("provider_name", booking.provider_name!);
+    setUpdateBookingValue("booking_reference", booking.booking_reference!);
+    setUpdateBookingValue("amount", booking.amount!);
+    setUpdateBookingValue("currency", booking.currency!);
+    setUpdateBookingValue("start_dateTime", booking.start_dateTime!);
+    setUpdateBookingValue("end_dateTime", booking.end_dateTime!);
+  };
+
+  const onUpdateBookingSubmit = async (data: any, bookingId: string) => {
+    try {
+      if (!travelId) {
+        toast.error("TravelId missing");
+        return;
+      }
+
+      const response = await updateBooking.mutateAsync({ 
+        travelId: travelId!, bookingId, 
+        data: { 
+          travel_id: travelId!,
+          bookingType: data.bookingType || null,
+          provider_name: data.provider_name || null,
+          booking_reference: data.booking_reference || null,
+          amount: data.amount || null,
+          currency: data.currency || null,
+          start_dateTime: data.start_dateTime || null,
+          end_dateTime: data.end_dateTime || null,
+        } 
+      });
+
+      setSuccessMessage(response.message || "Booking updated successfully!");
+      toast.success(response.message || "Booking updated successfully!");
+
+      setUpdateBookingDialogOpen(false);
+      resetUpdateBooking();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const handleDeleteBooking = async (bookingId: string) => {
+
+    const confirmed = window.confirm("Are you sure you want to delete this booking? This action cannot be undone.");
+    if (!confirmed) return;
+
+    try {
+
+      if (!travelId) {
+        toast.error("TravelId missing");
+        return;
+      }
+
+      const response = await deleteBooking.mutateAsync({ travelId, bookingId });
+
+      setSuccessMessage(response.message || "Booking deleted successfully!");
+      toast.success(response.message || "Booking deleted successfully!");
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
       toast.error(getErrorMessage(error));
@@ -222,6 +325,7 @@ export const TravelDetail = () => {
       destination: "",
       start_date: "",
       end_date: "",
+      allowance: 0,
     },
   });
 
@@ -289,6 +393,24 @@ export const TravelDetail = () => {
       setUpdateTravelDialogOpen(false);
       resetUpdateTravel();
       travelDetailQuery.refetch();
+    } catch (error) {
+      setErrorMessage(getErrorMessage(error));
+      toast.error(getErrorMessage(error));
+    }
+  };
+
+  const handleCancelTravel = async () => {  
+    const confirmed = window.confirm("Are you sure you want to cancel this travel? This action cannot be undone.");
+    if (!confirmed) return;
+
+    try {
+      if (!travelId) {
+        toast.error("TravelId missing");
+        return;
+      }
+      await cancelTravel.mutateAsync(travelId);
+      toast.success("Travel cancelled successfully");
+      setSuccessMessage("Travel cancelled successfully");
     } catch (error) {
       setErrorMessage(getErrorMessage(error));
       toast.error(getErrorMessage(error));
@@ -366,10 +488,20 @@ export const TravelDetail = () => {
     setUpdateItineraryDialogOpen(true);
   };
 
+  const getBadgeVarient = (s?: string): "default" | "secondary" | "outline" | "destructive" => {
+    switch (s) {
+      case "ONGOING":   return "default";
+      case "PLANNED":   return "secondary";
+      case "COMPLETED": return "outline";
+      case "CANCELLED": return "destructive";
+      default:          return "outline";
+    }
+  };
+
   if (travelDetailQuery.isLoading) {
     return (
       <div className="flex justify-center items-center gap-4 flex-col text-center">
-        <h2 className="text-xl font-semibold mb-2">
+        <h2 className="text-2xl font-semibold mb-2">
           Loading Travel Details for you!
         </h2>
         <Spinner />
@@ -402,6 +534,10 @@ export const TravelDetail = () => {
     (member) => member.member_id === user?.id,
   );
 
+  const isTravelPlanned = travel.status === "PLANNED";
+  const canModifyTravel = canUpdateTravel && isTravelPlanned;
+  const canModifyItinerary = isHR && isTravelPlanned;
+
   return (
     <div className="space-y-6">
       {/* Success/Error Messages */}
@@ -423,11 +559,11 @@ export const TravelDetail = () => {
             Back
           </Button>
           <div>
-            <h1 className="text-3xl font-semibold">{travel.title}</h1>
-            <p className="text-muted-foreground">Travel Details</p>
+            <h1 className="text-2xl font-semibold">{travel.title}</h1>
+            <p className="text-muted-foreground text-base">Travel Details</p>
           </div>
         </div>
-        <Badge variant="outline">{travel.status}</Badge>
+        <Badge variant={getBadgeVarient(travel.status)}>{travel.status}</Badge>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
@@ -435,165 +571,186 @@ export const TravelDetail = () => {
           {/* Travel Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className="flex items-center justify-between text-lg">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
                   Travel Information
                 </div>
-                {canUpdateTravel && (
-                  <Dialog
-                    open={updateTravelDialogOpen}
-                    onOpenChange={(open) => {
-                      setUpdateTravelDialogOpen(open);
-                      if (!open) resetUpdateTravel();
-                      if (open) {
-                        setUpdateTravelValue("title", travel?.title || "");
-                        setUpdateTravelValue(
-                          "description",
-                          travel?.description || "",
-                        );
-                        setUpdateTravelValue(
-                          "destination",
-                          travel?.destination || "",
-                        );
-                        setUpdateTravelValue(
-                          "start_date",
-                          travel?.start_date || "",
-                        );
-                        setUpdateTravelValue(
-                          "end_date",
-                          travel?.end_date || "",
-                        );
-                      }
-                    }}
-                  >
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        Update Travel
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle>Update Travel</DialogTitle>
-                        <DialogDescription>
-                          Update travel details.
-                        </DialogDescription>
-                      </DialogHeader>
+                {canModifyTravel && (
+                  <div className="flex items-center gap-2">
+                    <Dialog
+                      open={updateTravelDialogOpen}
+                      onOpenChange={(open) => {
+                        setUpdateTravelDialogOpen(open);
+                        if (!open) resetUpdateTravel();
+                        if (open) {
+                          setUpdateTravelValue("title", travel?.title || "");
+                          setUpdateTravelValue(
+                            "description",
+                            travel?.description || "",
+                          );
+                          setUpdateTravelValue(
+                            "destination",
+                            travel?.destination || "",
+                          );
+                          setUpdateTravelValue(
+                            "start_date",
+                            travel?.start_date || "",
+                          );
+                          setUpdateTravelValue(
+                            "end_date",
+                            travel?.end_date || "",
+                          );
+                        }
+                      }}
+                    >
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          Update Travel
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle>Update Travel</DialogTitle>
+                          <DialogDescription>
+                            Update travel details.
+                          </DialogDescription>
+                        </DialogHeader>
 
-                      <form
-                        onSubmit={updateTravelSubmit(onUpdateTravelSubmit)}
-                        className="space-y-4 py-4"
-                      >
-                        <div className="grid gap-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label htmlFor="travel-title">Title *</Label>
-                              <Input
-                                id="travel-title"
-                                placeholder="Travel Title"
-                                {...updateTravelRegister("title", {
-                                  required: "Title is required",
-                                })}
-                              />
-                              {updateTravelErrors.title && (
-                                <p className="text-sm text-destructive">
-                                  {updateTravelErrors.title.message as string}
-                                </p>
-                              )}
+                        <form
+                          onSubmit={updateTravelSubmit(onUpdateTravelSubmit)}
+                          className="space-y-4 py-4"
+                        >
+                          <div className="grid gap-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="travel-title">Title</Label>
+                                <Input
+                                  id="travel-title"
+                                  placeholder="Travel Title"
+                                  {...updateTravelRegister("title")}
+                                />
+                                {updateTravelErrors.title && (
+                                  <p className="text-sm text-destructive">
+                                    {updateTravelErrors.title.message as string}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label htmlFor="travel-destination">
+                                  Destination
+                                </Label>
+                                <Input
+                                  id="travel-destination"
+                                  placeholder="Destination"
+                                  {...updateTravelRegister("destination")}
+                                />
+                                {updateTravelErrors.destination && (
+                                  <p className="text-sm text-destructive">
+                                    {
+                                      updateTravelErrors.destination
+                                        .message as string
+                                    }
+                                  </p>
+                                )}
+                              </div>
                             </div>
 
                             <div className="space-y-2">
-                              <Label htmlFor="travel-destination">
-                                Destination *
+                              <Label htmlFor="travel-description">
+                                Description
                               </Label>
                               <Input
-                                id="travel-destination"
-                                placeholder="Destination"
-                                {...updateTravelRegister("destination", {
-                                  required: "Destination is required",
-                                })}
+                                id="travel-description"
+                                placeholder="Travel description"
+                                {...updateTravelRegister("description")}
                               />
-                              {updateTravelErrors.destination && (
-                                <p className="text-sm text-destructive">
-                                  {
-                                    updateTravelErrors.destination
-                                      .message as string
-                                  }
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="space-y-2">
-                            <Label htmlFor="travel-description">
-                              Description
-                            </Label>
-                            <Input
-                              id="travel-description"
-                              placeholder="Travel description"
-                              {...updateTravelRegister("description")}
-                            />
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label>Start Date *</Label>
-                              <Input
-                                type="date"
-                                {...updateTravelRegister("start_date", {
-                                  required: "Start date is required",
-                                })}
-                              />
-                              {updateTravelErrors.start_date && (
-                                <p className="text-sm text-destructive">
-                                  {
-                                    updateTravelErrors.start_date
-                                      .message as string
-                                  }
-                                </p>
-                              )}
                             </div>
 
                             <div className="space-y-2">
-                              <Label>End Date *</Label>
+                              <Label htmlFor="travel-allowance">
+                                Allowance per day
+                              </Label>
                               <Input
-                                type="date"
-                                {...updateTravelRegister("end_date", {
-                                  required: "End date is required",
-                                })}
+                                id="travel-allowance"
+                                placeholder="Allowance per day"
+                                {...updateTravelRegister("allowance")}
                               />
-                              {updateTravelErrors.end_date && (
-                                <p className="text-sm text-destructive">
-                                  {
-                                    updateTravelErrors.end_date
-                                      .message as string
-                                  }
-                                </p>
-                              )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>Start Date</Label>
+                                <Input
+                                  type="date"
+                                  {...updateTravelRegister("start_date")}
+                                />
+                                {updateTravelErrors.start_date && (
+                                  <p className="text-sm text-destructive">
+                                    {
+                                      updateTravelErrors.start_date
+                                        .message as string
+                                    }
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label>End Date</Label>
+                                <Input
+                                  type="date"
+                                  {...updateTravelRegister("end_date")}
+                                />
+                                {updateTravelErrors.end_date && (
+                                  <p className="text-sm text-destructive">
+                                    {
+                                      updateTravelErrors.end_date
+                                        .message as string
+                                    }
+                                  </p>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
 
-                        <DialogFooter className="mt-6">
-                          <Button
-                            variant="outline"
-                            type="button"
-                            onClick={() => setUpdateTravelDialogOpen(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button
-                            type="submit"
-                            disabled={updateTravel.isPending}
-                          >
-                            {updateTravel.isPending
-                              ? "Updating..."
-                              : "Update Travel"}
-                          </Button>
-                        </DialogFooter>
-                      </form>
-                    </DialogContent>
-                  </Dialog>
+                          <DialogFooter className="mt-6">
+                            <Button 
+                              variant="outline"
+                              type="button"
+                              onClick={() => resetUpdateTravel()}
+                            >
+                              Reset
+                            </Button>
+                            <Button
+                              variant="outline"
+                              type="button"
+                              onClick={() => setUpdateTravelDialogOpen(false)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              type="submit"
+                              disabled={updateTravel.isPending}
+                            >
+                              {updateTravel.isPending
+                                ? "Updating..."
+                                : "Update Travel"}
+                            </Button>
+                          </DialogFooter>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                    {isTravelPlanned && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCancelTravel}
+                      >
+                        Cancel Travel
+                      </Button>
+                    )}
+                  </div>
                 )}
               </CardTitle>
             </CardHeader>
@@ -603,34 +760,42 @@ export const TravelDetail = () => {
                   <p className="text-sm font-medium text-muted-foreground">
                     Title
                   </p>
-                  <p className="text-lg font-semibold">{travel.title}</p>
+                  <p className="text-sm font-semibold">{travel.title}</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">
                     Description
                   </p>
-                  <p className="text-lg font-semibold">{travel.description}</p>
+                  <p className="text-sm font-semibold">{travel.description}</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">
                     Destination
                   </p>
-                  <p className="font-semibold">{travel.destination}</p>
+                  <p className="text-sm font-semibold">{travel.destination}</p>
                 </div>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">
                     Travel scheduled date
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="text-sm font-semibold">
                     {travel.start_date} - {travel.end_date}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground  font-semibold">
+                  <p className="text-sm font-medium text-muted-foreground">
                     Travel Status
                   </p>
-                  <div className="flex items-center  font-semibold gap-2">
+                  <div className="text-sm font-semibold">
                     {travel.status}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Max allowance per day
+                  </p>
+                  <div className="text-sm font-semibold">
+                    {travel.allowance ? `${travel.allowance} INR` : "Not specified"}
                   </div>
                 </div>
               </div>
@@ -640,8 +805,8 @@ export const TravelDetail = () => {
           {/* Travel Itinerary */}
           <div className="space-y-3">
             <div className="flex justify-between">
-              <p className="text-sm font-medium">Travel Itinerary</p>
-              {isHR && (
+              <p className="text-base font-medium">Travel Itinerary</p>
+              {canModifyItinerary && (
                 <Dialog
                   open={itineraryDialogOpen}
                   onOpenChange={(open) => {
@@ -781,7 +946,7 @@ export const TravelDetail = () => {
               )}
 
               {/* Update Itinerary Dialog */}
-              {isHR && (
+              {canModifyItinerary && (
                 <Dialog
                   open={updateItineraryDialogOpen}
                   onOpenChange={(open) => {
@@ -939,7 +1104,7 @@ export const TravelDetail = () => {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="flex-1">
                       <div className="text-sm font-bold">{entry.title}</div>
-                      <div className="text-muted-foreground">
+                      <div className="text-muted-foreground text-sm">
                         {entry.description}
                       </div>
                       <div className="font-medium text-sm">
@@ -950,7 +1115,7 @@ export const TravelDetail = () => {
                         {entry.location}
                       </span>
                     </div>
-                    {isHR && (
+                    {canModifyItinerary && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -967,17 +1132,18 @@ export const TravelDetail = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className="flex items-center justify-between text-lg">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   Bookings ({travel.travel_bookings?.length || 0})
                 </div>
-                {canUpdateTravel && (
+                {canModifyTravel && (
+                  // create booking dialog
                   <Dialog
                     open={bookingDialogOpen}
                     onOpenChange={(open) => {
                       setBookingDialogOpen(open);
-                      if (!open) bookingExpense();
+                      if (!open) bookingReset();
                     }}
                   >
                     <DialogTrigger asChild>
@@ -1003,25 +1169,27 @@ export const TravelDetail = () => {
                           <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2">
                               <Label>Booking Type *</Label>
-                              <select
-                                className={`w-full border rounded-md h-10 px-2 bg-background ${bookingErrors.bookingType ? "border-destructive" : ""}`}
-                                {...bookingRegister("bookingType", {
-                                  required: "Please select a type",
-                                })}
-                              >
-                                <option value="">Select type</option>
-                                <option value="FLIGHT">Flight</option>
-                                <option value="HOTEL">Hotel</option>
-                                <option value="TRAIN">Train</option>
-                                <option value="BUS">Bus</option>
-                                <option value="CAR_RENTAL">Car Rental</option>
-                                <option value="OTHER">Other</option>
-                              </select>
-                              {bookingErrors.bookingType && (
-                                <p className="text-sm text-destructive">
-                                  {bookingErrors.bookingType.message as string}
-                                </p>
-                              )}
+
+                              <Controller
+                                name="bookingType"
+                                control={bookingControl}
+                                rules={{ required: "Please select a type" }}
+                                render={({ field }) => (
+                                  <Select value={field.value} onValueChange={field.onChange}>
+                                    <SelectTrigger className={`w-full border rounded-md h-10 px-2 bg-background ${bookingErrors.bookingType ? "border-destructive" : ""}`}>
+                                      <SelectValue placeholder="Select type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="FLIGHT">Flight</SelectItem>
+                                      <SelectItem value="HOTEL">Hotel</SelectItem>
+                                      <SelectItem value="TRAIN">Train</SelectItem>
+                                      <SelectItem value="BUS">Bus</SelectItem>
+                                      <SelectItem value="CAB">Car Rental</SelectItem>
+                                      <SelectItem value="OTHER">Other</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                )}
+                              />
                             </div>
 
                             <div className="space-y-2">
@@ -1157,9 +1325,205 @@ export const TravelDetail = () => {
                             {booking.bookingType || "Unknown"}
                           </span>
                         </div>
-                        <span className="text-lg font-medium">
-                          {booking.amount} {booking.currency}
-                        </span>
+                        
+                        <div className="flex gap-2 items-center justify-center">
+                          <span className="text-base font-medium">
+                            {booking.amount} {booking.currency}
+                          </span>
+
+                          {/* Update and delete buttons */}
+                          {canModifyTravel && (
+                            <>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className="bg-emerald-50">
+                                  <DropdownMenuItem>
+                                    <Button onClick={() => handleBookingUpdateDialogOpen(booking)}>
+                                      Update Booking <Pen className="h-4 w-4"/>
+                                    </Button>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem>
+                                    <Button 
+                                      variant="outline"
+                                      onClick={() => handleDeleteBooking(booking.booking_id!)}
+                                      disabled={deleteBooking.isPending}
+                                    >
+                                      Delete Booking <Trash2 className="h-4 w-4"/>
+                                    </Button>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>       
+
+                              <Dialog
+                                open={updateBookingDialogOpen}
+                                onOpenChange={(open) => {
+                                  setUpdateBookingDialogOpen(open);
+                                  if (!open) resetUpdateBooking();
+                                }}
+                              >
+
+                                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                                  <DialogHeader>
+                                    <DialogTitle>Update Booking</DialogTitle>
+                                    <DialogDescription>
+                                      Update booking details for this travel.
+                                    </DialogDescription>
+                                  </DialogHeader>
+
+                                  <form
+                                    onSubmit={(e) => {
+                                      e.preventDefault();
+                                      updateBookingSubmit((data) => onUpdateBookingSubmit(data, booking.booking_id!))();
+                                    }}
+                                    className="space-y-4 py-4"
+                                    >
+                                    <div className="grid gap-4">
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                          <Label>Booking Type *</Label>
+
+                                          <Controller
+                                            name="bookingType"
+                                            control={updateControl}
+                                            rules={{ required: "Please select a type" }}
+                                            render={({ field }) => (
+                                              <Select value={field.value} onValueChange={field.onChange}>
+                                                <SelectTrigger className={`w-full border rounded-md h-10 px-2 bg-background ${bookingErrors.bookingType ? "border-destructive" : ""}`}>
+                                                  <SelectValue placeholder="Select type" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  <SelectItem value="FLIGHT">Flight</SelectItem>
+                                                  <SelectItem value="HOTEL">Hotel</SelectItem>
+                                                  <SelectItem value="TRAIN">Train</SelectItem>
+                                                  <SelectItem value="BUS">Bus</SelectItem>
+                                                  <SelectItem value="CAB">Car Rental</SelectItem>
+                                                  <SelectItem value="OTHER">Other</SelectItem>
+                                                </SelectContent>
+                                              </Select>
+                                            )}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                          <Label htmlFor="provider-name">
+                                            Provider Name *
+                                          </Label>
+                                          <Input
+                                            id="provider-name"
+                                            placeholder="e.g., Air India, Marriott"
+                                            {...updateBookingRegister("provider_name")}
+                                            />
+                                          {updateBookingErrors.provider_name && (
+                                            <p className="text-sm text-destructive">
+                                              {
+                                                updateBookingErrors.provider_name
+                                                .message as string
+                                              }
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      <div className="space-y-2">
+                                        <Label htmlFor="booking-reference">
+                                          Booking Reference
+                                        </Label>
+                                        <Input
+                                          id="booking-reference"
+                                          placeholder="Booking confirmation number"
+                                          {...updateBookingRegister("booking_reference")}
+                                          />
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                          <Label>Amount *</Label>
+                                          <Input
+                                            type="number"
+                                            step="0.01"
+                                            placeholder="0.00"
+                                            {...updateBookingRegister("amount")}
+                                            />
+                                          {updateBookingErrors.amount && (
+                                            <p className="text-sm text-destructive">
+                                              {updateBookingErrors.amount.message as string}
+                                            </p>
+                                          )}
+                                        </div>
+
+                                        <div className="space-y-2">
+                                          <Label>Currency *</Label>
+                                          <Input
+                                            placeholder="INR, USD, etc."
+                                            {...updateBookingRegister("currency")}
+                                            />
+                                          {updateBookingErrors.currency && (
+                                            <p className="text-sm text-destructive">
+                                              {updateBookingErrors.currency.message as string}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                          <Label>Start Date Time *</Label>
+                                          <Input
+                                            type="datetime-local"
+                                            {...updateBookingRegister("start_dateTime")}
+                                            />
+                                          {updateBookingErrors.start_dateTime && (
+                                            <p className="text-sm text-destructive">
+                                              {
+                                                updateBookingErrors.start_dateTime
+                                                .message as string
+                                              }
+                                            </p>
+                                          )}
+                                        </div>
+
+                                        <div className="space-y-2">
+                                          <Label>End Date Time *</Label>
+                                          <Input
+                                            type="datetime-local"
+                                            {...updateBookingRegister("end_dateTime")}
+                                            />
+                                          {updateBookingErrors.end_dateTime && (
+                                            <p className="text-sm text-destructive">
+                                              {updateBookingErrors.end_dateTime.message as string}
+                                            </p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    <DialogFooter className="mt-6">
+                                      <Button variant="outline" type="button" onClick={() => {
+                                        resetUpdateBooking();
+                                      }}>
+                                        Reset form
+                                      </Button>
+                                      <Button
+                                        variant="outline"
+                                        type="button"
+                                        onClick={() => setUpdateBookingDialogOpen(false)}
+                                        >
+                                        Cancel
+                                      </Button>
+                                      <Button type="submit" disabled={updateBooking.isPending}>
+                                        {updateBooking.isPending ? "Updating..." : "Update Booking"}
+                                      </Button>
+                                    </DialogFooter>
+                                  </form>
+                                </DialogContent>
+                              </Dialog>
+                            </>
+                          )}
+                        </div>
                       </CardHeader>
                       <CardContent className="space-y-1">
                         <p className="text-sm text-muted-foreground">
@@ -1187,13 +1551,13 @@ export const TravelDetail = () => {
           <Card>
             <Collapsible>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 justify-between">
+                <CardTitle className="flex items-center gap-2 justify-between text-lg">
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
                     Travel Documents ({travel.travelDocument?.length || 0})
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex sm:flex-row flex-col gap-4 sm:gap-2 items-center justify-center">
                     {(isTravelMember || isHR) && (
                       <Dialog
                         open={documentUploadOpen}
@@ -1309,13 +1673,13 @@ export const TravelDetail = () => {
                           key={travelDoc.id}
                         >
                           <a
-                            href={travelDoc.fileUrl}
+                            href={travelDoc.docUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="block"
                           >
                             <img
-                              src={travelDoc.fileUrl}
+                              src={travelDoc.docUrl}
                               alt="document cover"
                               className="aspect-video w-full object-cover brightness-95 rounded-t-xl"
                             />
@@ -1345,10 +1709,10 @@ export const TravelDetail = () => {
                                     Uploaded At:
                                   </Label>
                                   <p
-                                    id="createdBy"
+                                    id="createdAt"
                                     className="text-black font-semibold"
                                   >
-                                    {travelDoc.uploadedAt}
+                                    {DateTimeDisplay(travelDoc.createdAt || "")}
                                   </p>
                                 </div>
                                 {isHR && (
@@ -1385,18 +1749,19 @@ export const TravelDetail = () => {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Created By</CardTitle>
+              <CardTitle className="text-lg">Created By</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="font-medium text-muted-foreground">
+              <p className="font-medium text-muted-foreground text-base">
                 {travel.created_by} - {travel.created_by_name}
               </p>
             </CardContent>
           </Card>
-
+          
+          {/* Expenses Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Expenses</CardTitle>
+              <CardTitle className="text-lg">Expenses</CardTitle>
             </CardHeader>
             <CardContent>
               <Button
@@ -1411,14 +1776,15 @@ export const TravelDetail = () => {
             </CardContent>
           </Card>
 
+          {/* Travel Members Section */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className="flex items-center justify-between text-lg">
                 <div className="flex items-center gap-2">
                   <Users className="h-5 w-5" />
                   Travel Members ({travel.travelMembers?.length || 0})
                 </div>
-                {canUpdateTravel && travel.status === "PLANNED" && (
+                {canModifyTravel && (
                   <Dialog
                     open={addMemberDialogOpen}
                     onOpenChange={(open) => {
@@ -1428,8 +1794,7 @@ export const TravelDetail = () => {
                   >
                     <DialogTrigger asChild>
                       <Button size="sm">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Member
+                        <Plus className="h-4 w-4" />
                       </Button>
                     </DialogTrigger>
 
@@ -1508,8 +1873,8 @@ export const TravelDetail = () => {
                     >
                       <div className="flex items-center gap-3">
                         <User className="h-8 w-8 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{member.name}</p>
+                        <div className="flex flex-col">
+                          <p className="font-medium text-base">{member.name}</p>
                           <p className="text-sm text-muted-foreground">
                             {member.role}
                           </p>
@@ -1518,7 +1883,7 @@ export const TravelDetail = () => {
                           </p>
                         </div>
                       </div>
-                      {canUpdateTravel && travel.status === "PLANNED" && (
+                      {canModifyTravel && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
