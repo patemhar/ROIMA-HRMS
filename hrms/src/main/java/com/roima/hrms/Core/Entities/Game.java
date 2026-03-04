@@ -38,6 +38,8 @@ public class Game extends BaseEntity {
     @Column(name = "active_on_weekends")
     private Boolean activeOnWeekends = false;
 
+    private Boolean active = true;
+
     @OneToMany(mappedBy = "game", cascade = CascadeType.ALL)
     private List<GameSlot> slots;
 

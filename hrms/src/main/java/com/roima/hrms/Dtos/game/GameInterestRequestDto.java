@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.game;
+package com.roima.hrms.dtos.game;
 
 
 import java.util.UUID;

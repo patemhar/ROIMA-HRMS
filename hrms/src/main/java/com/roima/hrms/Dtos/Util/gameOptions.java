@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.Util;
+package com.roima.hrms.dtos.Util;
 
 import lombok.Getter;
 import lombok.Setter;

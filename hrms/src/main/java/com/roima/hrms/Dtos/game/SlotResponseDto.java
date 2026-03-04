@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.game;
+package com.roima.hrms.dtos.game;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -20,5 +20,9 @@ public class SlotResponseDto {
     private LocalTime startTime;
     private LocalTime endTime;
 
-    private Integer queueCount;
+    private Boolean booked;
+
+    private Integer bookingPriority;
+
+    private Long queueCount;
 }

@@ -1,11 +1,14 @@
 package com.roima.hrms.Controller;
 
-import com.cloudinary.Api;
-import com.roima.hrms.Dtos.ApiResponse;
-import com.roima.hrms.Dtos.game.*;
+import com.roima.hrms.Utility.SecurityUtil;
+import com.roima.hrms.dtos.ApiResponse;
+import com.roima.hrms.dtos.game.*;
 import com.roima.hrms.Service.Interfaces.gameService;
 import com.roima.hrms.Service.Implementation.CycleService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,6 +25,7 @@ public class gameController {
 
     private final gameService gameService;
     private final CycleService cycleService;
+    private final SecurityUtil securityUtil;
 
     @PostMapping
     @PreAuthorize("hasAuthority('PER015')")
@@ -43,6 +47,15 @@ public class gameController {
         return ApiResponse.success( null, "Game Updated Successfully");
     }
 
+    @PostMapping("/{gameId}/toggle-active")
+    @PreAuthorize("hasAuthority('PER015')")
+    public ApiResponse<Void> toggleGameActiveStatus(
+            @PathVariable UUID gameId
+    ) {
+        gameService.toggleGameActiveStatus(gameId);
+        return ApiResponse.success(null, "Game active status toggled successfully.");
+    }
+
     @GetMapping("/{gameId}")
     @PreAuthorize("hasAuthority('PER016')")
     public ApiResponse<GameResponseDto> getGame(
@@ -60,6 +73,7 @@ public class gameController {
 
     @PostMapping("/book")
     @PreAuthorize("hasAuthority('PER016')")
+    @CacheEvict(value = "bookingRequests", allEntries = true)
     public ApiResponse<GameSlotBookingRequestResponse> makeBookingRequest(
             @RequestBody GameSlotBookingRequestDto request
     ) {
@@ -87,10 +101,12 @@ public class gameController {
         if (cycleOpt.isPresent()) {
             return ApiResponse.success(cycleOpt.get(), "Game cycle fetched successfully.");
         } else {
-            var nextStart = cycleService.getNextCycleStart();
+            var nextStart = cycleService.getNextCycleStartTime(gameId);
+
             if(nextStart == null) {
                 return ApiResponse.success(null, "New cycle will be created soon.");
             }
+
             long minutes = Duration.between(nextStart, LocalDateTime.now()).toMinutes();
             return ApiResponse.success(null, "New cycle will begin in " + minutes + " minutes.");
         }
@@ -110,10 +126,23 @@ public class gameController {
 
     @PatchMapping("/bookings/{bookingId}/cancel")
     @PreAuthorize("hasAuthority('PER016')")
+    @CacheEvict(value = "bookingRequests", allEntries = true)
     public ApiResponse<Void> cancelBooking(
             @PathVariable UUID bookingId
     ) {
         gameService.cancelBooking(bookingId);
         return ApiResponse.success(null, "Booking cancelled successfully.");
+    }
+
+    @GetMapping("/bookings")
+    @PreAuthorize("hasAuthority('PER016')")
+//    @Cacheable(value = "bookingRequests", key = "#pageNumber + '-' + #pageSize + '-' + #searchTerm + '-' + #securityUtil.getCurrentUserId()")
+    public ApiResponse<Page<BookingRequestListDto>> getAllBookingRequests(
+            @RequestParam(defaultValue = "1") int pageNumber,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(required = false) String searchTerm
+    ) {
+        Page<BookingRequestListDto> bookings = gameService.getAllBookingRequests(pageNumber - 1, pageSize, searchTerm);
+        return ApiResponse.success(bookings, "Booking requests fetched successfully.");
     }
 }

@@ -4,14 +4,17 @@ import com.roima.hrms.Core.Entities.Game;
 import com.roima.hrms.Core.Entities.GameBookingCycle;
 import com.roima.hrms.Core.Entities.GameSlot;
 import com.roima.hrms.Core.Entities.SlotBookingRequest;
-import com.roima.hrms.Dtos.game.*;
+import com.roima.hrms.Core.Enums.BookingRequestStatus;
+import com.roima.hrms.dtos.game.*;
 import com.roima.hrms.Repositories.GameInterestRepository;
 import com.roima.hrms.Repositories.GameSlotRepository;
 import com.roima.hrms.Repositories.SlotBookingRequestRepository;
-import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
-import org.springframework.ui.ModelMap;
+
+import java.util.stream.Collectors;
+
+import static java.util.Locale.filter;
 
 @Component
 public class GameMapper {
@@ -41,8 +44,6 @@ public class GameMapper {
 
         var newGame = new Game();
 
-        System.out.println("\n\nrequest: " + requestDto.getMaxPlayers());
-
         newGame.setName(requestDto.getName());
         newGame.setDescription(requestDto.getDescription());
         newGame.setOperatingStartTime(requestDto.getOperatingStartTime());
@@ -66,8 +67,11 @@ public class GameMapper {
         gameResponse.setStartTime(game.getOperatingStartTime());
         gameResponse.setEndTime(game.getOperatingEndTime());
         gameResponse.setActiveOnWeekends(game.getActiveOnWeekends());
+        gameResponse.setActive(game.getActive());
 
-        gameResponse.setInterestedCount(gameInterestRepository.countInterestedUsers(game.getId()));
+        if(game.getGame_interests() != null) {
+            gameResponse.setInterestedCount(game.getGame_interests().size());
+        }
 
         return gameResponse;
     }
@@ -109,7 +113,26 @@ public class GameMapper {
         slotResponse.setStartTime(gameSlot.getStartTime());
         slotResponse.setEndTime(gameSlot.getEndTime());
 
-        var queue = slotBookingRequestRepository.getQueueCount(gameSlot.getId());
+        var booked = gameSlot.getBookingRequests().stream().anyMatch(request -> request.getStatus() == BookingRequestStatus.CONFIRMED);
+        slotResponse.setBooked(booked);
+
+        if(booked) {
+            var bookingRequest = gameSlot.getBookingRequests().stream()
+                    .filter(request -> request.getStatus() == BookingRequestStatus.CONFIRMED)
+                    .findFirst()
+                    .orElse(null);
+
+            if(bookingRequest != null) {
+                slotResponse.setBookingPriority(bookingRequest.getPriorityScore());
+            }
+
+        } else {
+            slotResponse.setBookingPriority(null);
+        }
+
+        var queue = gameSlot.getBookingRequests().stream()
+                .filter(request -> request.getStatus() == BookingRequestStatus.PENDING)
+                .count();
         slotResponse.setQueueCount(queue);
 
         return slotResponse;
@@ -123,10 +146,43 @@ public class GameMapper {
         gameCycleResponse.setCycle_start(gameBookingCycle.getCycle_start());
         gameCycleResponse.setCycle_end(gameBookingCycle.getCycle_end());
 
-        var totalSlots = gameSlotRepository.getTotalSlots(gameBookingCycle.getId());
-
-        gameCycleResponse.setTotal_slots(totalSlots);
+        gameCycleResponse.setTotal_slots(gameBookingCycle.getCycle_slots().size());
 
         return gameCycleResponse;
+    }
+
+    public BookingRequestListDto toBookingRequestListDto(SlotBookingRequest request) {
+        var dto = new BookingRequestListDto();
+
+        dto.setBookingId(request.getId());
+        dto.setRequestedAt(request.getRequestedAt());
+        dto.setStatus(request.getStatus());
+        dto.setPriorityScore(request.getPriorityScore());
+
+        // User info
+        dto.setRequestedBy(request.getUser().getFirst_name() + " " + request.getUser().getLast_name());
+        dto.setRequestedByEmail(request.getUser().getEmail());
+
+        // Slot info
+        dto.setSlotDate(request.getSlot().getSlotDate());
+        dto.setStartTime(request.getSlot().getStartTime());
+        dto.setEndTime(request.getSlot().getEndTime());
+
+        // Game info
+        dto.setGameName(request.getSlot().getGame().getName());
+
+        // Participants
+        var participants = request.getParticipants().stream()
+            .map(sp -> {
+                var participantDto = new ParticipantDto();
+                participantDto.setUserId(sp.getUser().getId());
+                participantDto.setName(sp.getUser().getFirst_name() + " " + sp.getUser().getLast_name());
+                participantDto.setEmail(sp.getUser().getEmail());
+                return participantDto;
+            })
+            .collect(Collectors.toList());
+        dto.setParticipants(participants);
+
+        return dto;
     }
 }

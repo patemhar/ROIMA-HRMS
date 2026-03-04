@@ -1,4 +1,4 @@
-package com.roima.hrms.Dtos.game;
+package com.roima.hrms.dtos.game;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +17,7 @@ public class GameResponseDto {
     private LocalTime startTime;
     private LocalTime endTime;
     private Boolean activeOnWeekends;
+    private Boolean active;
 
     private Integer slotDurationMinutes;
     private Integer maxPlayersPerSlot;
