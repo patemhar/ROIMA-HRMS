@@ -10,19 +10,23 @@ import {
 import { Input } from "@/components/ui/input";
 
 interface SearchableSelectProps {
+  id: string;
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
   options: Array<{ value: string; label: string }>;
   disabled?: boolean;
+  className?: string;
 }
 
 export const SearchableSelect: React.FC<SearchableSelectProps> = ({
+  id,
   value,
   onValueChange,
   placeholder = "Select...",
   options,
   disabled = false,
+  className,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -52,7 +56,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         }}
         disabled={disabled}
         >
-        <SelectTrigger>
+        <SelectTrigger className={`flex items-center w-full ${className}`} id={id}>
           <SelectValue placeholder={placeholder}>
             {selectedLabel || placeholder}
           </SelectValue>
