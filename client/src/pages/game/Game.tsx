@@ -21,6 +21,7 @@ import type { components } from "@/types/api";
 import { hasPermission, PermissionCode } from "@/constants/permissions";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 
 type Schemas = components["schemas"];
 
@@ -181,6 +182,12 @@ export const GamePage = () => {
               onClick={() => navigate("bookings")}
             >
               My Bookings
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("stats")}
+            >
+              User Stats
             </Button>
           </div>
         </div>
@@ -394,7 +401,7 @@ export const GamePage = () => {
                     onChange={(e) => setFormData({ ...formData, maxPlayersPerSlot: Number(e.target.value) })}
                   />
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   <Label htmlFor="weekend">Operational on Weekends: </Label>
                   <Switch
                     id="weekend"

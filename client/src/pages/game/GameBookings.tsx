@@ -10,11 +10,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useGetAllGameBookingRequests } from "@/hooks/game/game.hooks";
-import { useGetBookings } from "@/hooks/travel/travel.hooks";
 import { useDebounce } from "@/hooks/useDebounce";
 import { getErrorMessage } from "@/utils/error";
 import { Badge } from "@/components/ui/badge"; 
-import React, { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -28,10 +27,13 @@ import { DateTimeDisplay, TimeDisplay } from "@/utils/dateUtils";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Spinner } from "@/components/ui/spinner";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, User2 } from "lucide-react";
+import { MoreHorizontal, User2, Filter, Calendar } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { set } from "date-fns";
-import { Confetti } from "@/components/ui/confetti";
+import { useAuth } from "@/store";
+import { hasPermission, PermissionCode } from "@/constants/permissions";
+import { Checkbox } from "@/components/ui/checkbox";
+import type { components } from "@/types/api";
+type Schemas = components["schemas"];
 
 //'"link" | "destructive" | "default" | "outline" | "secondary" | "ghost" | null | undefined'.
 const getBadgeVarient = (status: string) => {
@@ -44,13 +46,20 @@ const getBadgeVarient = (status: string) => {
   }
 }
 
-const filterOptions = [
-  { label: "All", value: "ALL" },
+const statusOptions = [
+  { label: "All Statuses", value: "ALL" },
   { label: "Pending", value: "PENDING" },
   { label: "Confirmed", value: "CONFIRMED" },
   { label: "Cancelled", value: "CANCELLED" },
   { label: "Expired", value: "EXPIRED" },
 ];
+
+const sortOptions = [
+  { value: "u.first_name", label: "User Name" },
+  { value: "sbr.requestedAt", label: "Requested At" },
+  { value: "s.slotDate", label: "Slot Date" },
+  { value: "sbr.priorityScore", label: "Priority Score" },
+]
 
 export const GameBookings = () => {
 
@@ -60,42 +69,60 @@ export const GameBookings = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("ALL");
-  const [filteredItems, setFilteredItems] = useState<typeof items>([]);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [status, setStatus] = useState("ALL");
+  const [sortBy, setSortBy] = useState<string>(sortOptions[1].value);
+  const [sortDir, setSortDir] = useState<string>("desc");
+  const [myRequestsOnly, setMyRequestsOnly] = useState(true);
 
+  const permissions = useAuth((state) => state.auth.user?.permission);
+  const isAdmin = hasPermission(permissions, PermissionCode.ADMIN_VIEW);
+  
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const debouncedStartDate = useDebounce(startDate, 800);
+  const debouncedEndDate = useDebounce(endDate, 800);
 
   const bookingsQuery = useGetAllGameBookingRequests(
     pageNumber,
     pageSize,
     debouncedSearchTerm,
+    debouncedStartDate || undefined,
+    debouncedEndDate || undefined,
+    status === "ALL" ? undefined : status,
+    sortBy,
+    sortDir,
+    myRequestsOnly
   );
 
   const items = bookingsQuery.data?.content || [];
 
   useEffect(() => {
-      if (bookingsQuery.data) {
-
-        const filtered = items.filter((item) => {
-          if (selectedFilter === "ALL") return true;
-          return item.status === selectedFilter;
-        });
-
-        setFilteredItems(filtered);
-      }
-  }, [items, selectedFilter]);
-
-  useEffect(() => {
     setPageNumber(1);
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, debouncedStartDate, debouncedEndDate, status, sortBy, sortDir, myRequestsOnly]);
+
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setStartDate("");
+    setEndDate("");
+    setStatus("ALL");
+    setSortBy(sortOptions[1].value);
+    setSortDir("desc");
+    setPageNumber(1);
+  };
+
+  const hasActiveFilters = searchTerm || startDate || endDate || status === "ALL" ? false : true;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div className="flex flex-col">
-            <h1 className="text-2xl font-bold">Game Bookings</h1>
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Calendar className="h-6 w-6" />
+              Game Bookings
+            </h1>
             <p className="text-muted-foreground mt-1">
-            All game bookings that you were part of.
+            View and manage all game booking requests
             </p>
         </div>
         <div className="flex items-center gap-3">
@@ -113,27 +140,106 @@ export const GameBookings = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>My Game Bookings</CardTitle>
+            <div className="flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              <CardTitle>Filters & Options</CardTitle>
             </div>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={handleClearFilters}>
+                Clear Filters
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex justify-between flex-wrap items-center gap-4">
-            <Input
-              placeholder="Search travels..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-3xl"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Search Input */}
+            <div className="space-y-2">
+              <Label htmlFor="search-input" className="text-sm font-medium">
+                Search
+              </Label>
+              <Input
+                id="search-input"
+                placeholder="Search by user name or booking details..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
 
-            <div className="flex gap-3">
-              <Select value={selectedFilter} onValueChange={(value) => setSelectedFilter(value)}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Filter by status" />
+            {/* Status Filter */}
+            <div className="space-y-2">
+              <Label htmlFor="status-filter" className="text-sm font-medium">
+                Status
+              </Label>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger id="status-filter">
+                  <SelectValue placeholder="All Statuses" />
                 </SelectTrigger>
                 <SelectContent className="bg-emerald-50">
-                  {filterOptions.map((option) => (
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Start Date */}
+            <div className="space-y-2">
+              <Label htmlFor="start-date" className="text-sm font-medium">
+                Start Date
+              </Label>
+              <Input
+                id="start-date"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+
+            {/* End Date */}
+            <div className="space-y-2">
+              <Label htmlFor="end-date" className="text-sm font-medium">
+                End Date
+              </Label>
+              <Input
+                id="end-date"
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                min={startDate}
+              />
+            </div>
+
+            {/* My Requests Only Checkbox */}
+            { isAdmin && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">View Options</Label>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="my-requests-only"
+                    checked={myRequestsOnly}
+                    onCheckedChange={(checked) => setMyRequestsOnly(checked as boolean)}
+                  />
+                  <Label htmlFor="my-requests-only" className="text-sm cursor-pointer font-normal">
+                    My Requests Only
+                  </Label>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-between flex-wrap items-center gap-4 pt-4 border-t">
+            {/* Sort Options */}
+            <div className="flex gap-3 items-center flex-wrap">
+              <Label className="text-xs text-muted-foreground">Sort by:</Label>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-emerald-50">
+                  {sortOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
@@ -141,36 +247,50 @@ export const GameBookings = () => {
                 </SelectContent>
               </Select>
 
-              <div className="flex items-center gap-2">
-                <Label
-                  htmlFor="myPageSize"
-                  className="text-xs text-muted-foreground"
-                >
-                  Per page:
-                </Label>
-                <Select
-                  value={String(pageSize)}
-                  onValueChange={(value) => {
-                    setPageSize(Number(value));
-                    setPageNumber(1);
-                  }}
-                >
-                  <SelectTrigger id="myPageSize" className="w-20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-emerald-50">
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Select value={sortDir} onValueChange={setSortDir}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-emerald-50">
+                  <SelectItem value="asc">Ascending</SelectItem>
+                  <SelectItem value="desc">Descending</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
+            {/* Page Size */}
+            <div className="flex items-center gap-2">
+              <Label htmlFor="pageSize" className="text-xs text-muted-foreground">
+                Per page:
+              </Label>
+              <Select
+                value={String(pageSize)}
+                onValueChange={(value) => {
+                  setPageSize(Number(value));
+                  setPageNumber(1);
+                }}
+              >
+                <SelectTrigger id="pageSize" className="w-20">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-emerald-50">
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="25">25</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
+        </CardContent>
+      </Card>
 
-            <div className="rounded-lg border border-slate-200">
+      <Card>
+        <CardHeader>
+          <CardTitle>Booking Requests</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="rounded-lg border border-slate-200">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -196,7 +316,7 @@ export const GameBookings = () => {
 
                   {bookingsQuery.isError && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8">
+                      <TableCell colSpan={9} className="text-center py-8">
                         <p className="text-destructive">
                           {getErrorMessage(bookingsQuery.error) ||
                             "Failed to load bookings"}
@@ -207,9 +327,9 @@ export const GameBookings = () => {
 
                   {!bookingsQuery.isLoading &&
                     !bookingsQuery.isError &&
-                    filteredItems.length === 0 && (
+                    items.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8">
+                        <TableCell colSpan={9} className="text-center py-8">
                           <p className="text-muted-foreground">
                             No game booking records found
                           </p>
@@ -217,7 +337,7 @@ export const GameBookings = () => {
                       </TableRow>
                     )}
 
-                  {filteredItems.map((booking) => {
+                  {items.map((booking) => {
                     return (
                       <TableRow
                         key={ booking?.bookingId }
@@ -286,7 +406,7 @@ export const GameBookings = () => {
           <CardContent className="pt-0">
             <div className="flex items-center justify-between border-t pt-4">
               <div className="text-sm text-muted-foreground">
-                Showing {filteredItems.length} of {bookingsQuery.data.totalElements}{" "}
+                Showing {items.length} of {bookingsQuery.data.totalElements}{" "}
                 game booking items
                 {bookingsQuery.data.totalPages! > 1 && (
                   <span className="ml-2">

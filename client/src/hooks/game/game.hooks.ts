@@ -28,14 +28,20 @@ export const useGetAllGames = () => {
 export const useGetAllGameBookingRequests = (
   pageNumber: number = 1,
   pageSize: number = 10,
-  searchTerm?: string
+  searchTerm?: string,
+  startDate?: string,
+  endDate?: string,
+  status?: string,
+  sortBy?: string,
+  sortDir?: string,
+  myRequests?: boolean
 ) => {
   const isAuthenticated = useAuth().auth.isAuthenticated;
 
   return useQuery({
-    queryKey: gameKeys.bookings(pageNumber, pageSize, searchTerm),
+    queryKey: gameKeys.bookings(pageNumber, pageSize, searchTerm, startDate, endDate, status, sortBy, sortDir, myRequests),
     queryFn: async () => {
-      const res = await GameService.getAllGameBookingRequests(pageNumber, pageSize, searchTerm);
+      const res = await GameService.getAllGameBookingRequests(pageNumber, pageSize, searchTerm, startDate, endDate, status, sortBy, sortDir, myRequests);
 
       if (!res.success || !res.data)
         throw new Error(res.errors || "Failed to fetch bookings");
@@ -145,6 +151,54 @@ export const useGetUserActiveBooking = (gameId: string) => {
       return res.data || null;
     },
     enabled: isAuthenticated && !!gameId,
+    ...normalCacheConfig,
+  });
+};
+
+export const useGetUserGameStatsPaginated = ({
+  userId,
+  gameId,
+  cycleId,
+  startDate,
+  endDate,
+  pageNumber = 1,
+  pageSize = 10,
+  sortBy,
+  sortDir
+}: {
+  userId?: string,
+  gameId?: string,
+  cycleId?: string,
+  startDate?: string,
+  endDate?: string,
+  pageNumber?: number,
+  pageSize?: number,
+  sortBy?: string,
+  sortDir?: string
+} = {}) => {
+  const isAuthenticated = useAuth().auth.isAuthenticated;
+
+  return useQuery({
+    queryKey: gameKeys.stats(userId, gameId, cycleId, startDate, endDate, pageNumber, pageSize, sortBy, sortDir),
+    queryFn: async () => {
+      const res = await GameService.getUserGameStatsPaginated({
+        userId,
+        gameId,
+        cycleId,
+        startDate,
+        endDate,
+        pageNumber,
+        pageSize,
+        sortBy,
+        sortDir
+      });
+
+      if (!res.success || !res.data)
+        throw new Error(res.errors || "Failed to fetch user game stats");
+
+      return res.data;
+    },
+    enabled: isAuthenticated,
     ...normalCacheConfig,
   });
 };

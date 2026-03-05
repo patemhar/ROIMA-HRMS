@@ -48,7 +48,13 @@ class gameService {
     getAllGameBookingRequests(
         pageNumber: number = 1,
         pageSize: number = 10,
-        searchTerm?: string
+        searchTerm?: string,
+        startDate?: string,
+        endDate?: string,
+        status?: string,
+        sortBy?: string,
+        sortDir?: string,
+        myRequests?: boolean
     ) : ApiResult<Schemas["PageBookingRequestListDto"]> {
 
         const params = new URLSearchParams();
@@ -57,6 +63,30 @@ class gameService {
 
         if (searchTerm) {
             params.append("searchTerm", searchTerm);
+        }
+
+        if (startDate) {
+            params.append("startDate", startDate);
+        }
+
+        if (endDate) {
+            params.append("endDate", endDate);
+        }
+
+        if (status) {
+            params.append("status", status);
+        }
+
+        if (sortBy) {
+            params.append("sortBy", sortBy);
+        }
+
+        if (sortDir) {
+            params.append("sortDir", sortDir);
+        }
+
+        if (myRequests) {
+            params.append("myRequests", myRequests.toString());
         }
 
         return apiClient.get<Schemas["PageBookingRequestListDto"]> (
@@ -105,6 +135,45 @@ class gameService {
     getUserGameStats() : ApiResult<Schemas["UserCycleStatsDto"][]> {
         return apiClient.get<Schemas["UserCycleStatsDto"][]> (
             `/profiles/game-stats?latest=true`
+        )
+    }
+
+    getUserGameStatsPaginated({
+        userId,
+        gameId,
+        cycleId,
+        startDate,
+        endDate,
+        pageNumber = 1,
+        pageSize = 10,
+        sortBy,
+        sortDir
+    }: {
+        userId?: string,
+        gameId?: string,
+        cycleId?: string,
+        startDate?: string,
+        endDate?: string,
+        pageNumber?: number,
+        pageSize?: number,
+        sortBy?: string,
+        sortDir?: string
+    }) : ApiResult<Schemas["PageUserCycleStatsDto"]> {
+        const params = new URLSearchParams();
+        params.append("pageNumber", pageNumber.toString());
+        params.append("pageSize", pageSize.toString());
+
+        if (userId) params.append("userId", userId);
+        if (gameId) params.append("gameId", gameId);
+        if (cycleId) params.append("cycleId", cycleId);
+        if (startDate) params.append("startDate", startDate);
+        if (endDate) params.append("endDate", endDate);
+        if (sortBy) params.append("sortBy", sortBy);
+        if (sortDir) params.append("sortDir", sortDir);
+
+        return apiClient.get<Schemas["PageUserCycleStatsDto"]> (
+            '/games/stats',
+            { params }
         )
     }
 

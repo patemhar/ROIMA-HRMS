@@ -342,6 +342,7 @@ const GameDetail = () => {
             cycleQuery.refetch();
             statsQuery.refetch();
             activeBookingQuery.refetch();
+            slotsQuery.refetch();
           }}
           disabled={gameQuery.isLoading}
         >
@@ -817,6 +818,7 @@ const GameDetail = () => {
                 <Label htmlFor="user-select">Select Member</Label>
                 <div className="flex gap-2">
                   <SearchableSelect
+                    id="user-select"
                     options={allUsers
                       .filter((user) => !slotFormData.members.some((m) => m.id === user.userId))
                       .map((user) => ({
