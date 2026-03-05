@@ -155,6 +155,7 @@ public class GameMapper {
         var dto = new BookingRequestListDto();
 
         dto.setBookingId(request.getId());
+        dto.setCycleId(request.getSlot().getGameCycle().getId());
         dto.setRequestedAt(request.getRequestedAt());
         dto.setStatus(request.getStatus());
         dto.setPriorityScore(request.getPriorityScore());

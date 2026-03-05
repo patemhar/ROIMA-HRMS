@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -32,4 +33,6 @@ public interface GameBookingCycleRepository extends JpaRepository<GameBookingCyc
         WHERE c.game.id = :gameId AND c.cycle_start > CURRENT_TIMESTAMP
     """)
     LocalDateTime findNextCycleStartTime(UUID gameId);
+
+    List<GameBookingCycle> findByGameId(UUID gameId);
 }

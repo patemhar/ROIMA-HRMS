@@ -5,6 +5,7 @@ import com.roima.hrms.Core.Enums.BookingRequestStatus;
 import com.roima.hrms.Core.Enums.NotificationType;
 import com.roima.hrms.dtos.game.*;
 import com.roima.hrms.Mapper.GameMapper;
+import com.roima.hrms.Mapper.UserCycleStatsMapper;
 import com.roima.hrms.Repositories.*;
 import com.roima.hrms.Service.Interfaces.EmailService;
 import com.roima.hrms.Service.Interfaces.NotificationService;
@@ -16,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -38,6 +40,7 @@ public class gameServiceImpl implements gameService {
     private final UserRepository userRepository;
     private final SecurityUtil securityUtil;
     private final GameMapper gameMapper;
+    private final UserCycleStatsMapper userCycleStatsMapper;
     private final GameRepository gameRepository;
     private final NotificationService notificationService;
     private final EmailService emailService;
@@ -49,6 +52,11 @@ public class gameServiceImpl implements gameService {
 
         var currentUser = securityUtil.getCurrentUser();
         var existingSlot = gameSlotRepository.findById(request.getSlotId()).orElseThrow(() -> new RuntimeException("No Slot Found"));
+
+        for(UUID participant : request.getParticipants()) {
+            if(slotParticipantRepository.existsActiveBookingAtSameTime(currentUser.getId(), existingSlot.getSlotDate(), existingSlot.getStartTime(), existingSlot.getEndTime()))
+                throw new RuntimeException("One or more users already have an active booking at the same time.");
+        }
 
         if(!existingSlot.getGame().getActive()) {
             throw new RuntimeException("Sorry, this game is currently inactive and cannot be booked.");
@@ -433,21 +441,49 @@ public class gameServiceImpl implements gameService {
     }
 
     @Override
-    public Page<BookingRequestListDto> getAllBookingRequests(int page, int size, String search) {
+    public Page<BookingRequestListDto> getAllBookingRequests(int page, int size, String search, LocalDate startDate, LocalDate endDate, BookingRequestStatus status, String sortBy, String sortDir, Boolean myRequests) {
 
         var currentUser = securityUtil.getCurrentUser();
         var userRole = currentUser.getRole().getName();
 
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending());
         Page<SlotBookingRequest> bookingRequests;
 
-        if ("HR".equals(userRole)) {
-            bookingRequests = slotBookingRequestRepository.findAllWithSearch(search, pageable);
+        if ("HR".equals(userRole) && (myRequests == null || !myRequests)) {
+            bookingRequests = slotBookingRequestRepository.findAllWithSearch(search, startDate, endDate, status, pageable);
         } else {
             bookingRequests = slotBookingRequestRepository.findByUserInvolvedWithSearch(
-                currentUser.getId(), search, pageable);
+                currentUser.getId(), search, startDate, endDate, status, pageable);
         }
 
         return bookingRequests.map(gameMapper::toBookingRequestListDto);
+    }
+
+    @Override
+    public Page<UserCycleStatsDto> getUserGameStats(UUID userId, UUID gameId, UUID cycleId, LocalDateTime startDate, LocalDateTime endDate, int page, int size, String sortBy, String sortDir) {
+
+        if (sortBy == null || sortBy.isEmpty()) {
+            sortBy = "playCount";
+        }
+        if (sortDir == null || sortDir.isEmpty()) {
+            sortDir = "desc";
+        }
+
+        Pageable pageable = PageRequest.of(
+            page,
+            size,
+            sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending()
+        );
+
+        Page<UserCycleStats> statsPage = userCycleStatsRepository.findUserGameStats(
+            userId,
+            gameId,
+            cycleId,
+            startDate,
+            endDate,
+            pageable
+        );
+
+        return statsPage.map(userCycleStatsMapper::toDto);
     }
 }
